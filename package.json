@@ -1,0 +1,31 @@
+{
+  "name": "scratch-tribology-simulator",
+  "private": true,
+  "version": "1.0.0",
+  "license": "MIT",
+  "author": "Eric Valls Gramunt",
+  "description": "Banco de tribología: uñas, garras, colmillos y qué raya a qué. Web · escritorio (Tauri) · iPhone/Android (Expo).",
+  "workspaces": [
+    "packages/*",
+    "apps/desktop"
+  ],
+  "scripts": {
+    "test": "npm test -w @sts/core",
+    "golden:update": "npm run golden:update -w @sts/core",
+    "audit": "node packages/core/scripts/audit.js",
+    "dev": "npm run dev -w @sts/desktop",
+    "build": "npm run build -w @sts/desktop",
+    "check:mobile": "esbuild apps/mobile/App.js --bundle --loader:.js=jsx --loader:.wav=empty --format=esm --log-level=warning --outfile=node_modules/.cache/mobile-check.js --external:react --external:react-native --external:react-native-svg --external:react-native-safe-area-context --external:expo --external:expo-* --external:@expo-google-fonts/* --external:@react-native-community/* && node apps/mobile/scripts/render-sfx.mjs --check && node apps/mobile/test/app-config.mjs && npm run test:mobile",
+    "test:mobile": "node apps/mobile/test/smoke.mjs",
+    "sfx:mobile": "node apps/mobile/scripts/render-sfx.mjs",
+    "check": "npm test && npm run build && npm run check:mobile",
+    "tauri": "npm run tauri -w @sts/desktop --"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.12",
+    "react-test-renderer": "18.3.1"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

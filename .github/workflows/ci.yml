@@ -1,0 +1,68 @@
+# Se ejecuta en cada push y pull request: tests del motor, build del frontend, chequeo móvil,
+# empaquetado de la app móvil con Metro y el shell nativo de escritorio (formato, clippy y compilación en Linux).
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - run: npm run check:mobile
+
+  # Metro empaqueta la app móvil igual que lo hacen Gradle y Xcode al compilar: si falla aquí, no hay
+  # APK ni IPA. La prueba de humo usa esbuild y no pasa por aquí.
+  mobile-bundle:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/mobile
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+      - name: Metro empaqueta Android e iOS
+        run: |
+          npx expo export --platform android --output-dir "$RUNNER_TEMP/export-android"
+          npx expo export --platform ios --output-dir "$RUNNER_TEMP/export-ios"
+
+  desktop-shell:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v7
+      - name: Dependencias de Linux (WebKitGTK 4.1)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: "./apps/desktop/src-tauri -> target"
+      - run: npm ci
+      # generate_context! necesita el frontend compilado (frontendDist)
+      - run: npm run build
+      - name: rustfmt · clippy · build
+        working-directory: apps/desktop/src-tauri
+        run: |
+          cargo fmt --check
+          cargo clippy --all-targets -- -D warnings
+          cargo build

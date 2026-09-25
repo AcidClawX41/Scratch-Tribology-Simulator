@@ -1,0 +1,242 @@
+{
+  "uña almendra 4N sobre pintura": {
+    "verdict": "ARAÑAZO EN BARNIZ",
+    "depthUm": 3.5,
+    "pressureMPa": 4.4,
+    "layer": "barniz (clearcoat)"
+  },
+  "uña stiletto 30N sobre piel": {
+    "verdict": "ARAÑAZO PROFUNDO",
+    "depthUm": 882.4,
+    "pressureMPa": 200,
+    "layer": "Dermis"
+  },
+  "uña cuadrada 30N sobre piel": {
+    "verdict": "RASGUÑO BLANCO",
+    "depthUm": 18,
+    "pressureMPa": 3.3,
+    "layer": "Capa córnea"
+  },
+  "uña + diamante 30N sobre zafiro": {
+    "verdict": "RAYA",
+    "depthUm": 4.4,
+    "pressureMPa": 750,
+    "layer": null
+  },
+  "uña natural sobre vidrio": {
+    "verdict": "NO RAYA",
+    "depthUm": 0,
+    "pressureMPa": 33.3,
+    "layer": null
+  },
+  "gato 15N sobre pintura": {
+    "verdict": "HASTA EL METAL",
+    "depthUm": 110,
+    "pressureMPa": 196.1,
+    "layer": "metal (chapa)"
+  },
+  "oso 300N sobre pintura": {
+    "verdict": "HASTA EL METAL",
+    "depthUm": 110,
+    "pressureMPa": 196.1,
+    "layer": "metal (chapa)"
+  },
+  "oso 300N desgarro sobre pintura": {
+    "verdict": "HASTA EL METAL",
+    "depthUm": 110,
+    "pressureMPa": 196.1,
+    "layer": "metal (chapa)"
+  },
+  "gato 15N sobre piel": {
+    "verdict": "ARAÑAZO PROFUNDO",
+    "depthUm": 688.2,
+    "pressureMPa": 274.6,
+    "layer": "Dermis"
+  },
+  "gato 3N sobre piel (mimo)": {
+    "verdict": "ARAÑAZO QUE SANGRA",
+    "depthUm": 137.6,
+    "pressureMPa": 150,
+    "layer": "Dermis"
+  },
+  "pájaro 1.5N sobre piel": {
+    "verdict": "RASGUÑOS",
+    "depthUm": 75,
+    "pressureMPa": 75,
+    "layer": "Epidermis viva"
+  },
+  "gato 12N sobre puerta aluminio (punción)": {
+    "verdict": "NO PERFORA",
+    "depthUm": 0,
+    "pressureMPa": 274.6,
+    "layer": null
+  },
+  "víbora 4N sobre piel (punción)": {
+    "verdict": "PUNCIÓN · INYECTA",
+    "depthUm": 18000,
+    "pressureMPa": 490.4,
+    "layer": "Músculo"
+  },
+  "víbora 4N sobre puerta madera (punción)": {
+    "verdict": "CLAVADA EN LA MADERA",
+    "depthUm": 401.7,
+    "pressureMPa": 176.5,
+    "layer": "madera"
+  },
+  "gabón 30N impacto sobre piel": {
+    "verdict": "PUNCIÓN · INYECTA",
+    "depthUm": 50000,
+    "pressureMPa": 490.4,
+    "layer": "Músculo"
+  },
+  "casuario 500N impacto sobre piel": {
+    "verdict": "PUNCIÓN PROFUNDA",
+    "depthUm": 110000,
+    "pressureMPa": 313.8,
+    "layer": "Músculo"
+  },
+  "casuario 500N sobre pintura": {
+    "verdict": "HASTA EL METAL",
+    "depthUm": 110,
+    "pressureMPa": 196.1,
+    "layer": "metal (chapa)"
+  },
+  "avestruz 900N sobre pintura": {
+    "verdict": "HASTA EL METAL",
+    "depthUm": 110,
+    "pressureMPa": 196.1,
+    "layer": "metal (chapa)"
+  },
+  "buitre 60N sobre pintura": {
+    "verdict": "HASTA EL METAL",
+    "depthUm": 110,
+    "pressureMPa": 196.1,
+    "layer": "metal (chapa)"
+  },
+  "garra+tungsteno 200N impacto puerta madera": {
+    "verdict": "CLAVADA EN LA MADERA",
+    "depthUm": 9693.5,
+    "pressureMPa": 176.5,
+    "layer": "madera"
+  },
+  "uña almendra 20 pasadas sobre pintura": {
+    "verdict": "ARAÑAZO EN BARNIZ",
+    "depthUm": 11.6,
+    "pressureMPa": 4.4,
+    "layer": "barniz (clearcoat)"
+  },
+  "uña natural sobre acero 100 pasadas": {
+    "verdict": "NO RAYA",
+    "depthUm": 0,
+    "pressureMPa": 200,
+    "layer": null
+  },
+  "uña almendra húmeda 30N sobre pintura": {
+    "verdict": "ROZA / REMOLINO",
+    "depthUm": 0,
+    "pressureMPa": 33.3,
+    "layer": "barniz · superficie"
+  },
+  "uña + cuarzo 30N sobre pantalla móvil": {
+    "verdict": "RAYA",
+    "depthUm": 7.2,
+    "pressureMPa": 300,
+    "layer": null
+  },
+  "víbora 40N punción sobre vidrio (rompe)": {
+    "verdict": "SE ROMPE LA PUNTA",
+    "depthUm": 0,
+    "pressureMPa": 490.4,
+    "layer": null
+  },
+  "casuario 500N impacto puerta madera": {
+    "verdict": "ATRAVIESA LA PUERTA",
+    "depthUm": 36645.1,
+    "pressureMPa": 176.5,
+    "layer": "madera"
+  },
+  "pájaro 1.5N punción sobre piel": {
+    "verdict": "NO PERFORA",
+    "depthUm": 0,
+    "pressureMPa": 75,
+    "layer": null
+  },
+  "uña almendra 4N sobre piel (rascarse)": {
+    "verdict": "RASGUÑO BLANCO",
+    "depthUm": 18,
+    "pressureMPa": 4.4,
+    "layer": "Capa córnea"
+  },
+  "uña almendra 30N ×20 sobre piel": {
+    "verdict": "RASGUÑOS QUE SANGRAN",
+    "depthUm": 75,
+    "pressureMPa": 33.3,
+    "layer": "Epidermis viva"
+  },
+  "gato 15N desgarro sobre piel": {
+    "verdict": "DESGARRO PROFUNDO",
+    "depthUm": 1800,
+    "pressureMPa": 274.6,
+    "layer": "Dermis"
+  },
+  "tigre 260N sobre piel": {
+    "verdict": "LACERACIÓN PROFUNDA",
+    "depthUm": 40000,
+    "pressureMPa": 294.2,
+    "layer": "Músculo"
+  },
+  "águila de acero, golpe, coche clásico": {
+    "verdict": "ATRAVIESA LA CHAPA",
+    "depthUm": 35000,
+    "pressureMPa": 196.1,
+    "layer": "metal (chapa)"
+  },
+  "uña stiletto de metal, golpe, coche moderno": {
+    "verdict": "PERFORA LA CHAPA",
+    "depthUm": 6065.2,
+    "pressureMPa": 196.1,
+    "layer": "metal (chapa)"
+  },
+  "uña stiletto de metal, golpe, coche clásico": {
+    "verdict": "PERFORA LA CHAPA",
+    "depthUm": 5286.6,
+    "pressureMPa": 196.1,
+    "layer": "metal (chapa)"
+  },
+  "águila de zafiro, golpe, coche de aluminio": {
+    "verdict": "ATRAVIESA LA CHAPA",
+    "depthUm": 35000,
+    "pressureMPa": 196.1,
+    "layer": "metal (chapa)"
+  },
+  "oso, zarpazo, aleta de plástico": {
+    "verdict": "ATRAVIESA EL PLÁSTICO",
+    "depthUm": 60000,
+    "pressureMPa": 196.1,
+    "layer": "plástico"
+  },
+  "oso de diamante 300N sobre coche moderno": {
+    "verdict": "HASTA EL METAL",
+    "depthUm": 389.2,
+    "pressureMPa": 196.1,
+    "layer": "metal (chapa)"
+  },
+  "tigre de tungsteno, zarpazo, puerta de aluminio": {
+    "verdict": "ATRAVIESA LA PUERTA",
+    "depthUm": 40000,
+    "pressureMPa": 588.4,
+    "layer": null
+  },
+  "gato, zarpazo, ventana": {
+    "verdict": "NO PERFORA",
+    "depthUm": 0,
+    "pressureMPa": 274.6,
+    "layer": null
+  },
+  "oso, zarpazo, ventana": {
+    "verdict": "ROMPE EL VIDRIO",
+    "depthUm": 0,
+    "pressureMPa": 255,
+    "layer": null
+  }
+}

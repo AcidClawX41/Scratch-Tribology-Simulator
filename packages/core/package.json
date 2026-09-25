@@ -1,0 +1,15 @@
+{
+  "name": "@sts/core",
+  "version": "1.0.0",
+  "license": "MIT",
+  "author": "Eric Valls Gramunt",
+  "private": true,
+  "description": "Motor físico de Scratch Tribology Simulator: dureza, presión, abrasión, punción. Sin dependencias.",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": { ".": "./src/index.js" },
+  "scripts": {
+    "test": "node --test",
+    "golden:update": "node scripts/update-golden.js"
+  }
+}

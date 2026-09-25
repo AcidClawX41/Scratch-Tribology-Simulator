@@ -1,0 +1,276 @@
+# Release: compila y publica cada versión para todas las plataformas.
+#   · Windows ........ instalador -setup.exe (NSIS) y .msi
+#   · Linux .......... .AppImage (ejecutable autocontenido), .deb y .rpm
+#   · macOS .......... .dmg para Apple Silicon (M1 y posteriores) y otro para Intel
+#   · Android ........ .apk instalable (firmado con la clave de depuración, o con la tuya si la das)
+#   · iPhone / iPad .. .ipa SIN firmar: se instala con AltStore o Sideloadly, que la firman con tu Apple ID
+#
+# Uso: sube la versión en los package.json y demás (npm version…) y después
+#        git tag v1.0.0 && git push origin v1.0.0
+#      La Release se crea como borrador, cada plataforma sube sus archivos y solo se publica si TODO compila.
+#      "Run workflow" a mano (workflow_dispatch) compila lo mismo sin publicar: los archivos quedan como artefactos.
+#
+# Secretos opcionales (Settings → Secrets and variables → Actions):
+#   ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD
+#   → el .apk se firma con tu clave (necesario para publicar en Google Play y actualizar sin desinstalar).
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  draft:
+    name: Borrador de la Release
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    outputs:
+      id: ${{ steps.release.outputs.id }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: La etiqueta coincide con la versión de la app
+        run: |
+          v="v$(node -p "require('./package.json').version")"
+          if [ "$v" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::La etiqueta $GITHUB_REF_NAME no coincide con la versión $v de package.json"
+            exit 1
+          fi
+      - name: Crear el borrador (o reutilizarlo si se relanza)
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          id=$(gh api "repos/$GITHUB_REPOSITORY/releases" --paginate --jq ".[] | select(.tag_name == \"$TAG\") | .id" | head -n1)
+          if [ -z "$id" ]; then
+            sed -e "s|{{VERSION}}|$TAG|g" -e "s|{{REPO}}|$GITHUB_REPOSITORY|g" .github/release-notes.md > "$RUNNER_TEMP/notes.md"
+            id=$(gh api "repos/$GITHUB_REPOSITORY/releases" -f tag_name="$TAG" -f name="Scratch Tribology Simulator $TAG" \
+              -F draft=true -F body=@"$RUNNER_TEMP/notes.md" --jq .id)
+          else
+            # Se relanza una versión que ya existe: se borra todo lo compilado antes y se recompila de cero
+            gh api "repos/$GITHUB_REPOSITORY/releases/$id/assets" --paginate --jq '.[] | "\(.id) \(.name)"' |
+              while read -r asset name; do
+                echo "Borrando $name"
+                gh api --method DELETE "repos/$GITHUB_REPOSITORY/releases/assets/$asset"
+              done
+          fi
+          echo "id=$id" >> "$GITHUB_OUTPUT"
+
+  desktop:
+    name: Escritorio · ${{ matrix.name }}
+    needs: draft
+    if: ${{ !failure() && !cancelled() }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macOS Apple Silicon
+            platform: macos-latest
+            args: --target aarch64-apple-darwin
+          - name: macOS Intel
+            platform: macos-latest
+            args: --target x86_64-apple-darwin
+          - name: Windows
+            platform: windows-latest
+            args: ""
+          # Linux: la versión más antigua soportada fija la glibc mínima de los binarios
+          - name: Linux
+            platform: ubuntu-22.04
+            args: ""
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Dependencias de Linux (WebKitGTK 4.1)
+        if: startsWith(matrix.platform, 'ubuntu')
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf xdg-utils
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ startsWith(matrix.platform, 'macos') && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: "./apps/desktop/src-tauri -> target"
+
+      - run: npm ci
+
+      # Con tag sube los instaladores al borrador; a mano (sin releaseId) solo compila y deja artefactos
+      - uses: tauri-apps/tauri-action@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: apps/desktop
+          args: ${{ matrix.args }}
+          releaseId: ${{ needs.draft.outputs.id }}
+          uploadWorkflowArtifacts: true
+
+  android:
+    name: Android · APK
+    needs: draft
+    if: ${{ !failure() && !cancelled() }}
+    runs-on: ubuntu-latest
+    env:
+      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+    defaults:
+      run:
+        working-directory: apps/mobile
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Dependencias de la app móvil
+        run: npm install --no-audit --no-fund
+
+      - name: Proyecto nativo de Android (Expo prebuild)
+        run: npx expo prebuild --platform android --no-install
+
+      # La plantilla de Expo firma la variante release con la clave de depuración: el .apk se instala tal cual
+      - name: Compilar el APK (release)
+        working-directory: apps/mobile/android
+        run: ./gradlew assembleRelease --no-daemon
+
+      - name: Nombrar el APK
+        run: |
+          v=$(node -p "require('./app.json').expo.version")
+          mkdir -p "$RUNNER_TEMP/out"
+          cp android/app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/out/Scratch-Tribology-Simulator_${v}_android.apk"
+
+      - name: Firmar con tu clave (si has dado los secretos)
+        if: env.ANDROID_KEYSTORE_BASE64 != ''
+        run: |
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
+          bt=$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n1)
+          for apk in "$RUNNER_TEMP"/out/*.apk; do
+            "$bt/apksigner" sign --ks "$RUNNER_TEMP/release.jks" --ks-pass env:ANDROID_KEYSTORE_PASSWORD \
+              --ks-key-alias "$ANDROID_KEY_ALIAS" --key-pass env:ANDROID_KEY_PASSWORD "$apk"
+            "$bt/apksigner" verify "$apk"
+          done
+          rm -f "$RUNNER_TEMP/release.jks"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: android-apk
+          path: ${{ runner.temp }}/out/*.apk
+
+      - name: Subir a la Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_ID: ${{ needs.draft.outputs.id }}
+        # Si se relanza la misma etiqueta, sustituye el archivo anterior (como hace tauri-action en escritorio)
+        run: |
+          for f in "$RUNNER_TEMP"/out/*.apk; do
+            name=$(basename "$f")
+            old=$(gh api "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID/assets" --paginate --jq ".[] | select(.name == \"$name\") | .id")
+            if [ -n "$old" ]; then gh api --method DELETE "repos/$GITHUB_REPOSITORY/releases/assets/$old"; fi
+            gh api --method POST -H "Content-Type: application/vnd.android.package-archive" \
+              "https://uploads.github.com/repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID/assets?name=$name" \
+              --input "$f" --jq .browser_download_url
+          done
+
+  ios:
+    name: iPhone · IPA sin firmar
+    needs: draft
+    if: ${{ !failure() && !cancelled() }}
+    # macOS 15 con Xcode 16.4: React Native 0.76.9 (Expo SDK 52) compila con Xcode 16.3 o posterior
+    runs-on: macos-15
+    defaults:
+      run:
+        working-directory: apps/mobile
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - name: Xcode 16.4
+        run: |
+          sudo xcode-select -s /Applications/Xcode_16.4.app
+          xcodebuild -version
+
+      - name: Dependencias de la app móvil
+        run: npm install --no-audit --no-fund
+
+      - name: Proyecto nativo de iOS (Expo prebuild + CocoaPods)
+        run: |
+          npx expo prebuild --platform ios --no-install
+          cd ios && pod install
+
+      # Sin certificado de Apple la app no se puede firmar: se compila sin firma y se empaqueta como .ipa.
+      # AltStore o Sideloadly la firman con tu Apple ID al instalarla (con cuenta gratuita, dura 7 días).
+      - name: Compilar (Release, sin firmar)
+        working-directory: apps/mobile/ios
+        run: |
+          xcodebuild -quiet -workspace ScratchTribologySimulator.xcworkspace -scheme ScratchTribologySimulator \
+            -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/STS.xcarchive" \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            archive
+
+      - name: Empaquetar el .ipa
+        run: |
+          v=$(node -p "require('./app.json').expo.version")
+          mkdir -p "$RUNNER_TEMP/ipa/Payload" "$RUNNER_TEMP/out"
+          cp -R "$RUNNER_TEMP"/STS.xcarchive/Products/Applications/*.app "$RUNNER_TEMP/ipa/Payload/"
+          (cd "$RUNNER_TEMP/ipa" && zip -qry "$RUNNER_TEMP/out/Scratch-Tribology-Simulator_${v}_ios-unsigned.ipa" Payload)
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ios-ipa
+          path: ${{ runner.temp }}/out/*.ipa
+
+      - name: Subir a la Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_ID: ${{ needs.draft.outputs.id }}
+        # Si se relanza la misma etiqueta, sustituye el archivo anterior (como hace tauri-action en escritorio)
+        run: |
+          for f in "$RUNNER_TEMP"/out/*.ipa; do
+            name=$(basename "$f")
+            old=$(gh api "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID/assets" --paginate --jq ".[] | select(.name == \"$name\") | .id")
+            if [ -n "$old" ]; then gh api --method DELETE "repos/$GITHUB_REPOSITORY/releases/assets/$old"; fi
+            gh api --method POST -H "Content-Type: application/octet-stream" \
+              "https://uploads.github.com/repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID/assets?name=$name" \
+              --input "$f" --jq .browser_download_url
+          done
+
+  publish:
+    name: Publicar la Release
+    needs: [draft, desktop, android, ios]
+    if: ${{ success() && startsWith(github.ref, 'refs/tags/v') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Quitar el borrador
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_ID: ${{ needs.draft.outputs.id }}
+        run: gh api --method PATCH "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID" -F draft=false --jq .html_url

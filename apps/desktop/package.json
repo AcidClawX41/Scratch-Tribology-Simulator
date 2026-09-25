@@ -1,0 +1,26 @@
+{
+  "name": "@sts/desktop",
+  "private": true,
+  "version": "1.0.0",
+  "license": "MIT",
+  "author": "Eric Valls Gramunt",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "node scripts/check-csp.mjs && vite build",
+    "preview": "vite preview",
+    "tauri": "tauri"
+  },
+  "dependencies": {
+    "@sts/core": "*",
+    "@fontsource/space-mono": "^5.1.0",
+    "@fontsource/syne": "^5.1.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.1.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "vite": "^6.0.0"
+  }
+}

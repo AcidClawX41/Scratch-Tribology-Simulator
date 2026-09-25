@@ -1,0 +1,32 @@
+# dependencias y cachés
+node_modules/
+.cache/
+.tmp/
+
+# builds
+dist/
+apps/desktop/src-tauri/target/
+apps/desktop/src-tauri/gen/
+
+# Expo / React Native (se regeneran con `expo prebuild`)
+apps/mobile/.expo/
+apps/mobile/ios/
+apps/mobile/android/
+apps/mobile/web-build/
+
+# sistema y editores
+.DS_Store
+Thumbs.db
+*.log
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# secretos
+.env
+.env.*
+!.env.example
+
+# configuración local del entorno de desarrollo (no se publica)
+/CLAUDE.md
+/.claude/

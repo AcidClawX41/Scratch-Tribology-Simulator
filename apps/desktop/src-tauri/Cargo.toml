@@ -1,0 +1,21 @@
+[package]
+name = "scratch-tribology-simulator"
+version = "1.0.0"
+description = "Scratch Tribology Simulator · banco de tribología de uñas, garras y colmillos"
+authors = ["Eric Valls Gramunt"]
+license = "MIT"
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-window-state = "2"
+
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+panic = "abort"
+strip = true

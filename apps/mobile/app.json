@@ -1,0 +1,42 @@
+{
+  "expo": {
+    "name": "Scratch Tribology Simulator",
+    "slug": "scratch-tribology-simulator",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "scratchtribology",
+    "userInterfaceStyle": "dark",
+    "icon": "./assets/icon.png",
+    "backgroundColor": "#170E1C",
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.acidclawx41.scratchtribology",
+      "buildNumber": "1",
+      "infoPlist": {
+        "UIViewControllerBasedStatusBarAppearance": false,
+        "NSHumanReadableCopyright": "© 2026 Eric Valls Gramunt · MIT License"
+      }
+    },
+    "android": {
+      "package": "com.acidclawx41.scratchtribology",
+      "versionCode": 1,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#170E1C"
+      }
+    },
+    "plugins": [
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/adaptive-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#170E1C"
+        }
+      ]
+    ]
+  }
+}
