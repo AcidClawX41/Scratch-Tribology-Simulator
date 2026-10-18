@@ -100,6 +100,15 @@ español. El programa es gratuito, no tiene anuncios, no recoge datos y no neces
   y soldadura fuerte de plata, con su propio tutorial). Lo que es fantasía va marcado como ficción. El resultado se puede
   probar en el banco, en el coche y en la clínica de cetrería.
 
+<p align="center">
+  <img src="docs/media/readme/claw-lab-bench.gif" width="760" alt="El banco de garras de la 2.0 con cinco ensayos: garra de tigre contra un coche moderno, colmillo de víbora en la piel, zarpazo de oso contra un coche, garra de tigre de diamante sobre una ventanilla templada y colmillo de víbora sobre cobre">
+</p>
+<p align="center"><sub><b>El banco de garras de la 2.0, cinco ensayos seguidos.</b> Una garra de tigre raya un coche
+moderno hasta el metal (abolladura de ~0,23 mm, riesgo de óxido) · un colmillo de víbora perfora la piel y deja el
+veneno a ~18 mm, en el músculo · un zarpazo de oso no perfora el coche, pero lo abolla ~2,8 mm · una garra de tigre con
+punta de diamante apretada contra la ventanilla templada la hace estallar (el truco del martillo de emergencia) · un
+colmillo de víbora sobre cobre solo deja una marca tenue: dureza parecida, 95 HV en su punta de esmalte.</sub></p>
+
 ## Taller industrial
 
 *En desarrollo: buena parte ya funciona, pero algunas partes están por terminar. El programa marca esta sección como

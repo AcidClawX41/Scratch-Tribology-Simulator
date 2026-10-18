@@ -100,6 +100,15 @@ in Spanish. The program is free, has no ads, collects no data and needs no netwo
   brazing, with its own tutorial). Anything that is fantasy is
   marked as fiction. The result can be tried on the bench, on the car and in the falconry clinic.
 
+<p align="center">
+  <img src="docs/media/readme/claw-lab-bench.gif" width="760" alt="The 2.0 claw lab running five trials: tiger claw on a modern car, viper fang into skin, bear strike on a car, diamond tiger claw on a tempered side window and viper fang on copper">
+</p>
+<p align="center"><sub><b>The claw lab in 2.0, five trials in a row.</b> A tiger claw scratches a modern car down to
+the metal (dent ~0.23 mm, rust risk) · a viper fang punctures the skin and leaves the venom at ~18 mm, in the muscle ·
+a bear strike does not pierce the car but dents it ~2.8 mm · a diamond-tipped tiger claw pressed on the tempered side
+window shatters it (the emergency-hammer trick) · a viper fang on copper only leaves a faint mark: similar hardness,
+95 HV at its enamel tip.</sub></p>
+
 ## Industrial workshop
 
 *Work in progress: much of it already works, but some parts are still being finished. The program marks this section

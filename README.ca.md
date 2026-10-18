@@ -99,6 +99,15 @@ castellà. El programa és gratuït, no té anuncis, no recull dades i no necess
   i soldadura forta de plata, amb el seu propi tutorial). El que és fantasia va marcat com a ficció. El resultat es pot
   provar al banc, al cotxe i a la clínica de falconeria.
 
+<p align="center">
+  <img src="docs/media/readme/claw-lab-bench.gif" width="760" alt="El banc d'urpes de la 2.0 amb cinc assajos: urpa de tigre contra un cotxe modern, ullal d'escurçó a la pell, cop d'urpa d'ós contra un cotxe, urpa de tigre de diamant sobre una finestreta temperada i ullal d'escurçó sobre coure">
+</p>
+<p align="center"><sub><b>El banc d'urpes de la 2.0, cinc assajos seguits.</b> Una urpa de tigre ratlla un cotxe modern
+fins al metall (bony d'uns 0,23 mm, risc d'òxid) · un ullal d'escurçó perfora la pell i deixa el verí a uns 18 mm, al
+múscul · un cop d'urpa d'ós no perfora el cotxe, però hi fa un bony d'uns 2,8 mm · una urpa de tigre amb punta de
+diamant premuda contra la finestreta temperada la fa esclatar (el truc del martell d'emergència) · un ullal d'escurçó
+sobre coure només hi deixa una marca tènue: duresa semblant, 95 HV a la seva punta d'esmalt.</sub></p>
+
 ## Taller industrial
 
 *En desenvolupament: bona part ja funciona, però algunes parts estan per acabar. El programa marca aquesta secció com a
