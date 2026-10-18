@@ -1,5 +1,7 @@
 <div align="center">
 
+**English** · [Español](README.es.md) · [Català](README.ca.md)
+
 ![Tribology Simulator & Industrial Workshop 2.0](docs/media/readme/banner.png)
 
 # Tribology Simulator & Industrial Workshop
@@ -46,6 +48,7 @@ in Spanish. The program is free, has no ads, collects no data and needs no netwo
 
 - [Biological tribology](#biological-tribology)
 - [Industrial workshop](#industrial-workshop)
+- [For vocational training students and teachers](#for-vocational-training-students-and-teachers)
 - [Screenshots](#screenshots)
 - [The physics: models and equations](#the-physics-models-and-equations)
 - [Materials, tissues and tools](#materials-tissues-and-tools)
@@ -116,6 +119,44 @@ in Spanish. The program is free, has no ads, collects no data and needs no netwo
 - **Angle grinder against car panels,** as used in fire-brigade rescues. Six discs and four body panels, with a cut
   cleanliness from 0 (clean) to 10 (dirty), kerf, burr, heat tint, burnt paint and spark colours (US Army TC 9-237).
   It is educational, not a rescue procedure.
+
+---
+
+## For vocational training students and teachers
+
+The program was born in a vocational training (FP) classroom: the lathe simulators of the *Técnico Superior en Diseño
+en Fabricación Mecánica* course inspired the workshop. It is built to be used in class:
+
+- **Free, offline and private.** No accounts, no ads, no data collected and no network connection, so it can be
+  installed on school computers (Windows, Linux, macOS) and on students' own phones (Android, iPhone).
+- **In Spanish, with the sources in sight.** Every value on screen shows where it comes from, and what is an estimate
+  or a game rule says so. Students learn to read a result critically, not just to accept it.
+- **Mechanical manufacturing courses** (*Mecanizado*, *Programación de la Producción en Fabricación Mecánica*,
+  *Diseño en Fabricación Mecánica*):
+  - programming a CNC lathe in the Fagor 8055 T dialect, with errors reported by block number, roughing cycles,
+    tool radius compensation, threading and subroutines;
+  - cutting data (*v<sub>c</sub>*, *n*, *f*, *a<sub>p</sub>*), Kienzle forces, cutting power and the roughness left by
+    the feed;
+  - inspecting the finished part against an ISO 286 / ISO 2768 drawing, with a mark out of 10;
+  - sharpening angles for knives, drills and end mills, grinding-wheel speed limits (EN 12413) and the colours of
+    overheating.
+- **Materials, physics and biology classes:** hardness and the Mohs scale, Hertz contact, why a sharp tip goes deeper
+  than a strong one, wear, why glass breaks without being scratched, skin layers, and a car's paint and panels.
+
+**Ideas for activities**
+
+1. *Predict, then test:* before pressing «ARAÑAR», each student writes down what will happen and why; then they
+   compare with the verdict and the cited formula.
+2. *Check it by hand:* take one result (a pressure, a cutting power, a wheel speed) and recompute it with the
+   equation from the table below.
+3. *Find the error:* give a Fagor program with a mistake and let the simulator's alarms guide the fix before
+   running it on a real machine.
+4. *Compare materials:* the same tool in steel, tungsten carbide, sapphire and diamond against the same target, and
+   explain the differences with the hardness ratio.
+
+It is an educational model: it does not replace safety training or practice on a real machine, and the workshop is
+still marked as work in progress. The code is open (MIT), so teachers can adapt it. Suggestions and errors are welcome
+on [GitHub Issues](https://github.com/AcidClawX41/Scratch-Tribology-Simulator/issues).
 
 ---
 
@@ -269,8 +310,6 @@ in [`docs/FISICA.md`](docs/FISICA.md).
 
 ---
 
----
-
 ## Materials, tissues and tools
 
 ### Human skin, layer by layer
@@ -340,8 +379,6 @@ stiletto 0.15 mm² · 22°, Stiletto XL 0.08 mm² · 16° (free edge 4–12 mm).
 E 2.9 GPa (nanoindentation, Tohmyoh et al. 2023).
 
 </details>
-
----
 
 ---
 
