@@ -38,7 +38,17 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh     # Rust en tu 
 
 Es la lista oficial de requisitos de Tauri 2 para Debian/Ubuntu. Node 24 (el de `.nvmrc`), mejor
 con `nvm` o `fnm` que con el paquete de la distribución. Para empaquetar el `.AppImage` hacen falta
-además `patchelf` y `xdg-utils` (la CI de GitHub ya los instala).
+además `patchelf`, `xdg-utils` y los plugins de GStreamer que lleva dentro para el sonido (la CI de
+GitHub ya lo instala todo):
+
+```bash
+sudo apt install -y patchelf xdg-utils gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-alsa
+```
+
+En Fedora y otras distribuciones con `lib64`, el empaquetado del AppImage no encuentra los plugins por sí
+solo: `GSTREAMER_PLUGINS_DIR=/usr/lib64/gstreamer-1.0 GSTREAMER_HELPERS_DIR=/usr/libexec/gstreamer-1.0 npm run tauri build`,
+o sin AppImage, `npm run tauri build -- --bundles deb,rpm`. Detalles en
+[`docs/AUDIO-NATIVO.md`](../../docs/AUDIO-NATIVO.md).
 
 **GPU NVIDIA en Linux.** Con el driver propietario, WebKitGTK puede dejar la ventana en blanco o
 parpadeando por su renderizador DMA-BUF. La app lo detecta (`/proc/driver/nvidia/version`) y solo
@@ -93,17 +103,21 @@ máquina, usa GitHub Actions (abajo).
 
 ## Compilación automática en GitHub
 
-`.github/workflows/release.yml`: al subir un tag `v*` (el mismo número que `package.json`), GitHub
-Actions compila macOS (Apple Silicon e Intel), Windows y Linux, además del APK de Android y el IPA
-de iPhone, los sube a un borrador de Release y lo publica cuando todo ha compilado:
+`.github/workflows/release.yml`: al subir un tag `v1*` (el mismo número que `package.json`; los `v2*` son
+de la V2 en Godot), GitHub Actions compila macOS (Apple Silicon e Intel), Windows y Linux, además del APK
+de Android y el IPA de iPhone, los sube a un borrador de Release y lo publica cuando todo ha compilado:
 
 ```bash
-git tag v1.0.0 && git push origin v1.0.0
+git tag v1.0.1 && git push origin v1.0.1
 ```
 
 «Run workflow» (a mano, en la pestaña Actions) compila lo mismo sin publicar nada: los archivos
 quedan como artefactos del workflow. En cada push a `main` y en cada pull request, la CI pasa los
 tests, compila el frontend, revisa la app móvil y compila el shell nativo con `rustfmt` y `clippy`.
+
+Linux se compila dentro de un contenedor `ubuntu:22.04` (en el ejecutor `ubuntu-latest`, porque GitHub
+retira el `ubuntu-22.04` el 17-04-2027): así el `.deb`, el `.rpm` y el AppImage siguen pidiendo glibc 2.35 y
+funcionan desde Ubuntu 22.04 y Debian 12. Detalles en [`docs/AUDIO-NATIVO.md`](../../docs/AUDIO-NATIVO.md).
 
 ---
 
@@ -171,9 +185,46 @@ falla si alguien vuelve a generar un `<style>` (`scripts/check-csp.mjs`).
   Se bloquean las teclas de navegador que no pintan nada en una app (recargar, imprimir) y el menú
   contextual fuera de los campos de texto.
 - **Windows 11:** barras de desplazamiento superpuestas (Fluent) con WebView2 ≥ 125.
-- **Linux:** paquetes .deb (sección *education*), .rpm y .AppImage, y el arreglo para NVIDIA.
+- **Linux:** paquetes .deb (sección *education*), .rpm y .AppImage, el arreglo para NVIDIA y, en el
+  AppImage, un registro de GStreamer propio que no pisa el del sistema.
 - **Sonido:** Web Audio del propio WebView (WebKit, WebView2, WebKitGTK); el botón de silencio se
-  recuerda en cada equipo.
+  recuerda en cada equipo. En Linux, WebKitGTK suena por GStreamer: el AppImage lleva sus plugins
+  dentro y el .deb y el .rpm los piden al instalarse ([`docs/AUDIO-NATIVO.md`](../../docs/AUDIO-NATIVO.md)).
+
+## Novedades de la 1.0.1
+
+- **Sonido en Linux.** El AppImage 1.0.0 no sonaba en ninguna distribución: su lanzador mandaba a GStreamer a una
+  carpeta de plugins que no existía. El AppImage lleva ahora solo los plugins del Web Audio, el `.deb` exige los del
+  sistema y el `.rpm` los recomienda. Detalle en [`docs/AUDIO-NATIVO.md`](../../docs/AUDIO-NATIVO.md).
+- **Licencias:** la Release incluye la lista de bibliotecas del AppImage con sus versiones exactas.
+- **AppImage con Mesa reciente.** Con Mesa 25 o posterior (Ubuntu 26.04, Fedora 44), el AppImage de Tauri 2.11
+  abría una ventana vacía: WebKit abortaba con `EGL_BAD_PARAMETER` por el `libwayland-client` de Ubuntu 22.04
+  que llevaba dentro (tauri-apps/tauri#15976). La 1.0.1 se empaqueta con el linuxdeploy de Tauri 2.12, que lo
+  deja fuera. Probado sin GPU; falta probarlo con una GPU de verdad (ver abajo).
+- **Release:** Linux se compila en un contenedor `ubuntu:22.04`, con la misma glibc que la 1.0.0.
+- **Registro de GStreamer propio del AppImage** (`GST_REGISTRY_1_0`): ya no pisa el del sistema.
+
+## Ubuntu 26.04
+
+Mientras el AppImage no se haya probado con una GPU de verdad, lo recomendado en Ubuntu 26.04 es el `.deb`:
+usa el WebKitGTK, el Mesa y el GStreamer del sistema, y apt instala los plugins de sonido que pide.
+
+```bash
+sudo apt install ./Scratch.Tribology.Simulator_1.0.1_amd64.deb    # el nombre con puntos, como lo guarda GitHub
+```
+
+Para probar el AppImage desde una terminal (así se ven los errores):
+
+```bash
+chmod +x Scratch*.AppImage
+./Scratch*.AppImage                       # si la ventana sale vacía y pone EGL_BAD_PARAMETER, usa el .deb
+./Scratch*.AppImage --appimage-extract-and-run    # si dice que falta FUSE
+```
+
+Con GPU NVIDIA vale lo de arriba («GPU NVIDIA en Linux»): en un equipo con NVIDIA y AMD, la app desactiva el
+renderizador DMA-BUF de WebKit en cuanto ve el driver de NVIDIA; si la pantalla la mueve la AMD, prueba también
+con `STS_KEEP_DMABUF=1`. Detalles en [`docs/AUDIO-NATIVO.md`](../../docs/AUDIO-NATIVO.md), «AppImage y Mesa 25
+o posterior».
 
 ## Qué incluye la 1.0.0
 

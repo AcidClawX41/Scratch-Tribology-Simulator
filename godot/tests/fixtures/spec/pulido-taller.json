@@ -1,0 +1,230 @@
+[
+  {
+    "id": "corte.kc_42crmo4_tabellenbuch",
+    "input": { "fn": "Cutting.specific_cutting_force", "args": { "kc11": 2500, "mc": 0.26, "h_mm": 0.2, "gamma_deg": 18, "gamma0_deg": 6, "tool_factor": 1.0, "wear_factor": 1.2 } },
+    "expect": { "kc": { "value": 4011, "tol": 0.001 }, "Kgamma": { "value": 0.88, "tol": 1e-9 }, "k": { "value": 3799, "tol": 0.00015 } },
+    "source": "Tabellenbuch Zerspantechnik (2015), p. 208: 42CrMo4, h = 0,2 mm, γ = 18°, metal duro, desgaste ligero → kc = 4011 N/mm²"
+  },
+  {
+    "id": "corte.potencia_8_4_kw",
+    "input": { "fn": "Cutting.cutting_power_kw", "args": { "fc_n": 2800, "vc": 180 } },
+    "expect": { "pc_kw": { "value": 8.4, "tol": 1e-9 } },
+    "source": "Tabellenbuch Zerspantechnik (2015), p. 212: Pc = Fc·vc = 2800 N · 180 m/min = 8400 W"
+  },
+  {
+    "id": "corte.torneado_42crmo4_desde_el_catalogo",
+    "input": { "fn": "Cutting.turning", "args": { "work_id": "c42crmo4", "tool_id": "hm", "d_mm": 50, "vc": 180, "f_mm_rev": 0.2, "ap_mm": 2, "gamma_deg": 18, "wear": "ligero" } },
+    "expect": { "kc": { "value": 4011, "tol": 0.001 }, "h_mm": { "value": 0.2, "tol": 1e-9 }, "a_mm2": { "value": 0.4, "tol": 1e-9 }, "pc_kw": { "value": 4.8142, "tol": 0.001 }, "quality": { "value": "primary" } },
+    "source": "Tabellenbuch Zerspantechnik (2015), p. 208 (kc) y p. 212 (Pc = Fc·vc con Fc = kc·ap·f)"
+  },
+  {
+    "id": "corte.rugosidad_teorica",
+    "input": { "fn": "Cutting.turning", "args": { "work_id": "c45e", "tool_id": "hm", "d_mm": 50, "vc": 150, "f_mm_rev": 0.2, "ap_mm": 2, "nose_r_mm": 0.8 } },
+    "expect": { "rt_um": { "value": 6.25, "tol": 1e-9 }, "ra_um": { "value": 1.60375, "tol": 0.0001 } },
+    "source": "Geometría de la huella del radio de punta: Rt = f²/(8·rε), Ra = f²/(18·√3·rε) (cota ideal, filo nuevo)"
+  },
+  {
+    "id": "corte.modelo_del_torno_42crmo4",
+    "input": { "fn": "Cutting.cutting_model", "args": { "work_id": "c42crmo4", "tool_id": "hm", "h_mm": 0.2, "b_mm": 2.0, "vc": 180 } },
+    "expect": { "kc": { "value": 3799, "tol": 0.00015 }, "fc_n": { "value": 1519.6, "tol": 0.00015 }, "ok": { "value": true }, "vc_ok": { "value": true }, "quality": { "value": "primary" } },
+    "source": "Tabellenbuch Zerspantechnik (2015), p. 209: 42CrMo4 a h = 0,2 mm, 3799 N/mm² (filo nuevo, γ0, torneado exterior); Fc = kc·b·h"
+  },
+  {
+    "id": "corte.modelo_del_torno_sin_kc",
+    "input": { "fn": "Cutting.cutting_model", "args": { "work_id": "vidrio", "tool_id": "hm", "h_mm": 0.2, "b_mm": 2.0, "vc": 180 } },
+    "expect": { "ok": { "value": false }, "kc": { "value": 0 }, "fc_n": { "value": 0 } },
+    "source": "CONTRATOS.md, modelo de corte inyectado: sin datos de fuerza, ok = false, fuerzas 0 finitas y motivo (work_materials.gd, kc_reason)"
+  },
+  {
+    "id": "corte.fresado_sandvik_27_kw",
+    "input": { "fn": "Cutting.milling", "args": { "work_id": "", "tool_id": "hm_coated", "dc_mm": 125, "z": 8, "ap_mm": 5, "ae_mm": 100, "fz_mm": 0.2, "vf_mm_min": 1000, "kappa_deg": 45, "centered": true, "kc_n_mm2": 2592, "gamma0_deg": 0, "gamma_deg": 0, "kc_quality": "primary", "machine": { "eta": 0.8 } } },
+    "expect": { "pmotor_kw": { "value": 27.0, "tol": 1e-9 }, "pc_kw": { "value": 21.6, "tol": 1e-9 }, "rpm": { "value": 625, "tol": 1e-9 }, "q_cm3_min": { "value": 500, "tol": 1e-9 } },
+    "source": "Sandvik Coromant, Metalcutting Technical Guide (D) Milling (2005), p. D25: planeado a 45° de acero CMC 01.3, K = 5,4 con η = 0,8 → 27,0 kW en el motor (kc = 600·0,8·5,4 = 2592 N/mm²)"
+  },
+  {
+    "id": "corte.fresado_sandvik_21_3_kw",
+    "input": { "fn": "Cutting.milling", "args": { "work_id": "", "tool_id": "hm_coated", "dc_mm": 125, "z": 8, "ap_mm": 5, "ae_mm": 100, "fz_mm": 0.2, "vf_mm_min": 1000, "kappa_deg": 45, "centered": true, "kc_n_mm2": 2592, "gamma0_deg": 0, "gamma_deg": 21, "kc_quality": "primary", "machine": { "eta": 0.8 } } },
+    "expect": { "pmotor_kw": { "value": 21.33, "tol": 0.001 }, "kc_parts.Kgamma": { "value": 0.79, "tol": 1e-9 } },
+    "source": "Sandvik Coromant, Metalcutting Technical Guide (D) Milling (2005), p. D25: con +21° de desprendimiento, Mγ = 0,79 → 27,0 × 0,79 = 21,3 kW"
+  },
+  {
+    "id": "corte.fresado_sandvik_planeado_r245",
+    "input": { "fn": "Cutting.milling", "args": { "work_id": "c45e", "tool_id": "hm_coated", "dc_mm": 125, "z": 8, "vc": 283, "fz_mm": 0.24, "ap_mm": 4, "ae_mm": 85, "kappa_deg": 45, "centered": true } },
+    "expect": { "rpm": { "value": 721, "tol": 0.0007 }, "vf_mm_min": { "value": 1384, "tol": 0.0004 }, "hex_mm": { "value": 0.17, "tol": 0.003 } },
+    "source": "Sandvik Coromant, Metalcutting Technical Guide (D) Milling (2005), p. D26: fresa R245-125Q40-12M (zn = 8, κr = 45°), vc = 283 m/min, fz = hex/sen κr = 0,17/sen 45° = 0,24 → n ≈ 721 rpm, vf ≈ 1384 mm/min"
+  },
+  {
+    "id": "corte.fresado_sandvik_seleccion_de_datos",
+    "input": { "fn": "Cutting.milling", "args": { "work_id": "c45e", "tool_id": "hm_coated", "dc_mm": 125, "z": 8, "vc": 262, "fz_mm": 0.24, "ap_mm": 4, "ae_mm": 85, "kappa_deg": 45, "centered": true } },
+    "expect": { "rpm": { "value": 667, "tol": 0.00075 }, "vf_mm_min": { "value": 1281, "tol": 0.0004 } },
+    "source": "Sandvik Coromant, Metalcutting Technical Guide (D) Milling (2005), p. D22: HB 180, vc compensada 0,925 × 283 ≈ 262 m/min → n = 667 rpm, vf = 8 × 667 × 0,24 ≈ 1281 mm/min"
+  },
+  {
+    "id": "corte.fresado_sandvik_ranurado_r390",
+    "input": { "fn": "Cutting.milling", "args": { "work_id": "c45e", "tool_id": "hm_coated", "dc_mm": 63, "z": 5, "vc": 250, "fz_mm": 0.15, "ap_mm": 5, "ae_mm": 50, "kappa_deg": 90, "centered": true } },
+    "expect": { "rpm": { "value": 1263, "tol": 0.0004 }, "vf_mm_min": { "value": 947, "tol": 0.0006 }, "hex_mm": { "value": 0.15, "tol": 1e-9 } },
+    "source": "Sandvik Coromant, Metalcutting Technical Guide (D) Milling (2005), p. D27: fresa R390-063Q22-17M (zn = 5, κr = 90°), vc = 250 m/min, hex = fz = 0,15 → n ≈ 1263 rpm, vf ≈ 947 mm/min"
+  },
+  {
+    "id": "corte.fresado_sandvik_lateral_r390",
+    "input": { "fn": "Cutting.milling", "args": { "work_id": "c45e", "tool_id": "hm_coated", "dc_mm": 63, "z": 5, "vc": 318, "fz_mm": 0.273, "ap_mm": 5, "ae_mm": 5, "kappa_deg": 90, "centered": false } },
+    "expect": { "rpm": { "value": 1607, "tol": 0.0004 }, "vf_mm_min": { "value": 2193, "tol": 0.0003 }, "hex_mm": { "value": 0.15, "tol": 0.02 } },
+    "source": "Sandvik Coromant, Metalcutting Technical Guide (D) Milling (2005), p. D27: planeado lateral con ae = 5 mm, fz = k1·hex = 1,82 × 0,15 → n ≈ 1607 rpm, vf ≈ 2193 mm/min; la geometría exacta da k1 = 1,85, así que hex sale un 1,6 % menor (tolerancia del 2 %)"
+  },
+  {
+    "id": "corte.taladrado_sandvik_d20",
+    "input": { "fn": "Cutting.drilling", "args": { "work_id": "c45e", "tool_id": "hm", "d_mm": 20, "vc": 200, "f_mm_rev": 0.2 } },
+    "expect": { "rpm": { "value": 3184, "tol": 0.0004 }, "q_cm3_min": { "value": 200, "tol": 1e-9 } },
+    "source": "Sandvik Coromant, fórmulas de taladrado (web): Dc 20 mm, vc = 200 m/min → n = 3184 rpm (redondeo hacia arriba); Q = Dc·fn·vc/4"
+  },
+  {
+    "id": "corte.taladrado_caudal_real",
+    "input": { "fn": "Cutting.drilling", "args": { "work_id": "c45e", "tool_id": "hm", "d_mm": 40, "vc": 100, "f_mm_rev": 0.16 } },
+    "expect": { "q_cm3_min": { "value": 160, "tol": 1e-9 } },
+    "source": "Volumen del agujero por minuto π·D²/4·f·n = Dc·fn·vc/4 (Sandvik). El ejemplo del TZ (p. 204, D = 40, f = 0,16, vc = 100) calcula A·vc = 320 cm³/min, el doble: discrepancia documentada en docs/taller/pulido-taller.md"
+  },
+  {
+    "id": "desgaste.vida_en_vct15",
+    "input": { "fn": "Wear.life", "args": { "tool_id": "hm_coated", "work_id": "c45e", "vc": 180 } },
+    "expect": { "life_min": { "value": 15, "tol": 1e-9 }, "n": { "value": 0.25, "tol": 1e-9 } },
+    "source": "Tabellenbuch Zerspantechnik (2015), p. 215: vcT15 y k = −4 (metal duro en acero); vcT15 = centro del intervalo de vc de tool_materials.gd (estimación)"
+  },
+  {
+    "id": "desgaste.fin_de_vida_iso3685",
+    "input": { "fn": "Wear.after", "args": { "t_min": 15, "vc": 180, "tool_id": "hm_coated", "work_id": "c45e" } },
+    "expect": { "vb_mm": { "value": 0.3, "tol": 1e-6 }, "end_of_life": { "value": true }, "stage": { "value": "acelerado" }, "kver": { "value": 1.25, "tol": 1e-6 } },
+    "source": "ISO 3685:1993: VB_B = 0,3 mm; vida T de Taylor hasta ese VB (docs/taller/pulido-taller.md)"
+  },
+  {
+    "id": "desgaste.curva_equeter_rodaje",
+    "input": { "fn": "Wear.vb_at_fraction", "args": { "tau": 0.197415 } },
+    "expect": { "vb_mm": { "value": 0.121, "tol": 0.002 } },
+    "source": "Equeter et al. (2020), Materials Science Forum 986:93, fig. 8: VB_B = 0,121 mm a los 5,01 min (fin del rodaje), con T(0,3 mm) = 25,38 min"
+  },
+  {
+    "id": "desgaste.curva_equeter_estable",
+    "input": { "fn": "Wear.vb_at_fraction", "args": { "tau": 0.812909 } },
+    "expect": { "vb_mm": { "value": 0.201, "tol": 0.002 } },
+    "source": "Equeter et al. (2020), Materials Science Forum 986:93, fig. 8: VB_B = 0,201 mm a los 20,63 min"
+  },
+  {
+    "id": "desgaste.efectos_en_el_fin_de_vida",
+    "input": { "fn": "Wear.effects", "args": { "vb_mm": 0.3 } },
+    "expect": { "kver": { "value": 1.25, "tol": 1e-9 }, "ra_factor": { "value": 1.29536, "tol": 1e-5 }, "end_of_life": { "value": true }, "end_of_life_max": { "value": false } },
+    "source": "Kver: Tabellenbuch (2015), p. 208 (1,2-1,5) sobre VBzul 0,2-0,8 mm (p. 214) (estimación); Ra: Equeter et al. (2020), fig. 10, Ra = 2,716 + 2,674·VB µm"
+  },
+  {
+    "id": "desgaste.kver_extremos_del_tabellenbuch",
+    "input": { "fn": "Wear.effects", "args": { "vb_mm": 0.8 } },
+    "expect": { "kver": { "value": 1.5, "tol": 1e-9 }, "end_of_life_max": { "value": true } },
+    "source": "Tabellenbuch Zerspantechnik (2015): Kver = 1,5 (máximo, p. 208) con VBzul = 0,8 mm (máximo, p. 214); ISO 3685: VB_Bmax = 0,6 mm"
+  },
+  {
+    "id": "desgaste.caso_medido_fuerzas",
+    "input": { "fn": "Wear.effects", "args": { "vb_mm": 0.684 } },
+    "expect": { "kver_band.0": { "value": 1.101916, "tol": 1e-6 }, "ff_factor": { "value": 1.472644, "tol": 1e-6 }, "fp_factor": { "value": 1.113544, "tol": 1e-6 } },
+    "source": "Equeter L. (2019), ASM MS&T, AISI 1045: Fc +9 %, Ff +40 %, Fp +10 % del primer (VB 0,075 mm) al último pase (VB 0,684 mm); modelo lineal en VB (ancla del modelo)"
+  },
+  {
+    "id": "viruta.favorable_c45_200",
+    "input": { "fn": "Chips.chip_breaking", "args": { "work_id": "c45e", "f_mm": 0.3, "ap_mm": 3, "vc": 200 } },
+    "expect": { "zone": { "value": "favorable" }, "surface_ok": { "value": true }, "form": { "value": "rizada" }, "chip_ratio_min": { "value": 25 }, "quality": { "value": "secondary" } },
+    "source": "Tabellenbuch Zerspantechnik (2015), p. 204 (Spanformdiagramm del C45 a vc = 200 m/min) y p. 203 (Spanraumzahl de la viruta helicoidal corta ≥ 25)"
+  },
+  {
+    "id": "viruta.favorable_sin_criterio_de_superficie",
+    "input": { "fn": "Chips.chip_breaking", "args": { "work_id": "c45e", "f_mm": 0.5, "ap_mm": 5, "vc": 200 } },
+    "expect": { "zone": { "value": "favorable" }, "surface_ok": { "value": false } },
+    "source": "Tabellenbuch Zerspantechnik (2015), p. 204: ap = 5 mm y f = 0,5 mm, dentro del criterio de rotura y fuera del de superficie"
+  },
+  {
+    "id": "viruta.larga_por_avance_bajo",
+    "input": { "fn": "Chips.chip_breaking", "args": { "work_id": "c45e", "f_mm": 0.1, "ap_mm": 3, "vc": 200 } },
+    "expect": { "zone": { "value": "viruta_larga" }, "form": { "value": "espiral" }, "tz_form": { "value": "enredada" }, "chip_ratio_min": { "value": 90 } },
+    "source": "Tabellenbuch Zerspantechnik (2015), p. 204: por debajo del borde inferior (f ≈ 0,16 mm a ap = 3 mm) la viruta no rompe; p. 203: viruta enredada, desfavorable, Spanraumzahl ≥ 90"
+  },
+  {
+    "id": "viruta.fuera_del_diagrama",
+    "input": { "fn": "Chips.chip_breaking", "args": { "work_id": "c45e", "f_mm": 0.4, "ap_mm": 7, "vc": 200 } },
+    "expect": { "zone": { "value": "fuera_del_diagrama" } },
+    "source": "Tabellenbuch Zerspantechnik (2015), p. 204: el diagrama llega a ap = 6 mm y f ≈ 0,7 mm"
+  },
+  {
+    "id": "viruta.aluminio_sin_diagrama",
+    "input": { "fn": "Chips.chip_breaking", "args": { "work_id": "al6082_t6", "f_mm": 0.2, "ap_mm": 2, "vc": 400 } },
+    "expect": { "zone": { "value": "sin_datos" }, "form": { "value": "espiral" } },
+    "source": "El TZ solo da el diagrama del C45; el aluminio de forja da viruta larga (Sandvik Coromant, Training Handbook, ISO N)"
+  },
+  {
+    "id": "viruta.filo_recrecido_inox_60",
+    "input": { "fn": "Chips.bue_risk", "args": { "work_id": "x5crni18_10", "tool_id": "hm", "vc": 60 } },
+    "expect": { "risk": { "value": true }, "vc_limit": { "value": 60, "tol": 1e-9 } },
+    "source": "Ahmed et al. (2017), Materials 10:1230, doi:10.3390/ma10111230: AISI 304 con metal duro sin recubrir, filo recrecido provocado a vc = 60 m/min; Sandvik Coromant: la vc baja lo favorece"
+  },
+  {
+    "id": "viruta.sin_filo_recrecido_acero_150",
+    "input": { "fn": "Chips.bue_risk", "args": { "work_id": "c45e", "tool_id": "hm", "vc": 150 } },
+    "expect": { "risk": { "value": false }, "vc_limit": { "value": 60, "tol": 1e-9 } },
+    "source": "Tabellenbuch Zerspantechnik (2015), p. 208: metal duro en acero, 60-300 m/min; por encima del mínimo, sin aviso (umbral: estimación)"
+  },
+  {
+    "id": "radial.disco_fino_marcado_12200",
+    "input": { "fn": "Radial.disc_check", "args": { "diameter_mm": 125, "rpm": 12240, "disc_id": "fino_1mm" } },
+    "expect": { "over_speed": { "value": true }, "limit_rpm": { "value": 12200, "tol": 1e-9 }, "disc_rpm": { "value": 12200, "tol": 1e-9 } },
+    "source": "PFERD, Werkzeughandbuch 23: EHT 125-1,0 SG STEELOX marcado a 12.200 rpm (manda lo marcado en el disco)"
+  },
+  {
+    "id": "radial.disco_cbn_50_ms",
+    "input": { "fn": "Radial.disc_check", "args": { "diameter_mm": 125, "rpm": 11000, "disc_id": "cbn_1mm" } },
+    "expect": { "over_speed": { "value": true }, "limit_rpm": { "value": 7639.437, "tol": 1e-6 }, "marked_rpm": { "value": null } },
+    "source": "Tyrolit, disco de CBN 1A1R 125 × 1 × 20, 50 m/s (ficha de SKS): n = 60.000·50/(π·125); norma EN 13236, sin tabla de EN 12413"
+  },
+  {
+    "id": "radial.surco_del_disco_fino",
+    "input": { "fn": "Radial.cut_panel", "args": { "disc_id": "fino_1mm", "diameter_mm": 125, "rpm": 11000, "angle_deg": 0, "feed_mm_s": 0, "panel_id": "acero-dulce", "cut_length_mm": 100 } },
+    "expect": { "kerf_mm": { "value": 1.4, "tol": 1e-9 }, "kerf_band_mm.0": { "value": 1.3, "tol": 1e-9 }, "kerf_band_mm.1": { "value": 1.8, "tol": 1e-9 } },
+    "source": "Awan et al. (2022), Sensors 22:7152 (1 mm → 1,3-1,5 mm) y Awan et al. (2021), Adv. Manuf. 10:260 (1 mm → 1,8 mm)"
+  },
+  {
+    "id": "radial.energia_del_acero_y_su_banda",
+    "input": { "fn": "Radial.cut_off", "args": { "disc_id": "fino_1mm", "diameter_mm": 125, "rpm": 11000, "work_kind": "acero", "thickness_mm": 3, "feed_mm_s": 5 } },
+    "expect": { "q_mm3_s": { "value": 21, "tol": 1e-9 }, "specific_energy_j_mm3": { "min": 20, "max": 30 }, "specific_energy_band_j_mm3.0": { "value": 17.471429, "tol": 1e-5 }, "specific_energy_band_j_mm3.1": { "value": 46.683333, "tol": 1e-5 } },
+    "source": "Rowe et al. (2003): ~25 J/mm³ típico en acero; banda con Awan et al. (2021), Adv. Manuf. 10:260, tabla 3: C45K 4,16 + 279,54/Q y S235JR 37,5 + 192,85/Q J/mm³"
+  },
+  {
+    "id": "radial.chispas_del_acero_dulce",
+    "input": { "fn": "Radial.cut_panel", "args": { "disc_id": "fino_1mm", "diameter_mm": 125, "rpm": 11000, "angle_deg": 0, "feed_mm_s": 0, "panel_id": "acero-dulce", "cut_length_mm": 100 } },
+    "expect": { "sparks.length_mm": { "value": 2309, "tol": 0.005 }, "sparks.color_name": { "value": "amarillo anaranjado" }, "sparks.color_end_name": { "value": "blanco" }, "sparks.bursts_name": { "value": "pocas, en horquilla" }, "sparks.rate": { "min": 1000, "max": 10000 } },
+    "source": "TC 9-237 (1993), tabla 7-5 y §7-3 (AISI 1020: 70 in, amarillo-naranja → blanco, pocos estallidos en horquilla), a 72 m/s con el arrastre de sparks.gd (longitud: estimación)"
+  },
+  {
+    "id": "radial.aluminio_sin_chispas",
+    "input": { "fn": "Radial.cut_panel", "args": { "disc_id": "corte_alu", "diameter_mm": 125, "rpm": 11000, "angle_deg": 0, "feed_mm_s": 0, "panel_id": "aluminio", "cut_length_mm": 100 } },
+    "expect": { "sparks.rate": { "value": 0 }, "sparks.length_mm": { "value": 0 }, "q_mm3_s": { "min": 1 } },
+    "source": "TC 9-237 (1993), tabla 7-5, fila 15: el aluminio no da haz de chispas"
+  },
+  {
+    "id": "radial.disco_de_laminas_no_tronza",
+    "input": { "fn": "Radial.cut_panel", "args": { "disc_id": "laminas", "diameter_mm": 125, "rpm": 11000, "angle_deg": 0, "feed_mm_s": 0, "panel_id": "acero-dulce", "cut_length_mm": 100 } },
+    "expect": { "q_mm3_s": { "value": 0 }, "kerf_mm": { "value": 0 }, "sparks.rate": { "value": 0 } },
+    "source": "PFERD: POLIFAN PFF, desbaste de superficie con 0-15° de ángulo de contacto (Tool Manual 26, cat. 6, p. 23); no es un disco de tronzar (EN 62841-2-3)"
+  },
+  {
+    "id": "radial.metal_duro_en_aluminio",
+    "input": { "fn": "Radial.cut_panel", "args": { "disc_id": "metal_duro", "diameter_mm": 125, "rpm": 12000, "angle_deg": 0, "feed_mm_s": 0, "panel_id": "aluminio", "cut_length_mm": 100 } },
+    "expect": { "q_mm3_s": { "min": 1 }, "disc_loading": { "max": 0.4 }, "kerf_mm": { "value": 2.305, "tol": 1e-9 } },
+    "source": "PFERD DS Multi Power Carbide (Tool Manual 26, cat. 5, p. 23): borde de 0,075 in (1,905 mm) para no férricos y plásticos; + 0,4 mm de holgura del surco (estimación)"
+  },
+  {
+    "id": "radial.cbn_por_debajo_de_50_ms",
+    "input": { "fn": "Radial.cut_panel", "args": { "disc_id": "cbn_1mm", "diameter_mm": 125, "rpm": 7000, "angle_deg": 0, "feed_mm_s": 0, "panel_id": "boro-22mnb5", "cut_length_mm": 100 } },
+    "expect": { "over_speed": { "value": false }, "q_mm3_s": { "min": 1 } },
+    "source": "Tyrolit, CBN 1A1R de 50 m/s: a 7000 rpm con Ø125 el borde va a 45,8 m/s"
+  },
+  {
+    "id": "chispas.longitud_de_la_tabla",
+    "input": { "fn": "Sparks.stream_for", "args": { "material_id": "acero-dulce", "vs_ms": 35 } },
+    "expect": { "length_mm": { "value": 1778, "tol": 1e-9 }, "color_end_name": { "value": "blanco" }, "volume": { "value": 1 } },
+    "source": "TC 9-237 (1993), tabla 7-5, fila 2 (AISI 1020): 70 in con la muela del ensayo (35 m/s en sparks.gd, estimación)"
+  }
+]

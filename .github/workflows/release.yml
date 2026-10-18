@@ -17,7 +17,8 @@ name: release
 
 on:
   push:
-    tags: ["v*"]
+    # Solo la 1.x (Tauri y Expo): las etiquetas v2* son de la V2 en Godot (godot-release.yml)
+    tags: ["v1*"]
   workflow_dispatch:
 
 permissions:
@@ -81,19 +82,57 @@ jobs:
           - name: Windows
             platform: windows-latest
             args: ""
-          # Linux: la versión más antigua soportada fija la glibc mínima de los binarios
+          # Linux: la versión más antigua soportada fija la glibc mínima de los binarios (2.35) y las bibliotecas del
+          # AppImage. Se compila en un contenedor de Ubuntu 22.04 porque el ejecutor ubuntu-22.04 de GitHub se retira el
+          # 17-04-2027; el ejecutor solo pone Docker (docs/AUDIO-NATIVO.md)
           - name: Linux
-            platform: ubuntu-22.04
+            platform: ubuntu-latest
+            container: ubuntu:22.04
             args: ""
     runs-on: ${{ matrix.platform }}
+    # Sin contenedor en macOS y Windows (null)
+    container: ${{ matrix.container || null }}
     steps:
-      - uses: actions/checkout@v7
+      # El contenedor trae lo mínimo y corre como root (sin sudo): primero lo que el ejecutor de GitHub ya tenía
+      # (git para checkout, curl para rustup, compilador y dpkg-dev, file para linuxdeploy, jq y rpm para comprobar
+      # los paquetes, zstd para las cachés). El sonido de Linux sale por GStreamer: sus plugins se instalan ANTES de
+      # compilar, porque linuxdeploy solo mete en el AppImage los que encuentra aquí (bundleMediaFramework). Son los
+      # que declara el .deb
+      - name: Dependencias de Linux (herramientas, WebKitGTK 4.1 y GStreamer)
+        if: startsWith(matrix.platform, 'ubuntu')
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          apt-get update
+          apt-get install -y ca-certificates curl git build-essential pkg-config file jq rpm zstd
+          apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf xdg-utils
+          apt-get install -y gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-alsa
+          # Al AppImage solo van los plugins del Web Audio (appsrc, clocksync, audioconvert, audioresample,
+          # autoaudiosink), sus salidas (pulsesink, alsasink) y lo que WebKit busca para el multimedia (playbin,
+          # typefind, volume). La carpeta entera son ~110 plugins y arrastra bibliotecas GPL (aasink, cacasink).
+          gst="$RUNNER_TEMP/gst-plugins"
+          mkdir -p "$gst"
+          for p in coreelements app audioconvert audioresample playback typefindfunctions volume autodetect pulseaudio alsa; do
+            cp "/usr/lib/x86_64-linux-gnu/gstreamer-1.0/libgst$p.so" "$gst/"
+          done
+          echo "GSTREAMER_PLUGINS_DIR=$gst" >> "$GITHUB_ENV"
 
-      - name: Dependencias de Linux (WebKitGTK 4.1)
+      # AppImage con Mesa 25 o posterior (tauri-apps/tauri#15976): el linuxdeploy de Tauri 2.11 mete en el AppImage el
+      # libwayland-client de Ubuntu 22.04, al que le faltan funciones que usa el libEGL de Mesa reciente (Ubuntu 26.04,
+      # Fedora 44), y WebKit aborta al arrancar con EGL_BAD_PARAMETER. Tauri 2.12, aún sin publicar, lo arregla con un
+      # linuxdeploy nuevo que la deja fuera. Tauri 2.11 solo descarga el suyo si falta en su caché: se deja allí el
+      # nuevo, verificado (docs/AUDIO-NATIVO.md)
+      - name: linuxdeploy de Tauri 2.12 para el AppImage (tauri#15976)
         if: startsWith(matrix.platform, 'ubuntu')
         run: |
-          sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf xdg-utils
+          tools="${XDG_CACHE_HOME:-$HOME/.cache}/tauri"
+          mkdir -p "$tools"
+          curl -fsSL --retry 3 -o "$tools/linuxdeploy-x86_64.AppImage" \
+            https://github.com/tauri-apps/binary-releases/releases/download/linuxdeploy-07333c6/linuxdeploy-x86_64.AppImage
+          echo "36a2d7e274d12e1050d0e9ecfe11d339ed54720b2bec464c286d53f8b07f5c62  $tools/linuxdeploy-x86_64.AppImage" | sha256sum -c -
+          chmod +x "$tools/linuxdeploy-x86_64.AppImage"
+
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-node@v6
         with:
@@ -119,6 +158,116 @@ jobs:
           args: ${{ matrix.args }}
           releaseId: ${{ needs.draft.outputs.id }}
           uploadWorkflowArtifacts: true
+
+      # Comprueba lo que llevan de verdad los paquetes de Linux; si algo falla, el borrador no se publica.
+      # AppImage: exactamente los plugins elegidos, cada binario de un paquete de Ubuntu y ninguna biblioteca solo GPL;
+      # la lista de paquetes, versiones y licencias va a la Release. .deb y .rpm: lo de tauri.conf.json.
+      # Ver docs/AUDIO-NATIVO.md
+      - name: Comprobar el sonido y las licencias de los paquetes de Linux
+        if: startsWith(matrix.platform, 'ubuntu')
+        run: |
+          bundle="$PWD/apps/desktop/src-tauri/target/release/bundle"
+          conf=apps/desktop/src-tauri/tauri.conf.json
+          appimage=$(find "$bundle/appimage" -maxdepth 1 -name '*.AppImage' | head -n1)
+          deb=$(find "$bundle/deb" -maxdepth 1 -name '*.deb' | head -n1)
+          rpm=$(find "$bundle/rpm" -maxdepth 1 -name '*.rpm' | head -n1)
+          for f in "$appimage" "$deb" "$rpm"; do
+            if [ ! -f "$f" ]; then echo "::error::Faltan el AppImage, el .deb o el .rpm en $bundle"; exit 1; fi
+          done
+          size=$(numfmt --to=iec-i --suffix=B "$(stat -c %s "$appimage")")
+          echo "Tamaño del AppImage: $size"
+
+          # AppImage (bundleMediaFramework): exactamente los plugins de GSTREAMER_PLUGINS_DIR, con la cadena del
+          # Web Audio (appsrc, clocksync, audioconvert, audioresample, autoaudiosink) y sus dos salidas
+          (cd "$RUNNER_TEMP" && "$appimage" --appimage-extract > /dev/null)
+          app="$RUNNER_TEMP/squashfs-root"
+          plugins="$app/usr/lib/gstreamer-1.0"
+          if ! diff <(ls "$GSTREAMER_PLUGINS_DIR") <(ls "$plugins"); then
+            echo "::error::El AppImage no lleva exactamente los plugins elegidos (GSTREAMER_PLUGINS_DIR)"; exit 1
+          fi
+          for so in libgstcoreelements.so libgstapp.so libgstaudioconvert.so libgstaudioresample.so libgstautodetect.so libgstpulseaudio.so libgstalsa.so; do
+            if [ ! -f "$plugins/$so" ]; then echo "::error::El AppImage no lleva $so: saldría mudo donde falte"; exit 1; fi
+          done
+          # El gancho de arranque hace que GStreamer use estos plugins y no los del sistema, que pueden ser de otra versión
+          if ! grep -qs GST_PLUGIN_SYSTEM_PATH_1_0 "$app"/apprun-hooks/*; then
+            echo "::error::El AppImage no apunta GStreamer a sus propios plugins (apprun-hooks)"; exit 1
+          fi
+          # libwayland-client tiene que ser la del sistema: con la de Ubuntu 22.04, Mesa 25 o posterior no carga (tauri#15976)
+          if [ -n "$(find "$app" -name 'libwayland-client.so*' -print -quit)" ]; then
+            echo "::error::El AppImage lleva libwayland-client: con Mesa 25 o posterior no arrancaría (tauri#15976)"; exit 1
+          fi
+
+          # Licencias de todo lo que va en usr/lib: cada binario sale de un paquete de Ubuntu, ninguno es una
+          # biblioteca solo GPL (como las que arrastran aasink y cacasink) y los plugins salen solo de los tres
+          # paquetes fuente LGPL que cita THIRD-PARTY-NOTICES.md
+          elf=()
+          while IFS= read -r -d '' f; do
+            if [ "$(head -c4 "$f" | tr -d '\0')" = $'\x7fELF' ]; then elf+=("*/${f##*/}"); fi
+          done < <(find "$app/usr/lib" -type f -print0)
+          if ! dpkg -S "${elf[@]}" > "$RUNNER_TEMP/owners.txt"; then
+            echo "::error::El AppImage lleva binarios que no salen de ningún paquete de Ubuntu (arriba)"; exit 1
+          fi
+          mapfile -t packages < <(cut -d: -f1 "$RUNNER_TEMP/owners.txt" | sort -u)
+          gpl=$(printf '%s\n' "${packages[@]}" | grep -xE 'libslang2|libgpm2|libreadline[0-9]+|libfftw3-.+|libx26[45]-.+|liba52-.+|libmpeg2-.+|libfaad2|libdvd(read|nav)[0-9]+|libcdio[0-9]+|libmad0|libdca0|libxvidcore[0-9]+' || true)
+          if [ -n "$gpl" ]; then echo "::error::El AppImage lleva bibliotecas solo GPL: $(echo "$gpl" | xargs)"; exit 1; fi
+          others=$(grep '/gstreamer-1\.0/' "$RUNNER_TEMP/owners.txt" | cut -d: -f1 | sort -u | xargs dpkg-query -W -f="\${source:Package}\n" | sort -u | grep -vxE 'gstreamer1\.0|gst-plugins-(base|good)1\.0' || true)
+          if [ -n "$others" ]; then echo "::error::El AppImage lleva plugins de $others: revisa su licencia y THIRD-PARTY-NOTICES.md"; exit 1; fi
+
+          # Paquetes, versiones exactas y licencias de lo empaquetado: a la Release (THIRD-PARTY-NOTICES.md remite ahí)
+          v=$(node -p "require('./package.json').version")
+          mkdir -p "$RUNNER_TEMP/out"
+          licenses="$RUNNER_TEMP/out/Scratch-Tribology-Simulator_${v}_linux-appimage-licenses.txt"
+          list=$(dpkg-query -W -f="\${binary:Package} \${Version} (source: \${source:Package} \${source:Version})\n" "${packages[@]}")
+          echo "$list"
+          {
+            echo "Scratch Tribology Simulator $v: Ubuntu packages inside the Linux AppImage ($(sed -n 's/^PRETTY_NAME="\(.*\)"$/\1/p' /etc/os-release), built $(date -u +%F))."
+            echo "Source code of each version: https://launchpad.net/ubuntu/+source/<source>/<version>. The copyright file of each package follows."
+            echo
+            echo "$list"
+            for p in "${packages[@]}"; do
+              printf '\n==== %s ====\n\n' "$p"
+              cat "/usr/share/doc/${p%%:*}/copyright"
+            done
+          } > "$licenses"
+
+          # .deb y .rpm: los plugins los instala el sistema. El .deb los exige; el .rpm los recomienda con los nombres de
+          # Fedora y de openSUSE (una dependencia fuerte con nombres de una sola distribución lo haría ininstalable en la otra)
+          dpkg-deb -I "$deb"
+          deb_deps=$(dpkg-deb -f "$deb" Depends | tr ',' '\n' | sed -e 's/^ *//' -e 's/[ (].*//')
+          while read -r p; do
+            if ! grep -qxF "$p" <<< "$deb_deps"; then echo "::error::El .deb no depende de $p"; exit 1; fi
+          done < <(jq -r '.bundle.linux.deb.depends[]' "$conf")
+          rpm -qpR "$rpm"
+          rpm_recs=$(rpm -qp --recommends "$rpm" | cut -d' ' -f1)
+          echo "$rpm_recs"
+          while read -r p; do
+            if ! grep -qxF "$p" <<< "$rpm_recs"; then echo "::error::El .rpm no recomienda $p"; exit 1; fi
+          done < <(jq -r '.bundle.linux.rpm.recommends[]' "$conf")
+          echo "Linux: AppImage de $size con ${#packages[@]} paquetes de Ubuntu (licencias: ${licenses##*/}); .deb y .rpm con sus dependencias" >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v7
+        if: startsWith(matrix.platform, 'ubuntu')
+        with:
+          name: linux-appimage-licenses
+          path: ${{ runner.temp }}/out/*.txt
+
+      - name: Subir las licencias del AppImage a la Release
+        if: startsWith(matrix.platform, 'ubuntu') && startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_ID: ${{ needs.draft.outputs.id }}
+        # Si se relanza la misma etiqueta, sustituye el archivo anterior (como hace tauri-action con los instaladores).
+        # Con curl y la API REST: el contenedor de Linux no trae gh
+        run: |
+          api="https://api.github.com/repos/$GITHUB_REPOSITORY/releases"
+          auth="Authorization: Bearer $GH_TOKEN"
+          for f in "$RUNNER_TEMP"/out/*.txt; do
+            name=$(basename "$f")
+            old=$(curl -fsSL -H "$auth" "$api/$RELEASE_ID/assets?per_page=100" | jq -r --arg n "$name" '.[] | select(.name == $n) | .id')
+            if [ -n "$old" ]; then curl -fsSL -X DELETE -H "$auth" "$api/assets/$old"; fi
+            curl -fsSL -H "$auth" -H "Content-Type: text/plain" --data-binary @"$f" \
+              "https://uploads.github.com/repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID/assets?name=$name" | jq -r .browser_download_url
+          done
 
   android:
     name: Android · APK

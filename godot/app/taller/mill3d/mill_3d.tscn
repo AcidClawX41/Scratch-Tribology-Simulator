@@ -1,0 +1,32 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://app/taller/mill3d/mill_3d.gd" id="1_mill"]
+[ext_resource type="Script" path="res://app/taller/mill3d/orbit_rig.gd" id="2_rig"]
+
+[node name="Mill3D" type="Node3D"]
+script = ExtResource("1_mill")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 4, 2.2)
+light_color = Color(1, 0.98, 0.95, 1)
+light_energy = 1.35
+shadow_enabled = true
+shadow_blur = 1.5
+directional_shadow_max_distance = 5.0
+
+[node name="Lamp" type="OmniLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.25, 1.35, 0.35)
+light_color = Color(1, 0.93, 0.82, 1)
+light_energy = 0.6
+omni_range = 1.2
+
+[node name="CameraRig" type="Node3D" parent="."]
+script = ExtResource("2_rig")
+
+[node name="Camera3D" type="Camera3D" parent="CameraRig"]
+current = true
+fov = 36.0
+near = 0.005
+far = 60.0

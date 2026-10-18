@@ -1,67 +1,216 @@
 <div align="center">
 
-# Scratch Tribology Simulator
+![Tribology Simulator & Industrial Workshop 2.0](docs/media/readme/banner.png)
 
-**What scratches, cuts, punctures or breaks what — and why.**
+# Tribology Simulator & Industrial Workshop
 
-An educational contact-mechanics and tribology laboratory. Human nails, animal claws and viper fangs
-are tested against materials from human skin to diamond, using published physical models and
-measured data. Every number the app shows comes from an equation you can look up.
+**What scratches, cuts, punctures or breaks what — and why. And how a lathe, a grinder and a sharpener really cut.**
 
-[![CI](https://github.com/AcidClawX41/Scratch-Tribology-Simulator/actions/workflows/ci.yml/badge.svg)](https://github.com/AcidClawX41/Scratch-Tribology-Simulator/actions/workflows/ci.yml)
+[![Godot CI](https://github.com/AcidClawX41/Scratch-Tribology-Simulator/actions/workflows/godot-ci.yml/badge.svg)](https://github.com/AcidClawX41/Scratch-Tribology-Simulator/actions/workflows/godot-ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-macOS (Apple Silicon & Intel) · Windows · Linux · iPhone & iPad · Android · Web
+Windows · macOS (Apple Silicon & Intel) · Linux · Android · iPhone & iPad
 
 </div>
 
-![The desktop app after a strike with a steel eagle talon on a classic car](docs/img/app-overview.png)
+An educational contact-mechanics and tribology laboratory. Human nails, animal claws and viper fangs are tested
+against materials from human skin to diamond, using published physical models and measured data. Every number the
+program shows comes from an equation you can look up.
 
-<sub>The real app build (the interface the Tauri desktop app shows), rendered in Chromium. An eagle talon
-reforged in steel strikes a classic car with 72 J. The talon passes all the way through 0.9 mm of mild steel and leaves a
-10.5 mm petalled hole. The panel absorbs 17 J of the strike. The user interface is in Spanish.</sub>
+Version 2.0, formerly *Scratch Tribology Simulator*, is rebuilt from scratch in **Godot 4.7.2** as one program with
+two sections:
+
+- **Biological tribology:** nails, claws, fangs and stings against skin, wood, car bodies, glass and diamond; a moving
+  car with an animal on the roof; a 3D falconry clinic where you trim and sharpen claws; and a forge that rebuilds a
+  claw in another material.
+- **Industrial workshop** *(work in progress)*: a lathe with a Fagor-compatible CNC, a milling machine and a drill, a
+  sharpener for knives, drills and end mills, and an angle grinder against car body panels.
+
+Every number on screen comes from a published model or measurement, or is labelled as an estimate. The interface is
+in Spanish. The program is free, has no ads, collects no data and needs no network connection.
+
 
 ---
 
 ## Contents
 
-- [What the app does](#what-the-app-does)
+- [Biological tribology](#biological-tribology)
+- [Industrial workshop](#industrial-workshop)
+- [Screenshots](#screenshots)
 - [The physics: models and equations](#the-physics-models-and-equations)
 - [Materials, tissues and tools](#materials-tissues-and-tools)
 - [What the model predicts](#what-the-model-predicts)
-  - [Decision paths, case by case](#decision-paths-case-by-case)
-- [Screenshots](#screenshots)
 - [How the physics is verified](#how-the-physics-is-verified)
+- [Known limitations](#known-limitations)
 - [Download](#download)
 - [Build from source](#build-from-source)
-- [Project structure](#project-structure)
-- [Known limitations](#known-limitations)
+- [Version 1.x](#version-1x)
 - [License](#license)
 - [Author](#author)
+- [Support the project](#support-the-project)
 
 ---
 
-## What the app does
+## Biological tribology
 
-Pick a **tool**, a **material** and a **test method**, then press *ARAÑAR* ("scratch"). The engine
-works out the contact pressure, whether the tip can scratch at all, how deep it goes and which layer
-gives way. Everything is drawn and, if you want, heard.
+- **Claw lab (test bench).** Pick a tool, a target and a method (scratch, hooked tear, puncture or strike) and the
+  engine works out the contact pressure, who yields, how deep it goes and which layer gives way. The catalogue covers
+  nail shapes and salon materials, gem inlays, 17 animal claws and fangs, insect stings and a *Velociraptor*.
+  Targets range from layered human skin (five body zones, down to the bone) to car paint, steel, window and tempered
+  glass, sapphire and diamond. Any claw can be reforged in steel, tungsten carbide, sapphire or diamond. Cross-sections,
+  magnifiers and synthesized sound show what happens.
+- **Moving car.** An eagle, an owl, a tiger, a bear or a *Velociraptor* holds on to a car at up to 230 km/h, and a
+  cassowary kicks it:
+  - the wind over each panel comes from wind-tunnel data (DrivAer), and the grip, the hook of the claws and the speed
+    at which the animal lets go each come with their band of uncertainty;
+  - jumps and strikes leave dents, scratches through each paint layer, punctures and slits, shown in 3D, in a
+    close-up and in a cross-section of the panel;
+  - in curves, the pull is a = v²/R on road radii from the Spanish road design standard (3.1-IC), with clothoids in
+    the S-bend, a G-meter that flips side and the animal's load on each side. Each species grips harder as its fear
+    grows, slips leaving marks and, in a curve taken too fast, falls off in its own way;
+  - claws on the windscreen, the rear window or a side window scratch the glass only when they are hard enough; the
+    laminated windscreen cracks without falling, and tempered glass shatters under the animal;
+  - an optional sun (midday or low) adds glints on the paint, the glass and the claws, and the chase camera shows an
+    endless road between fields, trees and mountains.
+- **Falconry Claw Care (3D).** A clinic and a falconry bench with the whole animal: raptors, a tiger, a bear and a
+  *Velociraptor*.
+  - You trim, file and sharpen each claw with clippers, files and a rotary nail grinder. A tip meter and a magnifier
+    show when the tip is natural, blunt or already a needle. The quick, the heat of the grinder and the animal's
+    stress all count.
+  - A beginner's tutorial guides each step, and a vet career brings jobs, levels and credits.
+  - An animal that is not held properly may react and strike the camera. The lens scratches, cracks or smears
+    depending on the claw, its sharpness and the lens bought in the shop; the marks of different animals add up on the
+    same lens. An «after an attack» tutorial shows how to calm it.
+- **Experimental forge.** A broken claw can be rebuilt as a cap or a cast piece. There is a furnace with eight
+  controls and ten sourced recipes (Verneuil sapphire and ruby, alumina, tungsten carbide, HPHT and CVD diamond, steel,
+  gold, titanium, glass), lost-wax casting, pass-by-pass cutting of hard minerals and a welding table (pulsed laser, micro-TIG and silver
+  brazing, with its own tutorial). Anything that is fantasy is
+  marked as fiction. The result can be tried on the bench, on the car and in the falconry clinic.
 
-| | |
-|---|---|
-| **Tools** | 6 nail shapes, from a square nail (9 mm² tip) to an extra-long Stiletto XL (0.08 mm²). 3 salon materials (natural keratin, UV gel, acrylic). 4 experimental solid nails (stainless steel, titanium, sapphire, diamond). 12 embedded stones, from gold leaf to diamond. 17 claws and fangs: cat, tiger, brown bear, eagle, harpy eagle, peregrine falcon, owl, barn owl, griffon vulture, cassowary, emu, ostrich, rooster spur, macaw, small bird, viper and Gaboon viper. Any claw can be *reforged* in steel, tungsten carbide, sapphire, diamond… (same shape, new material) |
-| **Materials** | 17 targets: layered human skin, pine, a varnished oak door, an aluminium house door, someone else's nail, ABS plastic, four cars (modern steel, classic steel, aluminium, plastic wing), a copper coin, window glass, stainless steel, a phone screen, a quartz countertop, sapphire crystal and diamond |
-| **Methods** | Scratch (drag) · hooked claw tear (lever) · static puncture or injection · 💥 strike (kinetic energy) · 1–100 passes over the same groove · light, normal or deep scratch · dry or soaked keratin |
-| **Results** | Verdict with the layer reached, depth, width, real vs nominal pressure, hardness ratio, plastic fraction, abrasion mode, scratch friction, Archard wear, JKR adhesion, strike energy and energy absorbed. On skin: whether it bleeds. On glass: the force that breaks the pane |
-| **Views** | Animated test bench with textured materials. Cross-sections of skin, car paint and body, and the oak door. Profile of the groove or hole. The whole catalogue compared on the same material. **Dual mode**: the same test on an old and a modern car, with a damage report in millimetres and centimetres. 15 lab achievements, a lab notebook and an in-app *Fundamentals* panel |
-| **Sound** | 22 synthesized effects (scratch, cut, puncture, shattering glass…), toggleable. Haptics on phones |
+## Industrial workshop
+
+*Work in progress: much of it already works, but some parts are still being finished. The program marks this section
+«WIP».*
+
+- **Lathe, manual and CNC.**
+  - The CNC is compatible with the Fagor 8055 T control: tool radius compensation G41/G42, threading G33/G86 and
+    subroutines.
+  - The 3D lathe cuts the part revolution by revolution, with real feed marks and the roughness measured on the
+    simulated crests. Coolant, chips and machine sound come with it.
+  - Cutting forces follow Kienzle's model, with published cases reproduced. Each part is inspected against an
+    ISO 286 / ISO 2768 drawing and gets a mark out of 10.
+- **Milling machine and drill.** Pages for a Lagun FTV 2 and an ERLO TSAR-32, with animated diagrams of the cut and
+  3D scenes.
+- **Sharpener.** Eleven real machines, from bench grinders to a Tormek, for knives, drills and end mills. It shows the
+  edge temperature, the tempering colours and sparks only when grinding dry.
+- **Angle grinder against car panels,** as used in fire-brigade rescues. Six discs and four body panels, with a cut
+  cleanliness from 0 (clean) to 10 (dirty), kerf, burr, heat tint, burnt paint and spark colours (US Army TC 9-237).
+  It is educational, not a rescue procedure.
+
+---
+
+## Screenshots
+
+All images are frames from the real program (desktop window, 1240 × 880), with no mock-ups. They were recorded without a
+GPU, with the OpenGL renderer, so on a graphics card with Vulkan the lighting looks better.
+
+<table>
+<tr>
+<td colspan="2" align="center"><img src="docs/media/readme/s-bend-chase.gif" alt="A car with a tiger on the roof driving through an S-bend between green fields, trees and mountains, seen from a chase camera, with the G-meter changing side"></td>
+</tr>
+<tr>
+<td colspan="2"><sub><b>Moving car in an S-bend.</b> The tiger on the roof at 95 km/h on a 130 m radius: the road
+curves, the car leans and the G-meter flips from right to left with «¡Cambia de lado!» («it changes side»). The endless
+road runs between fields, trees and mountains.</sub></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/media/readme/curve-fall-bear.gif" alt="A brown bear on the roof of a car slipping off in a tight curve at 125 km/h"></td>
+<td width="50%"><img src="docs/media/readme/low-sun-chase.gif" alt="The same car with a bear on the roof in a curve under a low, warm sun with long shadows"></td>
+</tr>
+<tr>
+<td><sub><b>Too fast for the curve.</b> On a 50 m curve, the bear standing on the roof grips with its outer claws,
+slips outwards scratching the roof and falls off as the car speeds up from 80 to 125 km/h. Each species falls in its own way.</sub></td>
+<td><sub><b>Light options.</b> «As before», «Midday sun» or «Low sun», with a slider for the sun's heading. The sun
+stays fixed in the world, so its glints run across the paint, the glass and the claws as the car turns.</sub></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/media/readme/falconry-lens-strike.gif" alt="A brown bear with diamond claws swiping at the camera in the falconry clinic and cracking the lens"></td>
+<td width="50%"><img src="docs/media/readme/falconry-lens-two-animals.gif" alt="A tiger and then an eagle swiping at the camera in the falconry clinic, leaving different marks on the same plastic lens"></td>
+</tr>
+<tr>
+<td><sub><b>An attack in the falconry clinic.</b> A bear left unrestrained swipes at the camera with diamond claws, in
+slow motion: the optical glass lens cracks and all five claws scratch it. Keratin claws could not scratch it.</sub></td>
+<td><sub><b>The same lens, two animals.</b> A badly sedated tiger cracks the cheap plastic lens with its keratin claws;
+then an eagle with steel claws tears it. The marks add up, and the cloth only removes the smears.</sub></td>
+</tr>
+<tr>
+<td width="50%"><img src="docs/media/readme/claw-sharpening.png" alt="Sharpening a claw with a rotary nail grinder, with the tip meter at needle and the tip magnifier"></td>
+<td width="50%"><img src="docs/media/readme/forge-welding.gif" alt="Welding a steel tip onto a steel claw sheath with a pulsed laser at the forge's welding table, point by point along the seam"></td>
+</tr>
+<tr>
+<td><sub><b>Claw Care: sharpening.</b> One touch of the rotary grinder at 45° turns a clipped, blunt claw into a
+5 µm needle. The tip meter and the magnifier show it.</sub></td>
+<td><sub><b>The forge's welding table.</b> A steel tip welded onto a steel sheath with a pulsed laser, pulse by pulse
+along the seam. The verdict: it holds about 504 MPa, 72 % of the base metal. It has its own tutorial.</sub></td>
+</tr>
+<tr>
+<td><img src="docs/media/readme/moving-car-bear.png" alt="A brown bear standing on the roof of a car at 174 km/h, with the wind lines, a magnifier and a close-up of the claws"></td>
+<td><img src="docs/media/readme/car-door-closeup.png" alt="Close-up of a car door slit open by a film Velociraptor's claws, with the cross-section of the paint and steel layers"></td>
+</tr>
+<tr>
+<td><sub><b>A bear on the roof at 174 km/h.</b> The wind follows each panel at its local speed, the magnifier shows
+the claw marks, and the verdict says it holds on up to about 289 km/h, with its band of uncertainty.</sub></td>
+<td><sub><b>Damage close-up.</b> The film <i>Velociraptor</i> slits the door open, marked as fiction: real keratin
+claws cannot cut bake-hardening steel. The inset shows the paint and steel layers it went through.</sub></td>
+</tr>
+<tr>
+<td colspan="2" align="center"><img src="docs/media/readme/lathe-3d.png" width="720" alt="The 3D lathe of the industrial workshop finishing a part with coolant"></td>
+</tr>
+<tr>
+<td colspan="2"><sub><b>Industrial workshop: the 3D lathe.</b> Finishing the contour of a C45E part at 1600 rpm with
+coolant. The part is cut revolution by revolution, and its finish goes from matte to mirror.</sub></td>
+</tr>
+</table>
+
+**The claw lab (test bench).** Frames from the 1.x build of the bench, rendered in Chromium; the 2.0 bench runs the
+same engine.
+
+![The claw lab after a strike with a steel eagle talon on a classic car](docs/img/app-overview.png)
+
+<sub>An eagle talon reforged in steel strikes a classic car with 72 J. The talon passes all the way through 0.9 mm of
+mild steel and leaves a 10.5 mm petalled hole. The panel absorbs 17 J of the strike.</sub>
+
+<table>
+<tr>
+<td width="50%"><img src="docs/img/skin-cross-section.png" alt="Tiger claw laceration with the layered skin cross-section"></td>
+<td width="50%"><img src="docs/img/car-cross-section.png" alt="Steel eagle talon through the classic car body, paint and steel cross-section"></td>
+</tr>
+<tr>
+<td><sub><b>Layered skin.</b> A 260 N tiger swipe: deep laceration to the muscle, as deep as the claw itself.</sub></td>
+<td><sub><b>Car cross-section.</b> Clearcoat, basecoat, primer and e-coat over 900 µm of mild steel.</sub></td>
+</tr>
+<tr>
+<td><img src="docs/img/window-glass.png" alt="Bear swipe breaking a window pane"></td>
+<td><img src="docs/img/dual-mode.png" alt="Dual mode comparing a classic and a modern car"></td>
+</tr>
+<tr>
+<td><sub><b>Window glass.</b> A bear claw can't scratch glass (<i>r</i> = 0.05), but it breaks the pane by bending it.</sub></td>
+<td><sub><b>Dual mode.</b> The same tool on a classic and a modern car: scratch, tear, puncture and strike, with a
+damage report in millimetres and centimetres.</sub></td>
+</tr>
+</table>
 
 ---
 
 ## The physics: models and equations
 
-All physics lives in [`packages/core`](packages/core), plain JavaScript with no dependencies,
-shared by the desktop and mobile apps. The apps only draw results; they never recompute physics.
+In version 2.0 all physics lives in [`godot/core/`](godot/core): GDScript with no scene nodes, deterministic, and
+every value carrying its source and its quality (primary, secondary or estimate). The interface only draws results.
+The original JavaScript engine of version 1.x ([`packages/core`](packages/core)) is frozen and acts as an oracle: the
+Godot port reproduces its texts, verdicts, sounds and drawings bit for bit. The table below is the core contact model
+both share; what 2.0 adds on top (Hertzian cone cracks, nail bending, elastic recovery, denting, tempered and
+laminated glass, body zones down to the bone, the moving car, the falconry clinic and the forge) is written up in
+[`docs/FISICA.md`](docs/FISICA.md) and [`docs/fisica/`](docs/fisica/), and the workshop in [`docs/TALLER.md`](docs/TALLER.md).
 Units: force in N, pressure and hardness in MPa (1 HV = 9.807 MPa), depth in µm or mm, energy in J.
 Every constant has a published source, or is flagged as an **estimate**, in
 [`docs/FISICA.md`](docs/FISICA.md) (model v2.4, 55 references, in Spanish).
@@ -107,6 +256,8 @@ Every model the engine uses, what it does and where the numbers come from:
 
 Full derivations, every data point with its source, the list of estimates and the 55 references are
 in [`docs/FISICA.md`](docs/FISICA.md).
+
+---
 
 ---
 
@@ -182,10 +333,13 @@ E 2.9 GPa (nanoindentation, Tohmyoh et al. 2023).
 
 ---
 
+---
+
 ## What the model predicts
 
-Computed by the engine itself, the same numbers the app shows. Many of these cases are locked in by
-tests.
+Computed by the engine itself, the same numbers the app shows (the core model of the table above; several of these
+cases are locked in by tests). The decision paths the engine takes for each kind of target are drawn in
+[`docs/README-1.x.md`](docs/README-1.x.md#decision-paths-case-by-case).
 
 | Test | Result | Why |
 |---|---|---|
@@ -207,260 +361,136 @@ tests.
 | Viper fang pushed at 40 N against glass | The fang breaks (~30 N) | Fang fracture load (Estrada et al. 2026) |
 | Kick on a 35 mm oak door: cassowary (160 J) vs ostrich (400 J) | Cassowary goes through (Ø 18.5 mm); the ostrich claw sticks at 25.5 mm | 14° dagger claw vs 32° blunt claw: sharpness beats energy |
 
-### Decision paths, case by case
-
-The same engine, drawn as the decisions it takes for each kind of target. The thresholds are the ones
-in [`packages/core/src/physics.js`](packages/core/src/physics.js), and the lines in italics are results
-from the table above.
-
-#### Hard solids: who scratches whom
-
-```mermaid
-flowchart TD
-  A["Tip sliding on a hard solid<br>glass, quartz, sapphire, steel…"] --> R{{"Hardness ratio<br>r = HV tool / HV target"}}
-  R -->|"r under 0.8"| W["No scratch: the softer tip wears<br><i>natural nail on window glass, r = 0.05</i>"]
-  R -->|"r ≥ 0.8"| H{{"Does the tip sink in?<br>Hertz yield: p₀ ≥ 1.6·Y"}}
-  H -->|"no"| E["Slides without a mark<br><i>square diamond nail on quartz, 30 N</i>"]
-  H -->|"yes"| S{{"r under 1.25?"}}
-  S -->|"yes"| F["Faint mark: both polish each other<br><i>sapphire stone on sapphire, r = 1</i>"]
-  S -->|"no"| G["Scratch: groove where H·π·a² = F<br>brittle targets chip at the edges"]
-  G --> D{{"Degree of penetration<br>Dp = h / a"}}
-  D -->|"under 0.1"| P["Ploughing"]
-  D -->|"0.1 to 0.2"| WG["Wedge<br><i>diamond-set nail on sapphire, 4.4 µm</i>"]
-  D -->|"over 0.2"| C["Cutting"]
-```
-
-#### Skin: scratch, tear or puncture
-
-```mermaid
-flowchart TD
-  K["Tip against skin<br>back of the upper arm"] --> M{{"Method"}}
-  M -->|"scratch or hooked tear"| B{{"Force above the tip's skin-rupture force?<br>cat claw 3.1 N · almond nail ~170 N"}}
-  B -->|"no: it only abrades"| A1["Nothing, or a red mark that fades"]
-  A1 -->|"more force or passes"| A2["White scratch: stratum corneum, 18 µm<br><i>almond nail, 4 N</i>"]
-  A2 -->|"more force or passes"| A3["The epidermis goes, 75 µm: it stings, but has no blood vessels"]
-  A3 -->|"repeated passes"| A4["Bleeding scratches: capillaries of the dermal papillae<br><i>almond nail, 30 N × 20 passes</i>"]
-  B -->|"yes: it cuts until force<br>and resistance balance"| L1["Surface cut, no blood"]
-  L1 -->|"more force"| L2["Dermis: a bleeding scratch, then a deep one that may scar<br><i>cat claw, 15 N: 0.69 mm</i><br><i>hooked: deep tear, 1.8 mm</i>"]
-  L2 -->|"more force: fat and muscle<br>resist far less than skin"| L3["Fat: laceration"]
-  L3 -->|"more force"| L4["Fascia or muscle: deep laceration<br><i>tiger claw, 260 N: 40 mm, the whole claw</i>"]
-  M -->|"puncture or strike"| NP["The skin dents and holds"]
-  NP -->|"force ≥ puncture force,<br>or energy ≥ Gₚ·A"| PU["Puncture, reporting the layer reached<br><i>viper fang, 4 N: venom at 18 mm, intramuscular</i>"]
-```
-
-#### Cars: paint first, then the panel
-
-```mermaid
-flowchart TD
-  T["Claw or nail against a car"] --> K{{"r ≥ 0.8 against the paint and deeper than 1.5 µm?"}}
-  K -->|"no"| Z["Swirl mark, polishable<br><i>soaked almond nail, 30 N</i>"]
-  K -->|"yes"| MT{{"Method"}}
-  MT -->|"scratch"| P1["Clearcoat scratch, within 45 µm<br><i>dry almond nail, 30 N: 30 µm</i>"]
-  P1 -->|"more force"| P2["Colour, primer, e-coat<br>15 + 25 + 25 µm: 110 µm of paint"]
-  P2 -->|"more force"| P3{{"Can it cut the panel?<br>r = HV tool / HV panel"}}
-  P3 -->|"keratin on steel, r ≈ 0.26"| ST["Down to the metal, and it stops<br><i>bear claw, 300 N, modern car</i>"]
-  P3 -->|"softer panel or harder tool"| GR["Groove in the panel, a slit if it cuts right through<br><i>bear claw, plastic wing: 1.0 mm</i>"]
-  MT -->|"strike, ½·m·v²"| S1["Puncture: the tip stays in the paint or the panel"]
-  S1 -->|"energy to break the sheet"| S2["Perforates: the tip exits and the hole opens in petals (Wierzbicki 1999)<br><i>solid-metal stiletto nail jab, 5 J</i>"]
-  S2 -->|"energy for the whole claw"| S3["Goes through<br><i>steel eagle talon, 72 J: Ø 10.5 mm hole</i>"]
-```
-
-#### Window glass: bending decides
-
-```mermaid
-flowchart TD
-  W["Load on a 4 mm window pane<br>annealed float glass, 550 HV"] --> TB{{"More force than the tool can take?<br>a viper fang breaks at ~30 N"}}
-  TB -->|"yes"| TK["The tip breaks<br><i>viper fang pushed at 40 N</i>"]
-  TB -->|"no"| F{{"Peak force ≥ ~197 N?<br>Roark plate bending up to 45 MPa<br>strike peak: F = v·√(m·k_eff)"}}
-  F -->|"yes"| BR["The glass breaks<br><i>bear swipe ~1,300 N · falcon stoop ~1,900 N</i>"]
-  F -->|"no"| SC{{"Hard enough to scratch it?<br>r = HV tool / 550 HV"}}
-  SC -->|"r under 0.8"| NS["The pane holds, unmarked<br><i>cat swipe: 147 N, under 197 N</i>"]
-  SC -->|"r ≥ 0.8"| HS["Same path as any hard solid"]
-```
-
-#### Oak door: sharpness beats energy
-
-```mermaid
-flowchart TD
-  K["Kick on a 35 mm oak door"] -->|"cassowary · 160 J"| C1["Dagger claw<br>14° · 0.05 mm² tip"]
-  K -->|"ostrich · 400 J"| S1["Blunt claw<br>32° · 0.35 mm² tip"]
-  C1 --> C2["Little work per millimetre:<br>a narrow wedge"] --> C3["Goes through<br><i>Ø 18.5 mm hole</i>"]
-  S1 --> S2["Energy spent widening the hole:<br>a wide wedge"] --> S3["Stuck in the door<br><i>at 25.5 mm</i>"]
-```
-
----
-
-## Screenshots
-
-All screenshots were taken from the real desktop build (web view, Chromium), with no mock-ups.
-
-<table>
-<tr>
-<td width="50%"><img src="docs/img/skin-cross-section.png" alt="Tiger claw laceration with the layered skin cross-section"></td>
-<td width="50%"><img src="docs/img/car-cross-section.png" alt="Steel eagle talon through the classic car body, paint and steel cross-section"></td>
-</tr>
-<tr>
-<td><sub><b>Layered skin.</b> A 260 N tiger swipe: deep laceration to the muscle, as deep as the claw itself.
-Real (294 MPa) vs nominal (4,333 MPa) pressure, the force that breaks the skin, and a table of each layer's
-stiffness and toughness.</sub></td>
-<td><sub><b>Car cross-section.</b> Clearcoat, basecoat, primer and e-coat over 900 µm of mild steel.
-The steel talon is buried 35 mm and has opened a 10.5 mm hole.</sub></td>
-</tr>
-<tr>
-<td><img src="docs/img/window-glass.png" alt="Bear swipe breaking a window pane"></td>
-<td><img src="docs/img/dual-mode.png" alt="Dual mode comparing a classic and a modern car"></td>
-</tr>
-<tr>
-<td><sub><b>Window glass.</b> A bear claw can't scratch glass (<i>r</i> = 0.05), but it breaks the pane: the
-bending stress reaches 45 MPa from ~197 N.</sub></td>
-<td><sub><b>Dual mode.</b> The same tool on a classic and a modern car: scratch, tear, puncture and strike,
-with the depth in mm and cm, the hole, and which car holds up better.</sub></td>
-</tr>
-</table>
-
-![The in-app Fundamentals panel](docs/img/fundamentals.png)
-<sub><b>Fundamentals panel</b> (∑ button): the same models as the table above, summarised inside the app.</sub>
-
 ---
 
 ## How the physics is verified
 
-- **115 automated tests** (`npm test`, Node's built-in runner):
-  - **40 golden scenarios** that freeze reference results. A physics change has to regenerate them
-    on purpose and explain why.
-  - **Physical invariants**:
-    - more force never gives less depth;
-    - a sharper nail never scratches shallower;
-    - depth is continuous across layer boundaries;
-    - a strike never penetrates less than a static push;
-    - nothing goes deeper than its own claw;
-    - keratin never cuts steel;
-    - of the whole catalogue, only the cassowary goes through the oak door.
-  - **A result contract**: every field the apps display exists and is finite across the whole bench.
-  - **Tests for the shared drawings and sounds**: deterministic SVG, no NaN, sounds in sync with the
-    mobile WAVs.
-- **Full-catalogue sweep** (`npm run audit`, ~20 s): 603,228 runs of every tool × material × method ×
-  force × wetness, plus dual mode, with no broken text, non-finite value or impossible depth. The v1 audit of 478,800 combinations had found 90,286 contact
-  pressures above the tip's own hardness, which is physically impossible. The v2 model was built to fix
-  that.
-- **Mobile smoke test**: renders the React Native app with test doubles and walks through a full
-  session, including dual mode and a broken window.
-- **CI on every pull request**: tests, desktop build, mobile checks, then `rustfmt`, `clippy` and a
-  build of the native shell.
-- **Honesty rule**: each new value needs a published source, or is labelled an estimate in the app and
-  in `docs/FISICA.md`.
-
----
-
-## Download
-
-Each tagged version (`v*`) is built by GitHub Actions
-([`release.yml`](.github/workflows/release.yml)) and published on the
-[Releases page](https://github.com/AcidClawX41/Scratch-Tribology-Simulator/releases):
-
-| Platform | File | First launch |
-|---|---|---|
-| Windows 10/11 | `…_x64-setup.exe` or `…_x64_en-US.msi` | Not code-signed: SmartScreen → *More info* → *Run anyway* |
-| macOS, Apple Silicon (M1 and later) | `…_aarch64.dmg` | Not notarized: open it once, then *System Settings → Privacy & Security → Open Anyway* |
-| macOS, Intel | `…_x64.dmg` | Same as above |
-| Linux | `…_amd64.AppImage` (portable), `.deb`, `.rpm` | AppImage: `chmod +x` and run. NVIDIA: see [`apps/desktop/README.md`](apps/desktop/README.md) |
-| Android 7.0+ | `…_android.apk` | Allow *Install unknown apps* for your browser or file manager |
-| iPhone / iPad | `…_ios-unsigned.ipa` | Unsigned: install it with AltStore or Sideloadly, which sign it with your Apple ID (free accounts: every 7 days) |
-
-The desktop app is a native Tauri 2 shell (~5–10 MB) around the system WebView. It needs no network
-at runtime: fonts are bundled, there are no CDNs and no analytics, under a strict CSP.
-
----
-
-## Build from source
-
-Requirements: Node 24 (`.nvmrc`), and Rust via [rustup](https://rustup.rs) for the native desktop app.
-
-```bash
-npm install            # core + desktop (workspaces)
-npm test               # physics engine tests
-npm run check          # tests + desktop build + mobile checks and smoke test
-npm run audit          # sweep of the whole catalogue (~600,000 runs)
-npm run dev            # web version at http://localhost:1420
-npm run tauri dev      # native desktop window
-npm run tauri build    # installers for the current OS
-```
-
-Universal macOS binary (Apple Silicon + Intel) on an M1 or later:
-
-```bash
-rustup target add x86_64-apple-darwin
-npm run tauri build -- --target universal-apple-darwin
-```
-
-Mobile (Expo SDK 52, React Native 0.76.9), installed on its own:
-
-```bash
-cd apps/mobile && npm install
-npx expo run:ios          # simulator, or --device for your iPhone (Xcode 16.3+)
-npx expo run:android      # Android Studio + JDK 17
-```
-
-Platform details, signing and first launch: [`apps/desktop/README.md`](apps/desktop/README.md) and
-[`apps/mobile/README.md`](apps/mobile/README.md) (both in Spanish).
-
----
-
-## Project structure
-
-```
-packages/core/        physics engine, catalogues, drawings (SVG scene graphs), sounds, lab state
-  src/physics.js      compute(): contact, layers, skin, sheets, glass, impact, wear, friction
-  src/data.js         nails, stones, claws, materials, paint and skin layers, car bodies
-  src/art.js          every illustration, shared by desktop and mobile
-  src/sfx.js          synthesized sound effects
-  test/               115 tests + golden.json
-apps/desktop/         React + Vite + Tauri 2 (macOS, Windows, Linux, web)
-apps/mobile/          Expo / React Native (iPhone, iPad, Android)
-docs/FISICA.md        physical model, equations, data, estimates and references
-docs/ROADMAP.md       planned improvements
-.github/workflows/    ci.yml (every PR) · release.yml (installers, APK and IPA)
-```
+- **More than 1,700 automated Godot tests** (`npm run godot:test`), run headless on every push by
+  [`godot-ci.yml`](.github/workflows/godot-ci.yml):
+  - **The 1.x oracle**: the 40 golden scenarios and a deterministic sample of about 20,000 bench runs exported from the
+    frozen JavaScript engine. The port must match its verdicts, layers, sounds and texts, numbers to 1e-9 relative,
+    and its SVG drawings byte for byte.
+  - **A 2.0 golden** for the new physics: a deliberate change has to regenerate it and explain which cases move and why.
+  - **Physical invariants**, for example: more force never gives less depth; a sharper tip never scratches shallower; a
+    harder claw never marks the same lens less; a strike never penetrates less than a static push; nothing goes deeper
+    than its own claw; keratin never cuts steel.
+  - **No floating-point drift**: core maths uses bit-exact ports of V8's functions, so every platform prints the same
+    numbers; a test fails if the platform's own libm is used.
+  - **Interface tests**: every page fits a 390 × 844 phone screen, nothing is built per frame in the 3D scenes, frame
+    budgets on desktop and phone, and every sound within the loudness band of its class.
+- **The 1.x engine** keeps its own 115 tests (`npm test`) and its full-catalogue sweep (`npm run audit`: 603,228 runs
+  with no broken text, non-finite value or impossible depth).
+- **Honesty rule**: each new value needs a published source, or is labelled an estimate in the app and in
+  [`docs/FISICA.md`](docs/FISICA.md), which keeps the table of estimates. Anything that is fantasy (the film
+  *Velociraptor*, coating a living claw) is marked as fiction.
 
 ---
 
 ## Known limitations
 
-This is an **educational model**. It gets trends and orders of magnitude right; it is not a laboratory
-test, nor a forensic or medical tool.
+This is an **educational model**. It gets trends and orders of magnitude right; it is not a laboratory test, a forensic
+or medical tool, or a workshop or rescue procedure.
 
-- Depths are **under load**: the elastic recovery of polymers is not modelled.
-- Nails are treated as sphero-conical points, not edges. A real stiletto would snap in bending long
-  before 30 N, and nail fracture is not modelled.
-- Thin sheets: the petals assume ductile fracture and no strain-rate effects. Denting is not modelled:
-  a blow that does not perforate would dent the panel. Neither is what lies behind it (reinforcements,
-  inner panel).
-- Glass: only annealed panes loaded at the centre. Car side windows are tempered and windscreens
-  laminated; both break differently. Hertzian cone cracks are not computed, so a blunt, hard tip on
-  glass may be reported as elastic where a ring crack could appear.
-- Skin: a single reference site (the arm). There is no bone. The skin's elastic recoil and the friction
-  on the tip's flanks are ignored.
-- Many animal forces and strike masses are estimates, and are labelled as such.
+- Thin sheets: the petals assume ductile fracture with no strain-rate effect, and the same formula is used for the
+  plastic wing. Denting is calibrated with a single measurement, and what lies behind a panel (reinforcements, the
+  inner panel) is not modelled.
+- Glass: the side windows' radii are geometric estimates. The Hertzian cone-crack constant overestimates the measured
+  loads by 1.7–2.6 times until the soda-lime measurement can be checked.
+- Nails are treated as sphero-conical points, not edges.
+- Moving car: claws locked in the plastic wing tear it only in a side strike; with a tail wind, the attitude of a
+  raptor's wings is unknown and the one that lifts most is used.
+- Many animal forces, strike masses, claw sections and game values (levels, credits) are estimates or game rules, and
+  are labelled as such.
+- Industrial workshop: forces and power carry a ±30–45 % uncertainty from the spread between sources; tool life, chip
+  shape, built-up edge, chatter onset and edge temperature are not predicted, only shown as trends.
 
-Planned improvements: [`docs/ROADMAP.md`](docs/ROADMAP.md).
+The full, up-to-date list is in [`docs/FISICA.md`](docs/FISICA.md#limitaciones-conocidas); planned work is in
+[`docs/ROADMAP.md`](docs/ROADMAP.md).
+
+---
+
+## Download
+
+Builds for every platform are published on the
+[Releases page](https://github.com/AcidClawX41/Scratch-Tribology-Simulator/releases) by GitHub Actions
+([`godot-release.yml`](.github/workflows/godot-release.yml)) for each `v2*` tag:
+
+| Platform | File | First launch |
+|---|---|---|
+| Windows 10/11 (64-bit) | `…_windows-x86_64.zip` | Unzip it and run `TribologySimulatorWorkshop.exe`. Not code-signed: SmartScreen → *More info* → *Run anyway* |
+| macOS 11+ (Intel) · 13+ (Apple Silicon) | `…_macos-universal.dmg` | Ad-hoc signed, not notarized: open it once, then *System Settings → Privacy & Security → Open Anyway* |
+| Linux x86_64 | `…_linux-x86_64.AppImage` · `…_amd64.deb` · `…_linux-x86_64.tar.gz` | AppImage: `chmod +x` and run it. Debian/Ubuntu: `sudo apt install ./…_amd64.deb` |
+| Android 7.0+ | `…_android.apk` | Allow *Install unknown apps* for your browser or file manager |
+| iPhone / iPad (iOS 15+) | `…_ios-unsigned.ipa` | Unsigned: install it with AltStore or Sideloadly, which sign it with your Apple ID (free accounts must reinstall every 7 days) |
+
+Version 2.0 installs over 1.x: the package identifiers have not changed.
+
+---
+
+## Build from source
+
+Requirements: Node 20 or later, and Godot 4.7.2 (standard editor, not .NET). The setup script downloads the official
+release and checks its SHA-512 checksum.
+
+```bash
+npm run godot:setup                       # Godot 4.7.2 in .godot-home/bin (add -- --templates for export templates)
+npm run godot:test                        # all Godot tests: physics against the 1.x oracle, workshop, interface
+npm run godot:test -- --filter=taller/    # one folder or file
+```
+
+Then import `godot/project.godot` in the Godot project manager and press **F5**. Demo scenes, benchmarks and captures
+are described in [`godot/README.md`](godot/README.md), and the export to each platform in
+[`docs/GODOT-EXPORT.md`](docs/GODOT-EXPORT.md) (both in Spanish).
+
+```
+godot/core/       physics, data and drawing, without nodes: shared/, lab/ (biology), taller/ (workshop)
+godot/app/        scenes and interface
+godot/tests/      test runner and tests
+packages/core/    the 1.x JavaScript engine, frozen: the oracle
+apps/             the 1.x apps (Tauri desktop and web, Expo mobile)
+docs/             physics, workshop and export documentation
+```
+
+---
+
+## Version 1.x
+
+Version 1.x, **Scratch Tribology Simulator**, is the original React/Tauri desktop and web app with an Expo mobile
+app. Its installers stay on the Releases page (tags `v1*`). Its README, with the full table of contact models,
+the skin and car data, the predictions and the decision paths, is kept in
+[`docs/README-1.x.md`](docs/README-1.x.md).
 
 ---
 
 ## License
 
-Scratch Tribology Simulator is released under the [MIT License](LICENSE).
+Tribology Simulator & Industrial Workshop is released under the [MIT License](LICENSE).
 Copyright © 2026 Eric Valls Gramunt.
 
-You may use, copy, modify and redistribute it, commercially or not, as long as the copyright notice
-and the license text are kept. It comes with no warranty.
+You may use, copy, modify and redistribute it, commercially or not, as long as the copyright notice and the license
+text are kept. It comes with no warranty.
 
-The apps bundle third-party software under their own licenses: the Syne and Space Mono fonts under the
-SIL Open Font License 1.1, plus React, Tauri, Expo and React Native, which are MIT or Apache-2.0. The
-details and the full font license are in [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md). The
-scientific sources cited in [`docs/FISICA.md`](docs/FISICA.md) belong to their authors and publishers.
+Version 2.0 is made with the Godot Engine (MIT). The fonts, Syne and Space Mono, and the Noto Color Emoji subset are
+under the SIL Open Font License 1.1. The third-party software of each version and its licenses are listed in
+[`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md). The scientific sources cited in the documentation belong to
+their authors and publishers.
 
 ---
 
 ## Author
 
 **Eric Valls Gramunt** · [@AcidClawX41](https://github.com/AcidClawX41)
+
+---
+
+## Support the project
+
+The program is free, ad-free and collects no data. If it has been useful to you, or you just enjoyed it, you can buy
+me a coffee or support its development:
+
+- [GitHub Sponsors](https://github.com/sponsors/AcidClawX41)
+- [Ko-fi](https://ko-fi.com/ericdev)
+- [PayPal](https://paypal.me/EricValls)
+
+The same links are behind the «Dona o invítame» button, in both sections of the program. They open in your browser:
+the program itself never connects to anything.

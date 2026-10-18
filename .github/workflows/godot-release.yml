@@ -1,0 +1,734 @@
+# Release de la V2 (Godot 4.7.2): exporta el proyecto de godot/ para todas las plataformas.
+#   · Linux .......... .tar.gz, .AppImage (appimagetool) y .deb (dpkg-deb), x86_64
+#   · Windows ........ .zip con un solo .exe (el pck va dentro), x86_64
+#   · macOS .......... .dmg (hdiutil) con la app universal (Intel y Apple Silicon), firma ad hoc, sin notarizar
+#   · Android ........ .apk (arm64-v8a y armeabi-v7a) firmado como en la 1.x: con tu clave si das los secretos,
+#                      o con la clave de depuración de siempre
+#   · iPhone / iPad .. .ipa SIN firmar, compilada con xcodebuild: se instala con AltStore o Sideloadly
+#
+# Cómo funciona: un trabajo en Linux instala Godot y sus plantillas (descarga oficial, SHA-512 comprobado) y exporta
+# las cinco plataformas; después, un trabajo por plataforma empaqueta y comprueba, y el último sube los archivos a
+# una Release en BORRADOR. El borrador no se publica solo: revísalo y publícalo a mano desde GitHub.
+#
+# Uso: sube la versión en godot/project.godot y en godot/export_presets.cfg (ver docs/GODOT-EXPORT.md) y después
+#        git tag v2.0.0-prototipo && git push origin v2.0.0-prototipo
+#      "Run workflow" a mano (workflow_dispatch), o una subida a la rama ci/release, compila lo mismo sin tocar
+#      Releases: los archivos quedan como artefactos de la ejecución.
+#
+# Secretos opcionales (Settings → Secrets and variables → Actions), los mismos que usa release.yml:
+#   ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD
+name: godot-release
+
+on:
+  push:
+    tags: ["v2*"]
+    # Una subida a la rama ci/release compila lo mismo sin tocar Releases (como «Run workflow»): sirve para probar la
+    # compilación de las cinco plataformas desde donde no se puede lanzar el workflow a mano
+    branches: ["ci/release"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: godot-release-${{ github.ref }}
+  cancel-in-progress: false
+
+# bash con -eo pipefail: un fallo en cualquier punto de una tubería hace fallar el paso
+defaults:
+  run:
+    shell: bash
+
+env:
+  GODOT_VERSION: "4.7.2"
+  # Nombre de los archivos publicados: Tribology-Simulator-Industrial-Workshop_<versión>_<plataforma>.<ext>. Desde la
+  # 2.0 el programa se llama Tribology Simulator & Industrial Workshop (la 1.x era Scratch Tribology Simulator); el
+  # paquete sigue siendo com.acidclawx41.scratchtribology para que la 2.0 se instale encima de la 1.x
+  APP_FILE: Tribology-Simulator-Industrial-Workshop
+
+jobs:
+  draft:
+    name: Versión y borrador de la Release
+    # En un repositorio privado los minutos de Actions salen del cupo de la cuenta (y los de macOS cuentan diez veces):
+    # ahí solo se compila si se lanza a mano («Run workflow»). En el público, como siempre (etiquetas v2* y ci/release)
+    if: ${{ !github.event.repository.private || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      id: ${{ steps.release.outputs.id }}
+    steps:
+      - uses: actions/checkout@v7
+
+      # La versión manda en godot/project.godot (config/version). Windows y Apple solo admiten números, así que los
+      # presets la repiten en el formato de cada plataforma; aquí se comprueba que todo coincide antes de compilar.
+      - name: Versión del proyecto (coincide con los presets y con la etiqueta)
+        id: version
+        run: |
+          v=$(sed -n 's/^config\/version="\(.*\)"$/\1/p' godot/project.godot)
+          code=$(sed -n 's/^version\/code=\([0-9][0-9]*\)$/\1/p' godot/export_presets.cfg)
+          if [ -z "$v" ] || [ -z "$code" ]; then
+            echo "::error::No encuentro config/version en godot/project.godot o version/code en godot/export_presets.cfg"
+            exit 1
+          fi
+          num=${v%%-*}
+          echo "Versión $v · números $num · código $code"
+          fail=0
+          # Cada clave tiene que existir y valer lo mismo en todos los presets que la usan
+          esperar() {
+            lineas=$(grep "^$1=" godot/export_presets.cfg || true)
+            if [ -z "$lineas" ] || printf '%s\n' "$lineas" | grep -qvxF "$1=$2"; then
+              echo "::error file=godot/export_presets.cfg::$1 debe ser $2 en todos los presets (versión $v)"
+              fail=1
+            fi
+          }
+          esperar version/name "\"$v\""
+          esperar application/short_version "\"$num\""
+          esperar application/version "\"$code\""
+          esperar application/file_version "\"$num.$code\""
+          esperar application/product_version "\"$num.$code\""
+          if [ "$GITHUB_REF_TYPE" = tag ] && [ "$GITHUB_REF_NAME" != "v$v" ]; then
+            echo "::error::La etiqueta $GITHUB_REF_NAME no coincide con la versión v$v de godot/project.godot"
+            fail=1
+          fi
+          [ "$fail" = 0 ]
+          echo "version=$v" >> "$GITHUB_OUTPUT"
+
+      - name: Crear el borrador (o reutilizarlo si se relanza)
+        id: release
+        if: github.ref_type == 'tag'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          id=$(gh api "repos/$GITHUB_REPOSITORY/releases" --paginate --jq ".[] | select(.tag_name == \"$TAG\") | .id" | head -n1)
+          if [ -z "$id" ]; then
+            # Una versión con guion (2.0.0-prototipo) se marca como prerrelease
+            case "$VERSION" in *-*) pre=true ;; *) pre=false ;; esac
+            # Las notas van en inglés, como las de la 1.x (.github/release-notes.md) y el README: son de cara a GitHub
+            cat > "$RUNNER_TEMP/notes.md" <<'EOF'
+          ## Tribology Simulator & Industrial Workshop {{TAG}}
+
+          A prototype of version 2 (formerly *Scratch Tribology Simulator*), rebuilt with Godot {{GODOT}}: one program with two sections, *Biological tribology* (nails, claws and fangs) and *Industrial workshop* (machining, lathe, angle grinder and knife sharpener).
+
+          | Platform | File | First launch |
+          |---|---|---|
+          | Windows 10/11 (64-bit) | `…_windows-x86_64.zip` | Unzip it and run `TribologySimulatorWorkshop.exe`. Not code-signed: SmartScreen → *More info* → *Run anyway* |
+          | macOS 11+ (Intel) · 13+ (Apple Silicon) | `…_macos-universal.dmg` | Ad-hoc signed, not notarized: open it once, then *System Settings → Privacy & Security → Open Anyway* |
+          | Linux x86_64 | `…_linux-x86_64.AppImage` · `…_amd64.deb` · `…_linux-x86_64.tar.gz` | AppImage: `chmod +x` and run it. Debian/Ubuntu: `sudo apt install ./…_amd64.deb` |
+          | Android 7.0+ | `…_android.apk` | Allow *Install unknown apps* for your browser or file manager |
+          | iPhone / iPad (iOS 15+) | `…_ios-unsigned.ipa` | Unsigned: install it with **AltStore** or **Sideloadly**, which sign it with your Apple ID (free accounts must reinstall every 7 days) |
+
+          The interface is in Spanish. The apps need no network connection. This is a prototype: parts are missing and it may change a lot before the final 2.0.
+
+          Built automatically by GitHub Actions (`.github/workflows/godot-release.yml`) from tag `{{TAG}}`.
+          EOF
+            sed -i -e "s|{{TAG}}|$TAG|g" -e "s|{{GODOT}}|$GODOT_VERSION|g" "$RUNNER_TEMP/notes.md"
+            id=$(gh api "repos/$GITHUB_REPOSITORY/releases" -f tag_name="$TAG" -f name="Tribology Simulator & Industrial Workshop $TAG" \
+              -F draft=true -F prerelease="$pre" -F body=@"$RUNNER_TEMP/notes.md" --jq .id)
+          else
+            # Se relanza una versión que ya existe: se borra todo lo compilado antes y se recompila de cero
+            gh api "repos/$GITHUB_REPOSITORY/releases/$id/assets" --paginate --jq '.[] | "\(.id) \(.name)"' |
+              while read -r asset name; do
+                echo "Borrando $name"
+                gh api --method DELETE "repos/$GITHUB_REPOSITORY/releases/assets/$asset"
+              done
+          fi
+          echo "id=$id" >> "$GITHUB_OUTPUT"
+
+  exportar:
+    name: Exportar con Godot (cinco plataformas)
+    needs: draft
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # Java 17 para firmar el APK (Godot llama a apksigner). El SDK de Android (ANDROID_HOME, con platform-tools y
+      # build-tools) ya viene en la imagen de ubuntu; Godot lee JAVA_HOME y ANDROID_HOME la primera vez que arranca.
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 17
+
+      # El editor y las plantillas de exportación (1,3 GB) se guardan en caché: una ejecución que se relanza no
+      # vuelve a bajarlos. Lo que sale de la caché se comprueba igual que una descarga nueva.
+      - name: Caché de las descargas de Godot
+        id: cache-godot
+        uses: actions/cache/restore@v6
+        with:
+          path: ~/godot-descargas
+          key: godot-${{ env.GODOT_VERSION }}-stable-editor-linux-y-plantillas
+
+      # Descarga oficial (downloads.godotengine.org) y SHA-512 comprobado con el SHA512-SUMS.txt de la Release de
+      # Godot en GitHub: dos orígenes distintos. De las plantillas solo se instalan las cinco que se usan (unos
+      # 600 MB de los 2 GB del paquete).
+      - name: Godot ${{ env.GODOT_VERSION }} y plantillas (descarga oficial verificada)
+        run: |
+          d="$HOME/godot-descargas"
+          editor="Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          tpz="Godot_v${GODOT_VERSION}-stable_export_templates.tpz"
+          url="https://downloads.godotengine.org/?version=${GODOT_VERSION}&flavor=stable"
+          mkdir -p "$d"
+          cd "$d"
+          [ -f SHA512-SUMS.txt ] || curl -fsSL --retry 3 -o SHA512-SUMS.txt \
+            "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/SHA512-SUMS.txt"
+          [ -f "$editor" ] || curl -fsSL --retry 3 -o "$editor" "$url&slug=linux.x86_64.zip&platform=linux.64"
+          [ -f "$tpz" ] || curl -fsSL --retry 3 -o "$tpz" "$url&slug=export_templates.tpz&platform=templates"
+          awk -v a="$editor" -v b="$tpz" '$2 == a || $2 == b' SHA512-SUMS.txt > "$RUNNER_TEMP/esperado.txt"
+          [ "$(wc -l < "$RUNNER_TEMP/esperado.txt")" -eq 2 ]
+          sha512sum -c "$RUNNER_TEMP/esperado.txt"
+          unzip -q -o "$editor" -d "$RUNNER_TEMP/godot"
+          echo "GODOT=$RUNNER_TEMP/godot/${editor%.zip}" >> "$GITHUB_ENV"
+          tpl="$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.stable"
+          mkdir -p "$tpl"
+          unzip -q -o -j "$tpz" templates/version.txt templates/linux_release.x86_64 templates/windows_release_x86_64.exe \
+            templates/macos.zip templates/android_release.apk templates/ios.zip -d "$tpl"
+          ls -la "$tpl"
+
+      # Se guarda en cuanto está comprobado, aunque después falle otro paso (actions/cache solo guardaría al terminar
+      # bien todo el trabajo): así un reintento tras un fallo de exportación no vuelve a bajar 1,3 GB
+      - name: Guardar las descargas en la caché
+        if: steps.cache-godot.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v6
+        with:
+          path: ~/godot-descargas
+          key: ${{ steps.cache-godot.outputs.cache-primary-key }}
+
+      # La 1.x firma el APK con la clave de depuración de la plantilla de Expo SDK 52, que es la de siempre de React
+      # Native (alias androiddebugkey, contraseña android). Se usa la misma, comprobada por su SHA-256, para que la
+      # V2 (mismo paquete com.acidclawx41.scratchtribology) se pueda instalar encima de la 1.x. Si hay secretos, el
+      # trabajo de Android la vuelve a firmar con tu clave, igual que release.yml.
+      - name: Clave de depuración de Android (la misma que la 1.x)
+        run: |
+          cd "$RUNNER_TEMP"
+          npm pack --silent expo-template-bare-minimum@52.0.79
+          tar -xzf expo-template-bare-minimum-52.0.79.tgz package/android/app/debug.keystore
+          echo "221e0a3106aa4c3ccc154e0a418b55020b3f9ea6e84f92e8749cd9e2f39f5e58  package/android/app/debug.keystore" | sha256sum -c -
+          {
+            echo "GODOT_ANDROID_KEYSTORE_RELEASE_PATH=$RUNNER_TEMP/package/android/app/debug.keystore"
+            echo "GODOT_ANDROID_KEYSTORE_RELEASE_USER=androiddebugkey"
+            echo "GODOT_ANDROID_KEYSTORE_RELEASE_PASSWORD=android"
+          } >> "$GITHUB_ENV"
+
+      # Primero se importan los recursos (.godot/); así la exportación no depende del orden del primer escaneo
+      - name: Importar el proyecto
+        run: |
+          "$GODOT" --headless --path godot --import 2>&1 | tee "$RUNNER_TEMP/import.log"
+          if grep -E "SCRIPT ERROR|Parse Error" "$RUNNER_TEMP/import.log"; then
+            echo "::error::Errores de GDScript al importar el proyecto"
+            exit 1
+          fi
+
+      # Todas las exportaciones salen de Linux: Windows (Godot escribe el icono y los metadatos del .exe sin
+      # rcedit), macOS (el firmador ad hoc integrado de Godot funciona fuera de macOS) e iOS (proyecto Xcode; la
+      # .ipa se compila después en macOS). Godot termina con código de error si una exportación falla.
+      - name: Exportar
+        run: |
+          out="$RUNNER_TEMP/export"
+          exportar() {
+            echo "::group::Exportar $1"
+            mkdir -p "$(dirname "$2")"
+            "$GODOT" --headless --path godot --export-release "$1" "$2" 2>&1 | tee "$RUNNER_TEMP/export-$1.log"
+            echo "::endgroup::"
+            if grep -E "SCRIPT ERROR|Parse Error" "$RUNNER_TEMP/export-$1.log"; then
+              echo "::error::Errores de GDScript al exportar $1"
+              exit 1
+            fi
+          }
+          exportar Linux "$out/linux/TribologySimulatorWorkshop.x86_64"
+          exportar Windows "$out/windows/TribologySimulatorWorkshop.exe"
+          exportar macOS "$out/macos/TribologySimulatorWorkshop.zip"
+          exportar Android "$out/android/TribologySimulatorWorkshop.apk"
+          exportar iOS "$out/ios/TribologySimulatorWorkshop.ipa"
+
+      # Viajan con cada paquete: la licencia del proyecto (MIT), la de Godot Engine (MIT) con las de sus componentes
+      # de terceros, y la SIL OFL 1.1 de las dos tipografías
+      - name: Licencias
+        run: |
+          lic="$RUNNER_TEMP/export/licencias"
+          raw="https://raw.githubusercontent.com/godotengine/godot/${GODOT_VERSION}-stable"
+          mkdir -p "$lic"
+          cp LICENSE "$lic/LICENSE.txt"
+          cp godot/assets/fonts/OFL-*.txt "$lic/"
+          curl -fsSL --retry 3 -o "$lic/GODOT-LICENSE.txt" "$raw/LICENSE.txt"
+          curl -fsSL --retry 3 -o "$lic/GODOT-COPYRIGHT.txt" "$raw/COPYRIGHT.txt"
+          ls -la "$lic"
+
+      - name: Comprobar lo exportado
+        run: |
+          cd "$RUNNER_TEMP/export"
+          file linux/* windows/* macos/* android/*
+          file linux/TribologySimulatorWorkshop.x86_64 | grep -q "ELF 64-bit LSB executable, x86-64"
+          file windows/TribologySimulatorWorkshop.exe | grep -q "PE32+ executable (GUI) x86-64"
+          unzip -l macos/TribologySimulatorWorkshop.zip | grep -q "Contents/_CodeSignature/CodeResources"
+          unzip -l android/TribologySimulatorWorkshop.apk | grep -q "AndroidManifest.xml"
+          test -f ios/TribologySimulatorWorkshop.xcodeproj/project.pbxproj
+          du -sh ./*
+
+      # Cada plataforma se empaqueta en su trabajo. Van en .tar porque upload-artifact no conserva los permisos
+      - name: Preparar los artefactos intermedios
+        run: |
+          cd "$RUNNER_TEMP/export"
+          for p in linux windows macos android ios; do
+            tar -cf "$RUNNER_TEMP/export-$p.tar" "$p" licencias
+          done
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: export-linux
+          path: ${{ runner.temp }}/export-linux.tar
+          retention-days: 1
+      - uses: actions/upload-artifact@v7
+        with:
+          name: export-windows
+          path: ${{ runner.temp }}/export-windows.tar
+          retention-days: 1
+      - uses: actions/upload-artifact@v7
+        with:
+          name: export-macos
+          path: ${{ runner.temp }}/export-macos.tar
+          retention-days: 1
+      - uses: actions/upload-artifact@v7
+        with:
+          name: export-android
+          path: ${{ runner.temp }}/export-android.tar
+          retention-days: 1
+      - uses: actions/upload-artifact@v7
+        with:
+          name: export-ios
+          path: ${{ runner.temp }}/export-ios.tar
+          retention-days: 1
+
+  linux:
+    name: Linux · tar.gz, AppImage y .deb
+    needs: [draft, exportar]
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.draft.outputs.version }}
+      # appimagetool 1.9.1 (AppImage/appimagetool), fijado por su SHA-256
+      APPIMAGETOOL_URL: https://github.com/AppImage/appimagetool/releases/download/1.9.1/appimagetool-x86_64.AppImage
+      APPIMAGETOOL_SHA256: ed4ce84f0d9caff66f50bcca6ff6f35aae54ce8135408b3fa33abfc3cb384eb0
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: export-linux
+          path: ${{ runner.temp }}
+
+      - name: Desempaquetar
+        run: tar -xf "$RUNNER_TEMP/export-linux.tar" -C "$RUNNER_TEMP"
+
+      # El ejecutable exportado tiene que arrancar: --headless no abre ventana ni necesita GPU ni audio, y --quit
+      # sale tras el primer fotograma. Un fallo de GDScript al cargar la escena principal sale como SCRIPT ERROR.
+      - name: El ejecutable arranca (--headless --quit)
+        run: |
+          "$RUNNER_TEMP/linux/TribologySimulatorWorkshop.x86_64" --headless --quit 2>&1 | tee "$RUNNER_TEMP/arranque.log"
+          if grep -E "SCRIPT ERROR|Parse Error" "$RUNNER_TEMP/arranque.log"; then
+            echo "::error::El ejecutable de Linux da errores de GDScript al arrancar"
+            exit 1
+          fi
+
+      - name: Paquetes .tar.gz, AppImage y .deb
+        run: |
+          src="$RUNNER_TEMP/linux/TribologySimulatorWorkshop.x86_64"
+          lic="$RUNNER_TEMP/licencias"
+          out="$RUNNER_TEMP/out"
+          id=tribology-simulator-workshop
+          mkdir -p "$out"
+
+          # Lanzador común a la AppImage y al .deb (una sola categoría principal, para no salir dos veces en el
+          # menú). Godot 4.7 da a la ventana la clase (X11) y el app_id (Wayland) config/name del proyecto, así que
+          # StartupWMClass asocia la ventana con este lanzador y su icono.
+          cat > "$RUNNER_TEMP/$id.desktop" <<'EOF'
+          [Desktop Entry]
+          Type=Application
+          Name=Tribology Simulator & Industrial Workshop
+          GenericName=Simulador de tribología
+          Comment=Tribología biológica y taller industrial: qué raya, corta o mecaniza a qué, y por qué
+          Exec=tribology-simulator-workshop
+          Icon=tribology-simulator-workshop
+          Terminal=false
+          Categories=Education;Physics;
+          StartupWMClass=Tribology Simulator & Industrial Workshop
+          EOF
+
+          # 1) .tar.gz: una carpeta con el ejecutable (lleva el pck dentro) y las licencias
+          mkdir -p "$RUNNER_TEMP/tgz/Tribology-Simulator-Industrial-Workshop"
+          cp "$src" "$RUNNER_TEMP/tgz/Tribology-Simulator-Industrial-Workshop/"
+          cp -R "$lic" "$RUNNER_TEMP/tgz/Tribology-Simulator-Industrial-Workshop/licencias"
+          tar -C "$RUNNER_TEMP/tgz" -czf "$out/${APP_FILE}_${VERSION}_linux-x86_64.tar.gz" Tribology-Simulator-Industrial-Workshop
+
+          # 2) AppImage: AppRun apunta al ejecutable. appimagetool descarga el runtime type2 actual, que va enlazado
+          #    estáticamente: la AppImage no necesita libfuse2 en el sistema del usuario.
+          #    APPIMAGE_EXTRACT_AND_RUN permite usar appimagetool (también es una AppImage) sin FUSE en el runner.
+          app="$RUNNER_TEMP/AppDir"
+          mkdir -p "$app/usr/bin" "$app/usr/share/doc/$id"
+          cp "$src" "$app/usr/bin/$id"
+          cp -R "$lic"/. "$app/usr/share/doc/$id/"
+          cp "$RUNNER_TEMP/$id.desktop" "$app/"
+          cp godot/assets/icon.png "$app/$id.png"
+          ln -s "usr/bin/$id" "$app/AppRun"
+          curl -fsSL --retry 3 -o "$RUNNER_TEMP/appimagetool" "$APPIMAGETOOL_URL"
+          echo "$APPIMAGETOOL_SHA256  $RUNNER_TEMP/appimagetool" | sha256sum -c -
+          chmod +x "$RUNNER_TEMP/appimagetool"
+          ARCH=x86_64 APPIMAGE_EXTRACT_AND_RUN=1 "$RUNNER_TEMP/appimagetool" --no-appstream "$app" \
+            "$out/${APP_FILE}_${VERSION}_linux-x86_64.AppImage"
+
+          # 3) .deb. Godot enlaza solo con la libc y carga en tiempo de ejecución el resto de bibliotecas del sistema
+          #    (ventanas, gráficos, audio…), así que dpkg-shlibdeps no las vería: se declaran a mano. Depends lleva lo
+          #    imprescindible para abrir una ventana y oír algo; Recommends, lo que Godot usa si está (explicado en
+          #    docs/GODOT-EXPORT.md). La versión 2.0.0-prototipo pasa a 2.0.0~prototipo: va antes que la 2.0.0.
+          pkg="$RUNNER_TEMP/deb"
+          debver=$(printf '%s' "$VERSION" | tr '-' '~')
+          mkdir -p "$pkg/DEBIAN" "$pkg/usr/bin" "$pkg/usr/share/applications" "$pkg/usr/share/pixmaps" "$pkg/usr/share/doc/$id"
+          cp "$src" "$pkg/usr/bin/$id"
+          cp "$RUNNER_TEMP/$id.desktop" "$pkg/usr/share/applications/"
+          cp godot/assets/icon.png "$pkg/usr/share/pixmaps/$id.png"
+          cp -R "$lic"/. "$pkg/usr/share/doc/$id/"
+          cp LICENSE "$pkg/usr/share/doc/$id/copyright"
+          cat > "$pkg/DEBIAN/control" <<EOF
+          Package: $id
+          Version: $debver
+          Architecture: amd64
+          Maintainer: Eric Valls Gramunt
+          Installed-Size: $(du -sk "$pkg/usr" | cut -f1)
+          Depends: libc6 (>= 2.28), libx11-6 | libwayland-client0, libgl1 | libvulkan1, libasound2 | libpulse0
+          Recommends: libpulse0, libvulkan1, mesa-vulkan-drivers | vulkan-icd, libegl1, libxcursor1, libxext6, libxi6, libxinerama1, libxrandr2, libxrender1, libwayland-cursor0, libwayland-egl1, libxkbcommon0, libdecor-0-0, libfontconfig1, libdbus-1-3, libudev1
+          Suggests: libspeechd2
+          Section: education
+          Priority: optional
+          Homepage: https://github.com/$GITHUB_REPOSITORY
+          Description: simulador educativo de tribología
+           Tribología biológica (uñas, garras y colmillos) y taller industrial
+           (mecanizado, torno, radial y afiladora) en un solo programa: qué raya,
+           corta o mecaniza a qué, y por qué. Prototipo de la versión 2, hecho con
+           Godot.
+          EOF
+          dpkg-deb --root-owner-group -Zxz --build "$pkg" "$out/${APP_FILE}_${VERSION}_amd64.deb"
+
+      - name: Comprobar los paquetes
+        run: |
+          out="$RUNNER_TEMP/out"
+          dpkg-deb --info "$out/${APP_FILE}_${VERSION}_amd64.deb"
+          dpkg-deb --contents "$out/${APP_FILE}_${VERSION}_amd64.deb"
+          tar -tzf "$out/${APP_FILE}_${VERSION}_linux-x86_64.tar.gz"
+          # La AppImage arranca igual que el ejecutable suelto (sin FUSE: se extrae y se ejecuta)
+          chmod +x "$out/${APP_FILE}_${VERSION}_linux-x86_64.AppImage"
+          APPIMAGE_EXTRACT_AND_RUN=1 "$out/${APP_FILE}_${VERSION}_linux-x86_64.AppImage" --headless --quit
+          # El .deb se instala con apt (que resuelve sus dependencias), arranca desde /usr/bin y se desinstala
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq "$out/${APP_FILE}_${VERSION}_amd64.deb"
+          tribology-simulator-workshop --headless --quit
+          sudo apt-get remove -y -qq tribology-simulator-workshop
+          # Tamaños: un paquete de menos de 10 MB es que le falta el ejecutable
+          for f in "$out"/*; do
+            b=$(wc -c < "$f" | tr -d ' ')
+            echo "$(basename "$f"): $((b / 1048576)) MB"
+            [ "$b" -ge 10485760 ] || { echo "::error::$(basename "$f") ocupa menos de 10 MB"; exit 1; }
+          done
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: paquete-linux
+          path: ${{ runner.temp }}/out/*
+          if-no-files-found: error
+
+  windows:
+    name: Windows · zip
+    needs: [draft, exportar]
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.draft.outputs.version }}
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: export-windows
+          path: ${{ runner.temp }}
+
+      - name: Desempaquetar
+        run: tar -xf "$RUNNER_TEMP/export-windows.tar" -C "$RUNNER_TEMP"
+
+      # Un .zip con una carpeta: el .exe (con el pck dentro) y las licencias. Se comprueba que Godot ha escrito
+      # los metadatos del .exe (nombre del producto), porque sin ellos Windows lo mostraría como «Godot Engine».
+      - name: Zip y comprobación
+        run: |
+          exe="$RUNNER_TEMP/windows/TribologySimulatorWorkshop.exe"
+          file "$exe" | grep -q "PE32+ executable (GUI) x86-64"
+          strings -el "$exe" | grep -qxF "Tribology Simulator & Industrial Workshop"
+          d="$RUNNER_TEMP/zip/Tribology-Simulator-Industrial-Workshop"
+          mkdir -p "$d" "$RUNNER_TEMP/out"
+          cp "$exe" "$d/"
+          cp -R "$RUNNER_TEMP/licencias" "$d/licencias"
+          zipfile="$RUNNER_TEMP/out/${APP_FILE}_${VERSION}_windows-x86_64.zip"
+          (cd "$RUNNER_TEMP/zip" && zip -qr9 "$zipfile" Tribology-Simulator-Industrial-Workshop)
+          unzip -l "$zipfile"
+          b=$(wc -c < "$zipfile" | tr -d ' ')
+          echo "$(basename "$zipfile"): $((b / 1048576)) MB"
+          [ "$b" -ge 10485760 ] || { echo "::error::El .zip de Windows ocupa menos de 10 MB"; exit 1; }
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: paquete-windows
+          path: ${{ runner.temp }}/out/*
+          if-no-files-found: error
+
+  macos:
+    name: macOS · DMG universal
+    needs: [draft, exportar]
+    runs-on: macos-26
+    env:
+      VERSION: ${{ needs.draft.outputs.version }}
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: export-macos
+          path: ${{ runner.temp }}
+
+      - name: Desempaquetar
+        run: |
+          tar -xf "$RUNNER_TEMP/export-macos.tar" -C "$RUNNER_TEMP"
+          ditto -x -k "$RUNNER_TEMP/macos/TribologySimulatorWorkshop.zip" "$RUNNER_TEMP/macos"
+
+      # Godot 4.7.2 escribe el nombre del ejecutable sin escapar el «&» del nombre del programa: el Info.plist y la lista
+      # de archivos de la firma (_CodeSignature/CodeResources) salen como XML mal formado, y codesign dice «a required
+      # plist file or resource is malformed». Se escapa el «&» del Info.plist y el codesign de Apple vuelve a firmar ad
+      # hoc (lo que reescribe CodeResources bien), con los permisos (entitlements) que llevara la firma de Godot.
+      - name: Arreglar el «&» del nombre en el Info.plist y volver a firmar
+        run: |
+          app="$RUNNER_TEMP/macos/Tribology Simulator & Industrial Workshop.app"
+          perl -pi -e 's/&(?!(?:amp|lt|gt|quot|apos|#\d+|#x[0-9a-fA-F]+);)/&amp;/g' "$app/Contents/Info.plist"
+          plutil -lint "$app/Contents/Info.plist"
+          ent="$RUNNER_TEMP/entitlements.plist"
+          codesign -d --entitlements - --xml "$app" > "$ent" 2>/dev/null || true
+          if [ -s "$ent" ] && plutil -lint "$ent" > /dev/null 2>&1; then
+            echo "Con los permisos de la firma de Godot:"
+            plutil -p "$ent"
+            codesign --force --deep --sign - --entitlements "$ent" "$app"
+          else
+            codesign --force --deep --sign - "$app"
+          fi
+
+      # Aquí la comprueba el codesign de Apple. En Apple Silicon un ejecutable sin firma válida no arranca, así que
+      # también se lanza (--headless --quit) en el runner.
+      - name: Comprobar la firma ad hoc y el binario universal
+        run: |
+          app="$RUNNER_TEMP/macos/Tribology Simulator & Industrial Workshop.app"
+          codesign --verify --deep --strict --verbose=2 "$app"
+          codesign -dv "$app" 2>&1 | tee "$RUNNER_TEMP/firma.txt"
+          grep -q "Signature=adhoc" "$RUNNER_TEMP/firma.txt"
+          archs=$(lipo -archs "$app/Contents/MacOS/Tribology Simulator & Industrial Workshop")
+          echo "Arquitecturas: $archs"
+          case "$archs" in *x86_64*arm64* | *arm64*x86_64*) ;; *) echo "::error::El binario no es universal"; exit 1 ;; esac
+          plutil -p "$app/Contents/Info.plist" | grep -E "CFBundleIdentifier|CFBundleShortVersionString|CFBundleVersion"
+          "$app/Contents/MacOS/Tribology Simulator & Industrial Workshop" --headless --quit
+
+      # DMG comprimido (UDZO) en HFS+, que abren todas las versiones de macOS que admite la app, con el acceso
+      # directo a Aplicaciones para instalar arrastrando. ditto copia la app sin tocar la firma.
+      - name: DMG con hdiutil
+        run: |
+          stage="$RUNNER_TEMP/dmg"
+          dmg="$RUNNER_TEMP/out/${APP_FILE}_${VERSION}_macos-universal.dmg"
+          mkdir -p "$stage" "$RUNNER_TEMP/out"
+          ditto "$RUNNER_TEMP/macos/Tribology Simulator & Industrial Workshop.app" "$stage/Tribology Simulator & Industrial Workshop.app"
+          ln -s /Applications "$stage/Aplicaciones"
+          cp -R "$RUNNER_TEMP/licencias" "$stage/Licencias"
+          hdiutil create -volname "Tribology Simulator & Industrial Workshop" -srcfolder "$stage" -fs HFS+ -format UDZO -ov "$dmg"
+          hdiutil verify "$dmg"
+          b=$(wc -c < "$dmg" | tr -d ' ')
+          echo "$(basename "$dmg"): $((b / 1048576)) MB"
+          [ "$b" -ge 10485760 ] || { echo "::error::El .dmg ocupa menos de 10 MB"; exit 1; }
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: paquete-macos
+          path: ${{ runner.temp }}/out/*
+          if-no-files-found: error
+
+  android:
+    name: Android · APK
+    needs: [draft, exportar]
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.draft.outputs.version }}
+      ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+      ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+      ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: export-android
+          path: ${{ runner.temp }}
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Nombrar el APK
+        run: |
+          tar -xf "$RUNNER_TEMP/export-android.tar" -C "$RUNNER_TEMP"
+          mkdir -p "$RUNNER_TEMP/out"
+          cp "$RUNNER_TEMP/android/TribologySimulatorWorkshop.apk" "$RUNNER_TEMP/out/${APP_FILE}_${VERSION}_android.apk"
+
+      # Igual que release.yml: si has dado los secretos, apksigner sustituye la firma de depuración por la tuya
+      - name: Firmar con tu clave (si has dado los secretos)
+        if: env.ANDROID_KEYSTORE_BASE64 != ''
+        run: |
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
+          bt=$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n1)
+          for apk in "$RUNNER_TEMP"/out/*.apk; do
+            "$bt/apksigner" sign --ks "$RUNNER_TEMP/release.jks" --ks-pass env:ANDROID_KEYSTORE_PASSWORD \
+              --ks-key-alias "$ANDROID_KEY_ALIAS" --key-pass env:ANDROID_KEY_PASSWORD "$apk"
+          done
+          rm -f "$RUNNER_TEMP/release.jks"
+
+      # Firma válida, paquete y versión, minSdk 24 (Android 7.0), solo las dos arquitecturas ARM y ningún permiso de
+      # Internet
+      - name: Comprobar el APK
+        run: |
+          apk="$RUNNER_TEMP/out/${APP_FILE}_${VERSION}_android.apk"
+          bt=$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -n1)
+          "$bt/apksigner" verify --print-certs "$apk"
+          "$bt/aapt2" dump badging "$apk" > "$RUNNER_TEMP/badging.txt"
+          grep -E "^(package|sdkVersion|minSdkVersion|targetSdkVersion|uses-permission|native-code)" "$RUNNER_TEMP/badging.txt"
+          grep -q "name='com.acidclawx41.scratchtribology'" "$RUNNER_TEMP/badging.txt"
+          grep -q "versionName='$VERSION'" "$RUNNER_TEMP/badging.txt"
+          # el aapt2 de las build-tools recientes escribe «minSdkVersion»; el de antes, «sdkVersion»
+          grep -Eq "^(sdkVersion|minSdkVersion):'24'" "$RUNNER_TEMP/badging.txt"
+          abis=$(grep "^native-code:" "$RUNNER_TEMP/badging.txt")
+          case "$abis" in *"'arm64-v8a'"*) ;; *) echo "::error::Al APK le falta arm64-v8a"; exit 1 ;; esac
+          case "$abis" in *"'armeabi-v7a'"*) ;; *) echo "::error::Al APK le falta armeabi-v7a"; exit 1 ;; esac
+          case "$abis" in *"'x86"*) echo "::error::El APK lleva bibliotecas x86"; exit 1 ;; esac
+          if grep -q "android.permission.INTERNET" "$RUNNER_TEMP/badging.txt"; then
+            echo "::error::El APK pide permiso de Internet"
+            exit 1
+          fi
+          b=$(wc -c < "$apk" | tr -d ' ')
+          echo "$(basename "$apk"): $((b / 1048576)) MB"
+          [ "$b" -ge 10485760 ] || { echo "::error::El APK ocupa menos de 10 MB"; exit 1; }
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: paquete-android
+          path: ${{ runner.temp }}/out/*.apk
+          if-no-files-found: error
+
+  ios:
+    name: iPhone · IPA sin firmar
+    needs: [draft, exportar]
+    # Las bibliotecas de iOS de las plantillas de Godot 4.7.2 están compiladas con el SDK de iOS 26.1: hace falta
+    # Xcode 26.1 o posterior (el Xcode 16.4 que usa la 1.x no las enlaza). macOS 26 trae Xcode 26.
+    runs-on: macos-26
+    env:
+      VERSION: ${{ needs.draft.outputs.version }}
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: export-ios
+          path: ${{ runner.temp }}
+
+      - name: Desempaquetar
+        run: tar -xf "$RUNNER_TEMP/export-ios.tar" -C "$RUNNER_TEMP"
+
+      - name: Xcode 26.6
+        run: |
+          sudo xcode-select -s /Applications/Xcode_26.6.app
+          xcodebuild -version
+
+      # Sin certificado de Apple la app no se puede firmar: se compila sin firma y se empaqueta como .ipa, como en
+      # la 1.x. AltStore o Sideloadly la firman con tu Apple ID al instalarla (con cuenta gratuita, dura 7 días).
+      # El Team ID del preset es un marcador que Godot exige: sin firma, Xcode no lo usa.
+      - name: Compilar (Release, sin firmar)
+        working-directory: ${{ runner.temp }}/ios
+        run: |
+          xcodebuild -quiet -project TribologySimulatorWorkshop.xcodeproj -scheme TribologySimulatorWorkshop \
+            -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/STS.xcarchive" \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            archive
+
+      - name: Empaquetar y comprobar el .ipa
+        run: |
+          ipa="$RUNNER_TEMP/out/${APP_FILE}_${VERSION}_ios-unsigned.ipa"
+          mkdir -p "$RUNNER_TEMP/ipa/Payload" "$RUNNER_TEMP/out"
+          cp -R "$RUNNER_TEMP"/STS.xcarchive/Products/Applications/*.app "$RUNNER_TEMP/ipa/Payload/"
+          app=$(find "$RUNNER_TEMP/ipa/Payload" -maxdepth 1 -name '*.app' | head -n1)
+          plutil -p "$app/Info.plist" | grep -E "CFBundleIdentifier|CFBundleShortVersionString|CFBundleVersion|MinimumOSVersion"
+          lipo -archs "$app/$(plutil -extract CFBundleExecutable raw "$app/Info.plist")"
+          (cd "$RUNNER_TEMP/ipa" && zip -qry "$ipa" Payload)
+          b=$(wc -c < "$ipa" | tr -d ' ')
+          echo "$(basename "$ipa"): $((b / 1048576)) MB"
+          [ "$b" -ge 10485760 ] || { echo "::error::La .ipa ocupa menos de 10 MB"; exit 1; }
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: paquete-ios
+          path: ${{ runner.temp }}/out/*.ipa
+          if-no-files-found: error
+
+  # Sube al borrador lo que haya salido bien (también si falla una plataforma: así se ve qué falta), sustituyendo
+  # los archivos de un intento anterior. Termina en rojo si falta alguno de los siete archivos.
+  publicar:
+    name: Subir los archivos al borrador
+    needs: [draft, linux, windows, macos, android, ios]
+    if: ${{ !cancelled() && needs.draft.result == 'success' && github.ref_type == 'tag' }}
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.draft.outputs.version }}
+      RELEASE_ID: ${{ needs.draft.outputs.id }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: paquete-*
+          merge-multiple: true
+          path: ${{ runner.temp }}/out
+
+      - name: Subir a la Release
+        run: |
+          mkdir -p "$RUNNER_TEMP/out"
+          cd "$RUNNER_TEMP/out"
+          shopt -s nullglob
+          for f in *; do
+            case "$f" in
+              *.tar.gz) type=application/gzip ;;
+              *.zip) type=application/zip ;;
+              *.deb) type=application/vnd.debian.binary-package ;;
+              *.dmg) type=application/x-apple-diskimage ;;
+              *.apk) type=application/vnd.android.package-archive ;;
+              *) type=application/octet-stream ;;
+            esac
+            old=$(gh api "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID/assets" --paginate --jq ".[] | select(.name == \"$f\") | .id")
+            if [ -n "$old" ]; then gh api --method DELETE "repos/$GITHUB_REPOSITORY/releases/assets/$old"; fi
+            gh api --method POST -H "Content-Type: $type" \
+              "https://uploads.github.com/repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID/assets?name=$f" \
+              --input "$f" --jq .browser_download_url
+          done
+
+      - name: Resumen
+        run: |
+          cd "$RUNNER_TEMP/out"
+          url=$(gh api "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID" --jq .html_url)
+          {
+            echo "### Borrador de la Release $VERSION"
+            echo
+            echo "Revísalo y publícalo a mano: $url"
+            echo
+            echo "| Archivo | Tamaño |"
+            echo "|---|---|"
+          } >> "$GITHUB_STEP_SUMMARY"
+          missing=0
+          for suf in linux-x86_64.tar.gz linux-x86_64.AppImage amd64.deb windows-x86_64.zip macos-universal.dmg \
+            android.apk ios-unsigned.ipa; do
+            f="${APP_FILE}_${VERSION}_$suf"
+            if [ -f "$f" ]; then
+              echo "| $f | $(( $(wc -c < "$f") / 1048576 )) MB |" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "| $f | **falta** |" >> "$GITHUB_STEP_SUMMARY"
+              echo "::error::Falta $f: revisa el trabajo de su plataforma"
+              missing=1
+            fi
+          done
+          [ "$missing" = 0 ]

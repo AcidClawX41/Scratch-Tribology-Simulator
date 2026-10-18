@@ -30,3 +30,6 @@ Thumbs.db
 # configuración local del entorno de desarrollo (no se publica)
 /CLAUDE.md
 /.claude/
+
+# Godot: ajustes aislados del editor en las ejecuciones por línea de órdenes (tests, capturas)
+/.godot-home/

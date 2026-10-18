@@ -1,0 +1,719 @@
+[
+  {
+    "id": "piel-brazo-stiletto-30N",
+    "note": "Sin zona, la del brazo. Unidad 4b, con la 2.0 completa: la stiletto natural cede a ~13,8 N (bending.gd: voladizo en «C» con el ataque de 45° de las uñas) y a la punta solo llega esa carga; el esfuerzo arranca la epidermis (75 µm, no sangra) sin romper la piel, que pide 27,8 N (Davis 2004). La referencia de la 1g, sin la flexión de la uña (el arañazo de 882 µm del golden 1.x «uña stiletto 30N sobre piel»), queda en expect1g.",
+    "input": { "geom": "stiletto", "base": "natural", "inlay": "none", "claw": null, "target": "piel", "type": "aranazo", "force": 30, "length": 25, "tear": false, "method": "rayado", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "zone": { "value": "brazo" },
+      "verdict": { "value": "SE DOBLA LA UÑA" },
+      "toolBroken": { "value": true },
+      "nail.broken": { "value": true },
+      "nail.breakN": { "value": 13.751035527497447, "tol": 0.000001 },
+      "depthUm": { "value": 75.0 },
+      "layer": { "value": "Epidermis viva" },
+      "bleeds": { "value": false },
+      "ruptures": { "value": false },
+      "pen.abrasionUm": { "value": 75.0 },
+      "pen.excoriation": { "value": true },
+      "pen.cutUm": { "value": 0.0 },
+      "pen.boneHit": { "value": false }
+    },
+    "expect1g": {
+      "zone": { "value": "brazo" },
+      "depthUm": { "value": 882.3529411764706, "tol": 0.000001 },
+      "layer": { "value": "Dermis" },
+      "bleeds": { "value": true },
+      "ruptures": { "value": true },
+      "pen.cutUm": { "value": 882.3529411764706, "tol": 0.000001 },
+      "pen.boneHit": { "value": false }
+    },
+    "source": "golden 1.x; Sandby-Møller 2003; Gibney 2010; flexión de la uña: Baraldi et al. 2015, Jung et al. 2015 (docs/fisica/pulido-materiales.md, tema 2)"
+  },
+  {
+    "id": "piel-brazo-gato-3N",
+    "note": "El mimo del gato en el brazo: rompe la piel y sangra (golden 1.x, ARAÑAZO QUE SANGRA).",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "gato", "target": "piel", "type": "aranazo", "force": 3, "length": 25, "tear": false, "method": "rayado", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "depthUm": { "value": 137.6470588235294, "tol": 0.000001 },
+      "layer": { "value": "Dermis" },
+      "bleeds": { "value": true },
+      "ruptures": { "value": true },
+      "pen.layerId": { "value": "dermis" }
+    },
+    "source": "golden 1.x; Shergold & Fleck 2005; Comley & Fleck 2010"
+  },
+  {
+    "id": "piel-brazo-pajaro-1.5N",
+    "note": "Un pájaro no rompe la piel: excoria la epidermis del brazo (75 µm), que no sangra.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "pajaro", "target": "piel", "type": "aranazo", "force": 1.5, "length": 25, "tear": false, "method": "rayado", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "depthUm": { "value": 75.0 },
+      "layer": { "value": "Epidermis viva" },
+      "bleeds": { "value": false },
+      "ruptures": { "value": false },
+      "pen.excoriation": { "value": true },
+      "pen.abrasionUm": { "value": 75.0 }
+    },
+    "source": "golden 1.x; Sandby-Møller 2003"
+  },
+  {
+    "id": "piel-brazo-almendra-30N-x20",
+    "note": "Veinte pasadas de uña excorian hasta las papilas: sangra desde la quinta, como en la 1.x.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": null, "target": "piel", "type": "aranazo", "force": 30, "length": 25, "tear": false, "method": "rayado", "strike": false, "passes": 20, "wet": false, "model": "2.0" },
+    "expect": {
+      "depthUm": { "value": 75.0 },
+      "layer": { "value": "Epidermis viva" },
+      "bleeds": { "value": true },
+      "pen.excoriationBleeds": { "value": true },
+      "pen.bleedPasses": { "value": 5.0 }
+    },
+    "source": "golden 1.x (heurística calibrada, FISICA §7)"
+  },
+  {
+    "id": "piel-brazo-tigre-260N",
+    "note": "El tigre rasga con toda la garra (40 mm): el húmero, a 41,4 mm, queda fuera de su alcance.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "tigre", "target": "piel", "type": "aranazo", "force": 260, "length": 25, "tear": false, "method": "rayado", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "depthUm": { "value": 40000.0 },
+      "layer": { "value": "Músculo" },
+      "fullReach": { "value": true },
+      "pen.boneHit": { "value": false },
+      "pen.boneDepthUm": { "value": 41400.0 }
+    },
+    "source": "golden 1.x; Homer 2025 (2,84 cm de la grasa al húmero)"
+  },
+  {
+    "id": "piel-brazo-oso-300N-desgarro",
+    "note": "El oso desgarra más hondo de lo que mide el brazo: se para en el húmero (la 1.x lo dejaba en 60 mm de músculo).",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "oso", "target": "piel", "type": "aranazo", "force": 300, "length": 25, "tear": true, "method": "rayado", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "depthUm": { "value": 41400.0 },
+      "layer": { "value": "Músculo" },
+      "fullReach": { "value": false },
+      "pen.boneHit": { "value": true },
+      "bleeds": { "value": true }
+    },
+    "source": "Gibney 2010; Homer 2025; Tingart 2003"
+  },
+  {
+    "id": "piel-brazo-vibora-4N-puncion",
+    "note": "La víbora entra entera (18 mm) empujando 4 N: la grieta y el roce de los flancos suman ~2 N (golden 1.x).",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "vibora", "target": "piel", "type": "aranazo", "force": 4, "length": 25, "tear": false, "method": "puncion", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "pierces": { "value": true },
+      "depthUm": { "value": 18000.0 },
+      "layer": { "value": "Músculo" },
+      "inject": { "value": true },
+      "bleeds": { "value": true },
+      "fullReach": { "value": true },
+      "fPuncture": { "value": 0.86, "tol": 0.000001 },
+      "pen.stoppedBy": { "value": "alcance" },
+      "pen.crackN": { "value": 0.12096, "tol": 0.000001 },
+      "pen.frictionN": { "value": 1.8593606418277606, "tol": 0.000001 },
+      "pen.workJ": { "value": 0.03641343026224952, "tol": 0.000001 },
+      "workJ": { "value": 0.03641343026224952, "tol": 0.000001 },
+      "sev": { "value": 0.8902295350525409, "tol": 0.000001 }
+    },
+    "source": "golden 1.x; Shergold & Fleck 2005; Fregonese & Bacca 2022"
+  },
+  {
+    "id": "piel-brazo-gabon-golpe",
+    "note": "El Gabón llega al húmero con el colmillo entero dentro: indenta la cortical y se rompe a 30 N (la 1.x lo dejaba en 50 mm de músculo).",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "gabon", "target": "piel", "type": "aranazo", "force": 30, "length": 25, "tear": false, "method": "puncion", "strike": true, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "pierces": { "value": true },
+      "depthUm": { "value": 41410.1841607419, "tol": 0.000001 },
+      "layer": { "value": "Húmero" },
+      "toolBroken": { "value": true },
+      "bleeds": { "value": true },
+      "sev": { "value": 0.97 },
+      "pen.stoppedBy": { "value": "rotura" },
+      "pen.toolLoadN": { "value": 30.0 },
+      "pen.boneHit": { "value": true },
+      "pen.boneIndentUm": { "value": 10.184160741897358, "tol": 0.000001 },
+      "pen.bonePierced": { "value": false },
+      "pen.energyLeftJ": { "value": 4.235113049600493, "tol": 0.000001 }
+    },
+    "source": "Estrada et al. 2026 (rotura a ~30 N); Li 2021 (húmero 47,25 HV); Enax 2013 (esmalte)"
+  },
+  {
+    "id": "piel-brazo-casuario-golpe",
+    "note": "La patada del casuario se para en el húmero: la queratina no raya hueso (r = 0,68) y el resto de la energía se la queda la pata.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "casuario", "target": "piel", "type": "aranazo", "force": 500, "length": 25, "tear": false, "method": "puncion", "strike": true, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "depthUm": { "value": 41400.0 },
+      "layer": { "value": "Músculo" },
+      "fullReach": { "value": false },
+      "sev": { "value": 0.97 },
+      "pen.stoppedBy": { "value": "hueso" },
+      "pen.boneN": { "value": null },
+      "pen.toolLoadN": { "value": null },
+      "pen.boneIndentUm": { "value": 0.0 },
+      "pen.energyLeftJ": { "min": 100.0 }
+    },
+    "source": "Li 2021 (húmero 47,25 HV); Richardson 1968 (r < 1,25 no marca); Homer 2025"
+  },
+  {
+    "id": "piel-brazo-pajaro-1.5N-puncion",
+    "note": "Un pájaro que empuja 1,5 N no perfora la piel (hacen falta ~3,1 N con su punta).",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "pajaro", "target": "piel", "type": "aranazo", "force": 1.5, "length": 25, "tear": false, "method": "puncion", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "pierces": { "value": false },
+      "depthUm": { "value": 0.0 },
+      "layer": { "value": null },
+      "bleeds": { "value": false },
+      "sev": { "value": 0.08 },
+      "pen.stoppedBy": { "value": "sin perforar" },
+      "fPuncture": { "value": 3.14, "tol": 0.000001 }
+    },
+    "source": "golden 1.x; Sting.puncture_force (unidad 1a)"
+  },
+  {
+    "id": "piel-brazo-gato-3.2N-puncion",
+    "note": "Un gato que empuja 3,2 N rompe la piel y se para en la grasa: la grieta de la dermis y el roce lo frenan.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "gato", "target": "piel", "type": "aranazo", "force": 3.2, "length": 25, "tear": false, "method": "puncion", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "pierces": { "value": true },
+      "depthUm": { "value": 3397.5772257657777, "tol": 0.000001 },
+      "layer": { "value": "Hipodermis (grasa)" },
+      "pen.stoppedBy": { "value": "fuerza" },
+      "pen.crackN": { "value": 2.1609336929818173, "tol": 0.000001 },
+      "pen.frictionN": { "value": 1.039085106730243, "tol": 0.000001 },
+      "pen.resN": { "value": 3.20001879971206, "tol": 0.000001 }
+    },
+    "source": "Shergold & Fleck 2005; Fregonese & Bacca 2022; Shergold, Fleck & Radford 2006"
+  },
+  {
+    "id": "piel-brazo-casuario-tungsteno-golpe",
+    "note": "Una daga de tungsteno a 50 km/h sí atraviesa la cortical del húmero y acaba en la médula. Unidad 4i, con el golpe del casuario de la 2.0 (la patada del coche en marcha: 4,84 m/s y los músculos de la pata que patea, ~91 J en vez de los 160 J de la 1.x; claws_v2.gd): la daga sigue atravesando la cortical y acaba en la médula, a 60,6 mm en vez de 65,1. Unidad 4i-B2: con la hembra de 58 kg del coche en marcha (antes, los 60 kg sin fuente de la 1.x), ~88 J: acaba a 60,4 mm. La referencia de la 1g, con los 160 J de la 1.x, queda en expect1g.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "tungsteno", "claw": "casuario", "target": "piel", "type": "aranazo", "force": 500, "length": 25, "tear": false, "method": "puncion", "strike": true, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "depthUm": { "value": 60355.477140331546, "tol": 0.000001 },
+      "layer": { "value": "Médula ósea" },
+      "pen.layerId": { "value": "medula" },
+      "pen.bonePierced": { "value": true },
+      "pen.stoppedBy": { "value": "energia" },
+      "pen.boneIndentUm": { "min": 4400.0 },
+      "sev": { "value": 0.97 }
+    },
+    "expect1g": {
+      "depthUm": { "value": 65107.44458151362, "tol": 0.000001 },
+      "layer": { "value": "Médula ósea" },
+      "pen.layerId": { "value": "medula" },
+      "pen.bonePierced": { "value": true },
+      "pen.stoppedBy": { "value": "energia" },
+      "pen.boneIndentUm": { "min": 4400.0 },
+      "sev": { "value": 0.97 }
+    },
+    "source": "Li 2021; Tingart 2003 (cortical de 4,4 mm); FISICA §4-5 (dureza)"
+  },
+  {
+    "id": "piel-palma-gato-3N",
+    "note": "El mismo mimo en la palma se queda en el callo: la capa córnea mide 173 µm y no sangra.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "gato", "target": "piel", "type": "aranazo", "force": 3, "length": 25, "tear": false, "method": "rayado", "strike": false, "passes": 1, "wet": false, "model": "2.0", "zone": "palma" },
+    "expect": {
+      "zone": { "value": "palma" },
+      "depthUm": { "value": 137.6470588235294, "tol": 0.000001 },
+      "layer": { "value": "Capa córnea" },
+      "bleeds": { "value": false },
+      "ruptures": { "value": true }
+    },
+    "source": "Egawa 2007 (palma 173 µm); Baumann 2024"
+  },
+  {
+    "id": "piel-palma-almendra-30N-x20",
+    "note": "Veinte pasadas de uña pulen el callo de la palma sin llegar a la epidermis viva.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": null, "target": "piel", "type": "aranazo", "force": 30, "length": 25, "tear": false, "method": "rayado", "strike": false, "passes": 20, "wet": false, "model": "2.0", "zone": "palma" },
+    "expect": {
+      "depthUm": { "value": 130.58258449441863, "tol": 0.000001 },
+      "layer": { "value": "Capa córnea" },
+      "bleeds": { "value": false },
+      "pen.excoriation": { "value": true },
+      "pen.excoriationBleeds": { "value": false }
+    },
+    "source": "Egawa 2007; 1.x: profundidad ∝ n^0,4 (FISICA §5)"
+  },
+  {
+    "id": "piel-palma-almendra-30N-x150",
+    "note": "Con 150 pasadas también la palma acaba sangrando: la excoriación llega al final de su epidermis (265 µm).",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": null, "target": "piel", "type": "aranazo", "force": 30, "length": 25, "tear": false, "method": "rayado", "strike": false, "passes": 150, "wet": false, "model": "2.0", "zone": "palma" },
+    "expect": {
+      "depthUm": { "value": 265.0 },
+      "layer": { "value": "Epidermis viva" },
+      "bleeds": { "value": true },
+      "pen.excoriationBleeds": { "value": true },
+      "pen.bleedPasses": { "value": 117.33606800965795, "tol": 0.000001 }
+    },
+    "source": "Baumann 2024 (265 µm); 1.x: 5 pasadas para 75 µm y profundidad ∝ n^0,4"
+  },
+  {
+    "id": "piel-palma-pajaro-1.5N",
+    "note": "El pájaro solo excoria 75 µm, que en la palma son callo.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "pajaro", "target": "piel", "type": "aranazo", "force": 1.5, "length": 25, "tear": false, "method": "rayado", "strike": false, "passes": 1, "wet": false, "model": "2.0", "zone": "palma" },
+    "expect": {
+      "depthUm": { "value": 75.0 },
+      "layer": { "value": "Capa córnea" },
+      "bleeds": { "value": false }
+    },
+    "source": "Egawa 2007"
+  },
+  {
+    "id": "piel-cara-almendra-30N",
+    "note": "En el pómulo la epidermis entera mide 74 µm: excoriarla escuece pero no sangra.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": null, "target": "piel", "type": "aranazo", "force": 30, "length": 25, "tear": false, "method": "rayado", "strike": false, "passes": 1, "wet": false, "model": "2.0", "zone": "cara" },
+    "expect": {
+      "zone": { "value": "cara" },
+      "depthUm": { "value": 74.0 },
+      "layer": { "value": "Epidermis viva" },
+      "bleeds": { "value": false },
+      "pen.bleedPasses": { "value": 4.834996290098628, "tol": 0.000001 }
+    },
+    "source": "Egawa 2007 (mejilla 16,8 µm); Robertson & Rees 2010"
+  },
+  {
+    "id": "piel-cara-almendra-30N-x5",
+    "note": "Cinco pasadas en la cara ya sangran (hacen falta 4,8).",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": null, "target": "piel", "type": "aranazo", "force": 30, "length": 25, "tear": false, "method": "rayado", "strike": false, "passes": 5, "wet": false, "model": "2.0", "zone": "cara" },
+    "expect": {
+      "depthUm": { "value": 74.0 },
+      "bleeds": { "value": true },
+      "pen.excoriationBleeds": { "value": true }
+    },
+    "source": "Egawa 2007; 1.x (5 pasadas para 75 µm)"
+  },
+  {
+    "id": "piel-cara-gato-3N",
+    "note": "El mimo del gato en la cara: el mismo corte que en el brazo, en la dermis, y sangra.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "gato", "target": "piel", "type": "aranazo", "force": 3, "length": 25, "tear": false, "method": "rayado", "strike": false, "passes": 1, "wet": false, "model": "2.0", "zone": "cara" },
+    "expect": {
+      "depthUm": { "value": 137.6470588235294, "tol": 0.000001 },
+      "layer": { "value": "Dermis" },
+      "bleeds": { "value": true }
+    },
+    "source": "Meng 2022 (dermis sobre el cigoma ~1 mm)"
+  },
+  {
+    "id": "piel-dorsomano-almendra-30N-x5",
+    "note": "En el dorso de la mano la epidermis mide 86 µm: con 5 pasadas aún no sangra.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": null, "target": "piel", "type": "aranazo", "force": 30, "length": 25, "tear": false, "method": "rayado", "strike": false, "passes": 5, "wet": false, "model": "2.0", "zone": "dorsomano" },
+    "expect": {
+      "zone": { "value": "dorsomano" },
+      "depthUm": { "value": 75.0 },
+      "bleeds": { "value": false },
+      "pen.bleedPasses": { "value": 7.03984300311288, "tol": 0.000001 }
+    },
+    "source": "Egawa 2007 (dorso de la mano 29,3 µm); Sandby-Møller 2003"
+  },
+  {
+    "id": "piel-dorsomano-almendra-30N-x8",
+    "note": "Con 8 pasadas llega al final de la epidermis del dorso y sangra.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": null, "target": "piel", "type": "aranazo", "force": 30, "length": 25, "tear": false, "method": "rayado", "strike": false, "passes": 8, "wet": false, "model": "2.0", "zone": "dorsomano" },
+    "expect": {
+      "depthUm": { "value": 86.0 },
+      "layer": { "value": "Epidermis viva" },
+      "bleeds": { "value": true },
+      "pen.excoriationBleeds": { "value": true }
+    },
+    "source": "Egawa 2007; 1.x (profundidad ∝ n^0,4)"
+  },
+  {
+    "id": "piel-dorsomano-tigre-260N",
+    "note": "El tigre en el dorso de la mano: el corte topa con el metacarpiano a 5,6 mm.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "tigre", "target": "piel", "type": "aranazo", "force": 260, "length": 25, "tear": false, "method": "rayado", "strike": false, "passes": 1, "wet": false, "model": "2.0", "zone": "dorsomano" },
+    "expect": {
+      "depthUm": { "value": 5640.0 },
+      "layer": { "value": "Fascia profunda" },
+      "fullReach": { "value": false },
+      "bleeds": { "value": true },
+      "pen.boneHit": { "value": true },
+      "pen.boneDepthUm": { "value": 5640.0 }
+    },
+    "source": "Hung 2022 (grasa del dorso); Egawa 2007"
+  },
+  {
+    "id": "piel-abdomen-tigre-260N",
+    "note": "El tigre en el abdomen: sin hueso detrás, la garra entera llega a la cavidad abdominal.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "tigre", "target": "piel", "type": "aranazo", "force": 260, "length": 25, "tear": false, "method": "rayado", "strike": false, "passes": 1, "wet": false, "model": "2.0", "zone": "abdomen" },
+    "expect": {
+      "depthUm": { "value": 40000.0 },
+      "layer": { "value": "Cavidad abdominal" },
+      "fullReach": { "value": true },
+      "pen.boneHit": { "value": false },
+      "pen.boneDepthUm": { "value": null }
+    },
+    "source": "Gibney 2010 (grasa 13,9 mm); Kim 2012 (recto 10,26 mm)"
+  },
+  {
+    "id": "piel-cara-vibora-4N-puncion",
+    "note": "La víbora empujando 4 N en la mejilla llega al pómulo: su esmalte marca el hueso y se para.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "vibora", "target": "piel", "type": "aranazo", "force": 4, "length": 25, "tear": false, "method": "puncion", "strike": false, "passes": 1, "wet": false, "model": "2.0", "zone": "cara" },
+    "expect": {
+      "depthUm": { "value": 8714.858325369923, "tol": 0.000001 },
+      "layer": { "value": "Hueso cigomático" },
+      "toolBroken": { "value": false },
+      "sev": { "value": 0.97 },
+      "pen.boneHit": { "value": true },
+      "pen.boneIndentUm": { "value": 14.858325369923477, "tol": 0.000001 },
+      "pen.stoppedBy": { "value": "hueso" },
+      "pen.boneN": { "value": 2.8674648976171895, "tol": 0.000001 }
+    },
+    "source": "De Greef 2006 (pómulo a 8,7 mm); Li 2021; Enax 2013"
+  },
+  {
+    "id": "piel-cara-vibora-golpe",
+    "note": "El golpe de la víbora en la mejilla rompe el colmillo contra el pómulo.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "vibora", "target": "piel", "type": "aranazo", "force": 4, "length": 25, "tear": false, "method": "puncion", "strike": true, "passes": 1, "wet": false, "model": "2.0", "zone": "cara" },
+    "expect": {
+      "toolBroken": { "value": true },
+      "layer": { "value": "Hueso cigomático" },
+      "pen.stoppedBy": { "value": "rotura" },
+      "pen.toolLoadN": { "value": 30.0 },
+      "pen.boneHit": { "value": true }
+    },
+    "source": "Estrada et al. 2026 (30 N); De Greef 2006"
+  },
+  {
+    "id": "piel-dorsomano-vibora-golpe",
+    "note": "En el dorso de la mano el colmillo se rompe contra el metacarpiano, a 5,6 mm.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "vibora", "target": "piel", "type": "aranazo", "force": 4, "length": 25, "tear": false, "method": "puncion", "strike": true, "passes": 1, "wet": false, "model": "2.0", "zone": "dorsomano" },
+    "expect": {
+      "toolBroken": { "value": true },
+      "depthUm": { "min": 5640.0, "max": 5700.0 },
+      "pen.stoppedBy": { "value": "rotura" },
+      "pen.toolLoadN": { "value": 30.0 }
+    },
+    "source": "Estrada et al. 2026; Hung 2022"
+  },
+  {
+    "id": "piel-palma-vibora-golpe",
+    "note": "En la palma el colmillo (18 mm) atraviesa los músculos del pulgar y se rompe contra el primer metacarpiano.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "vibora", "target": "piel", "type": "aranazo", "force": 4, "length": 25, "tear": false, "method": "puncion", "strike": true, "passes": 1, "wet": false, "model": "2.0", "zone": "palma" },
+    "expect": {
+      "toolBroken": { "value": true },
+      "depthUm": { "min": 17755.0, "max": 17900.0 },
+      "pen.stoppedBy": { "value": "rotura" }
+    },
+    "source": "Çetiner Şeker 2026 (13,89 mm de músculo); Estrada et al. 2026"
+  },
+  {
+    "id": "piel-palma-vibora-4N-puncion",
+    "note": "Empujando 4 N en la palma, la punta de esmalte marca el metacarpiano y la dentina ya no entra.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "vibora", "target": "piel", "type": "aranazo", "force": 4, "length": 25, "tear": false, "method": "puncion", "strike": false, "passes": 1, "wet": false, "model": "2.0", "zone": "palma" },
+    "expect": {
+      "depthUm": { "value": 17766.947770229435, "tol": 0.000001 },
+      "toolBroken": { "value": false },
+      "pen.stoppedBy": { "value": "hueso" },
+      "pen.boneHit": { "value": true },
+      "pen.boneIndentUm": { "max": 50.0 }
+    },
+    "source": "Li 2021 (radio y cúbito 42,5-43,3 HV); Enax 2013; Richardson 1968"
+  },
+  {
+    "id": "piel-abdomen-vibora-4N-puncion",
+    "note": "En el abdomen la víbora entra entera y deja el veneno en el recto del abdomen.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "vibora", "target": "piel", "type": "aranazo", "force": 4, "length": 25, "tear": false, "method": "puncion", "strike": false, "passes": 1, "wet": false, "model": "2.0", "zone": "abdomen" },
+    "expect": {
+      "depthUm": { "value": 18000.0 },
+      "layer": { "value": "Músculo" },
+      "fullReach": { "value": true },
+      "pen.stoppedBy": { "value": "alcance" },
+      "pen.frictionN": { "value": 1.9586763517708554, "tol": 0.000001 }
+    },
+    "source": "Gibney 2010; Kim 2012"
+  },
+  {
+    "id": "piel-abdomen-gabon-golpe",
+    "note": "El Gabón en el abdomen: 5 cm de colmillo sin hueso detrás, el veneno queda en la cavidad abdominal.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "gabon", "target": "piel", "type": "aranazo", "force": 30, "length": 25, "tear": false, "method": "puncion", "strike": true, "passes": 1, "wet": false, "model": "2.0", "zone": "abdomen" },
+    "expect": {
+      "depthUm": { "value": 50000.0 },
+      "layer": { "value": "Cavidad abdominal" },
+      "fullReach": { "value": true },
+      "toolBroken": { "value": false },
+      "sev": { "value": 0.97 },
+      "pen.stoppedBy": { "value": "alcance" }
+    },
+    "source": "Gibney 2010; Kim 2012"
+  },
+  {
+    "id": "piel-abdomen-casuario-golpe",
+    "note": "La patada del casuario en el abdomen es una herida penetrante: la daga entera dentro. Unidad 4i, con el golpe del casuario de la 2.0 (la patada del coche en marcha, ~91 J en vez de los 160 J de la 1.x; claws_v2.gd): la daga sigue entrando entera, y le sobran 145 J en vez de 214. Unidad 4i-B2: con la hembra de 58 kg del coche en marcha (antes, 60 kg sin fuente), ~88 J: le sobran 142 J. La referencia de la 1g, con los 160 J de la 1.x, queda en expect1g.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "casuario", "target": "piel", "type": "aranazo", "force": 500, "length": 25, "tear": false, "method": "puncion", "strike": true, "passes": 1, "wet": false, "model": "2.0", "zone": "abdomen" },
+    "expect": {
+      "depthUm": { "value": 110000.0 },
+      "layer": { "value": "Cavidad abdominal" },
+      "fullReach": { "value": true },
+      "sev": { "value": 0.97 },
+      "pen.energyLeftJ": { "value": 142.23412148017968, "tol": 0.000001 }
+    },
+    "expect1g": {
+      "depthUm": { "value": 110000.0 },
+      "layer": { "value": "Cavidad abdominal" },
+      "fullReach": { "value": true },
+      "sev": { "value": 0.97 },
+      "pen.energyLeftJ": { "value": 213.82896566029785, "tol": 0.000001 }
+    },
+    "source": "Gibney 2010; Kim 2012"
+  },
+  {
+    "id": "piel-dorsomano-gato-diamante-200N-puncion",
+    "note": "Un gato de diamante empujado con 200 N marca el metacarpiano sin atravesar su cortical.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "diamante", "claw": "gato", "target": "piel", "type": "aranazo", "force": 200, "length": 25, "tear": false, "method": "puncion", "strike": false, "passes": 1, "wet": false, "model": "2.0", "zone": "dorsomano" },
+    "expect": {
+      "depthUm": { "value": 6941.6126760062325, "tol": 0.000001 },
+      "layer": { "value": "Tercer metacarpiano" },
+      "pen.boneIndentUm": { "value": 1301.6126760062325, "tol": 0.000001 },
+      "pen.bonePierced": { "value": false },
+      "pen.boneN": { "value": 198.27856675693417, "tol": 0.000001 },
+      "pen.stoppedBy": { "value": "hueso" }
+    },
+    "source": "Li 2021; Schneider & Gilmour 2025; FISICA §4-5"
+  },
+  {
+    "id": "piel-cara-arpia-golpe",
+    "note": "El águila arpía golpea el pómulo: su queratina (33 HV) no marca el hueso (40 HV) y se queda en la superficie.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "arpia", "target": "piel", "type": "aranazo", "force": 200, "length": 25, "tear": false, "method": "puncion", "strike": true, "passes": 1, "wet": false, "model": "2.0", "zone": "cara" },
+    "expect": {
+      "depthUm": { "value": 8700.0 },
+      "layer": { "value": "Músculo" },
+      "pen.boneHit": { "value": true },
+      "pen.boneIndentUm": { "value": 0.0 },
+      "pen.stoppedBy": { "value": "hueso" },
+      "pen.boneN": { "value": null }
+    },
+    "source": "Li 2021 (cráneo > 40 HV); Richardson 1968 (r < 1,25)"
+  },
+  {
+    "id": "ataque-90-gato-plastico-15N",
+    "note": "Con 90° (de punta) todo es la 1.x: corte.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "gato", "target": "plastico", "type": "aranazo", "force": 15, "length": 25, "tear": false, "method": "rayado", "strike": false, "passes": 1, "wet": false, "model": "2.0", "attack_deg": 90 },
+    "expect": {
+      "verdict": { "value": "RAYA" },
+      "depthUm": { "value": 682.2932842253473, "tol": 0.000001 },
+      "absMode": { "value": "corte" },
+      "fab": { "value": 1.0 },
+      "DpEff": { "value": 2.9351957499075936, "tol": 0.000001 },
+      "faceDeg": { "value": 76.0 },
+      "attackDeg": { "value": 90.0 }
+    },
+    "source": "Hokkirigawa & Kato 1988"
+  },
+  {
+    "id": "ataque-20-gato-plastico-15N",
+    "note": "Tumbada a 20°, la cara que avanza del gato queda a 6°: el surco pasa de corte a cuña y arranca una quinta parte.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "gato", "target": "plastico", "type": "aranazo", "force": 15, "length": 25, "tear": false, "method": "rayado", "strike": false, "passes": 1, "wet": false, "model": "2.0", "attack_deg": 20 },
+    "expect": {
+      "depthUm": { "value": 682.2932842253473, "tol": 0.000001 },
+      "absMode": { "value": "cuña" },
+      "fab": { "value": 0.21227316290740775, "tol": 0.000001 },
+      "muPlough": { "value": 0.10245463258148156, "tol": 0.000001 },
+      "DpEff": { "value": 0.11383848064609062, "tol": 0.000001 },
+      "faceDeg": { "value": 6.0 },
+      "attackDeg": { "value": 20.0 },
+      "wearIdx": { "min": 7461.0, "max": 7464.0 }
+    },
+    "source": "Challen & Oxley 1979; Sedriks & Mulhearn 1963; Hokkirigawa & Kato 1988"
+  },
+  {
+    "id": "ataque-45-gato-plastico-15N",
+    "note": "A 45° la cara del gato queda a 31°: sigue cortando.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "gato", "target": "plastico", "type": "aranazo", "force": 15, "length": 25, "tear": false, "method": "rayado", "strike": false, "passes": 1, "wet": false, "model": "2.0", "attack_deg": 45 },
+    "expect": {
+      "absMode": { "value": "corte" },
+      "fab": { "value": 1.0 },
+      "muPlough": { "value": 0.5520769242563995, "tol": 0.000001 },
+      "DpEff": { "value": 0.6134188047293327, "tol": 0.000001 },
+      "faceDeg": { "value": 31.0 }
+    },
+    "source": "Challen & Oxley 1979; Hokkirigawa & Kato 1988"
+  },
+  {
+    "id": "ataque-20-stiletto-madera-30N",
+    "note": "Una stiletto casi tumbada sobre la madera solo ara: la cara apoya plana (1°). Unidad 4b, con la 2.0 completa: tumbada a 20° la placa recibe N·(cos 20° + μ·sin 20°) = 1,08·N (μ del pino, 0,4), así que la stiletto cede a ~13,5 N y a la punta solo llega esa carga: surco de 1,10 mm en vez de 1,82 mm, y arado igual (la cara sigue a 1°). La referencia de la 1g, a 30 N en la punta, queda en expect1g.",
+    "input": { "geom": "stiletto", "base": "natural", "inlay": "none", "claw": null, "target": "madera", "type": "aranazo", "force": 30, "length": 25, "tear": false, "method": "rayado", "strike": false, "passes": 1, "wet": false, "model": "2.0", "attack_deg": 20 },
+    "expect": {
+      "verdict": { "value": "SE DOBLA LA UÑA" },
+      "nail.broken": { "value": true },
+      "nail.breakN": { "value": 13.548691609065422, "tol": 0.000001 },
+      "nail.factor": { "value": 1.076500678116176, "tol": 0.000001 },
+      "depthUm": { "value": 1103.2577537913476, "tol": 0.000001 },
+      "absMode": { "value": "arado" },
+      "fab": { "value": 0.02977525430955557, "tol": 0.000001 },
+      "DpEff": { "value": 0.019850169539703713, "tol": 0.000001 },
+      "faceDeg": { "value": 1.0 },
+      "attackDeg": { "value": 20.0 },
+      "wearIdx": { "min": 3025.0, "max": 3027.0 }
+    },
+    "expect1g": {
+      "depthUm": { "value": 1819.711364774072, "tol": 0.000001 },
+      "absMode": { "value": "arado" },
+      "fab": { "value": 0.02824911748523383, "tol": 0.000001 },
+      "DpEff": { "value": 0.018832744990155886, "tol": 0.000001 },
+      "faceDeg": { "value": 1.0 },
+      "wearIdx": { "min": 6355.0, "max": 6358.0 }
+    },
+    "source": "Sedriks & Mulhearn 1963 (por debajo del ángulo crítico, arado); flexión de la uña: docs/fisica/pulido-materiales.md, tema 2"
+  },
+  {
+    "id": "ataque-150-cuadrada-madera-30N",
+    "note": "Una uña cuadrada «de gancho» (150°) sobre la madera: cara de 75°, corte casi pleno. Unidad 4b, con la 2.0 completa no cambia: de gancho la reacción empuja la placa casi a lo largo y solo |cos 150° + 0,4·sin 150°| = 0,67 de la carga la flexa (a 45°, 0,99), así que la cuadrada cede a ~43,8 N, por encima de los 30 N. La madera no recupera (recovery.gd). La referencia de la 1g, idéntica, queda en expect1g.",
+    "input": { "geom": "cuadrada", "base": "natural", "inlay": "none", "claw": null, "target": "madera", "type": "aranazo", "force": 30, "length": 25, "tear": false, "method": "rayado", "strike": false, "passes": 1, "wet": false, "model": "2.0", "attack_deg": 150 },
+    "expect": {
+      "absMode": { "value": "corte" },
+      "fab": { "value": 0.9522998692453556, "tol": 0.000001 },
+      "muPlough": { "value": 0.33853494116041005, "tol": 0.000001 },
+      "DpEff": { "value": 0.3761499346226778, "tol": 0.000001 },
+      "faceDeg": { "value": 75.0 },
+      "nail.broken": { "value": false },
+      "nail.factor": { "value": 0.6660254037844388, "tol": 0.000001 },
+      "nail.breakN": { "value": 43.79765583075689, "tol": 0.000001 },
+      "residualDepthUm": { "value": 176.78481756552287, "tol": 0.000001 }
+    },
+    "expect1g": {
+      "absMode": { "value": "corte" },
+      "fab": { "value": 0.9522998692453556, "tol": 0.000001 },
+      "muPlough": { "value": 0.33853494116041005, "tol": 0.000001 },
+      "DpEff": { "value": 0.3761499346226778, "tol": 0.000001 },
+      "faceDeg": { "value": 75.0 }
+    },
+    "source": "Challen & Oxley 1979; flexión de la uña: docs/fisica/pulido-materiales.md, tema 2"
+  },
+  {
+    "id": "ataque-45-almendra-coche-4N",
+    "note": "En el barniz la almendra apoya en su casquete esférico: inclinarla no cambia nada. Unidad 4b, con la 2.0 completa: al levantar la punta el barniz recupera los 3,5 µm (recovery.gd, Oliver & Pharr 1992) y no queda surco: «ROZA / REMOLINO», sin modo de abrasión que dar (absMode null, como en el golden 2.0 de la unidad 4a); el Dp bajo carga es el mismo y el ángulo sigue sin cambiarlo. La uña, a 4 N, no cede. La referencia de la 1g, sin recuperación, queda en expect1g.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": null, "target": "coche", "type": "aranazo", "force": 4, "length": 25, "tear": false, "method": "rayado", "strike": false, "passes": 1, "wet": false, "model": "2.0", "attack_deg": 45 },
+    "expect": {
+      "verdict": { "value": "ROZA / REMOLINO" },
+      "depthUm": { "value": 3.4857664928608507, "tol": 0.000001 },
+      "residualDepthUm": { "value": 0.0 },
+      "absMode": { "value": null },
+      "fab": { "value": 1.0 },
+      "DpEff": { "value": 0.054385523781476035, "tol": 0.000001 },
+      "Dp": { "value": 0.054385523781476035, "tol": 0.000001 },
+      "faceDeg": { "value": 5.0 },
+      "attackDeg": { "value": 45.0 },
+      "nail.broken": { "value": false }
+    },
+    "expect1g": {
+      "verdict": { "value": "ARAÑAZO EN BARNIZ" },
+      "absMode": { "value": "arado" },
+      "fab": { "value": 0.08157828567221405, "tol": 0.000001 },
+      "DpEff": { "value": 0.054385523781476035, "tol": 0.000001 },
+      "Dp": { "value": 0.054385523781476035, "tol": 0.000001 }
+    },
+    "source": "Hokkirigawa & Kato 1988 (indentador esférico); recuperación: Oliver & Pharr 1992 (docs/fisica/pulido-materiales.md, tema 3)"
+  },
+  {
+    "id": "ataque-20-diamante-acero-30N",
+    "note": "Un diamante tumbado sobre el acero pasa de cortar a arar. Unidad 4b, con la 2.0 completa: lo que se dobla es la placa de queratina de debajo de la gema, que a 20° recibe N·(cos 20° + μ·sin 20°) = 1,11·N (μ del acero, 0,5) y cede a ~17,5 N; con esa carga el surco es de 28,8 µm (48,3 µm con 30 N) y el contacto apenas sube por el cono, así que la cara tumbada da un Dp efectivo de 0,14: cuña, no arado. El acero recupera 1,6 µm al levantar la punta. La referencia de la 1g, a 30 N en la punta, queda en expect1g.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "diamante", "claw": null, "target": "acero", "type": "aranazo", "force": 30, "length": 25, "tear": false, "method": "rayado", "strike": false, "passes": 1, "wet": false, "model": "2.0", "attack_deg": 20 },
+    "expect": {
+      "verdict": { "value": "SE DOBLA LA UÑA" },
+      "nail.broken": { "value": true },
+      "nail.breakN": { "value": 17.508646617923457, "tol": 0.000001 },
+      "depthUm": { "value": 28.79377873727739, "tol": 0.000001 },
+      "residualDepthUm": { "value": 27.151129687013658, "tol": 0.000001 },
+      "absMode": { "value": "cuña" },
+      "fab": { "value": 0.3178206708867284, "tol": 0.000001 },
+      "DpEff": { "value": 0.13729348241927297, "tol": 0.000001 },
+      "faceDeg": { "value": 1.0 },
+      "tipHv": { "value": 10000.0 }
+    },
+    "expect1g": {
+      "depthUm": { "value": 48.33864430863475, "tol": 0.000001 },
+      "absMode": { "value": "arado" },
+      "fab": { "value": 0.05453986748715333, "tol": 0.000001 },
+      "DpEff": { "value": 0.03635991165810223, "tol": 0.000001 },
+      "faceDeg": { "value": 1.0 }
+    },
+    "source": "Challen & Oxley 1979; Sedriks & Mulhearn 1963; flexión de la uña: docs/fisica/pulido-materiales.md, tema 2"
+  },
+  {
+    "id": "ataque-150-aguila-acero-cobre-110N",
+    "note": "Un águila con tachuela de acero clavando de gancho en el cobre: corte, con la fricción de arado en su tope.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "acero", "claw": "aguila", "target": "cobre", "type": "aranazo", "force": 110, "length": 25, "tear": false, "method": "rayado", "strike": false, "passes": 1, "wet": false, "model": "2.0", "attack_deg": 150 },
+    "expect": {
+      "absMode": { "value": "corte" },
+      "fab": { "value": 1.0 },
+      "muPlough": { "value": 1.2 },
+      "faceDeg": { "value": 90.0 }
+    },
+    "source": "Challen & Oxley 1979; Hokkirigawa & Kato 1988"
+  },
+  {
+    "id": "esmalte-vibora-cobre-4N",
+    "note": "El esmalte de la punta (321 HV) marca el cobre (90 HV), que la dentina sola (50 HV) no raya; en cuanto el contacto crece, manda la dentina.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "vibora", "target": "cobre", "type": "aranazo", "force": 4, "length": 25, "tear": false, "method": "rayado", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "verdict": { "value": "MARCA TENUE" },
+      "depthUm": { "value": 3.339785778028762, "tol": 0.000001 },
+      "tipHv": { "value": 94.59161052972857, "tol": 0.000001 },
+      "ratio": { "value": 1.051017894774451, "tol": 0.000001 },
+      "toolWorn": { "value": false }
+    },
+    "source": "Enax 2013 (esmalte 3,15 GPa); Estrada et al. 2026; Dumont et al. 2023"
+  },
+  {
+    "id": "esmalte-vibora-acero-4N",
+    "note": "Contra el acero (200 HV) el esmalte apenas llega: marca tenue de unos pocos µm.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "vibora", "target": "acero", "type": "aranazo", "force": 4, "length": 25, "tear": false, "method": "rayado", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "verdict": { "value": "MARCA TENUE" },
+      "depthUm": { "value": 0.4617569204478417, "tol": 0.000001 },
+      "tipHv": { "value": 187.24346164741206, "tol": 0.000001 },
+      "ratio": { "value": 0.9362173082372854, "tol": 0.000001 }
+    },
+    "source": "Enax 2013; Richardson 1968"
+  },
+  {
+    "id": "esmalte-vibora-vidrio-4N",
+    "note": "El vidrio (550 HV) es más duro que el esmalte: la punta se desgasta, como en la 1.x.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "vibora", "target": "vidrio", "type": "aranazo", "force": 4, "length": 25, "tear": false, "method": "rayado", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "verdict": { "value": "NO RAYA" },
+      "depthUm": { "min": 0.0, "max": 0.000001 },
+      "tipHv": { "value": 321.1999998063709, "tol": 0.000001 },
+      "ratio": { "value": 0.5839999996479, "tol": 0.000001 },
+      "toolWorn": { "value": true }
+    },
+    "source": "Enax 2013"
+  },
+  {
+    "id": "esmalte-vibora-vidrio-40N-puncion",
+    "note": "Golden 1.x «víbora 40N punción sobre vidrio»: se rompe igual, pero la presión del contacto es la del esmalte (3,15 GPa), no la de la dentina.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "vibora", "target": "vidrio", "type": "aranazo", "force": 40, "length": 25, "tear": false, "method": "puncion", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "verdict": { "value": "SE ROMPE LA PUNTA" },
+      "depthUm": { "min": 0.0, "max": 0.000001 },
+      "toolBroken": { "value": true },
+      "pressure": { "value": 3150.008398463062, "tol": 0.000001 },
+      "tipHv": { "value": 321.1999998432816, "tol": 0.000001 }
+    },
+    "source": "Enax 2013; Estrada et al. 2026 (rotura a ~30 N)"
+  },
+  {
+    "id": "esmalte-gabon-cobre-20N",
+    "note": "El Gabón empujando 20 N contra una moneda: su esmalte la marca.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "gabon", "target": "cobre", "type": "aranazo", "force": 20, "length": 25, "tear": false, "method": "puncion", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "verdict": { "value": "PERFORA" },
+      "depthUm": { "value": 3.2700860539855223, "tol": 0.000001 },
+      "tipHv": { "value": 87.30534328219406, "tol": 0.000001 },
+      "ratio": { "value": 0.9700593698021562, "tol": 0.000001 },
+      "toolBroken": { "value": false }
+    },
+    "source": "Enax 2013; Estrada et al. 2026"
+  },
+  {
+    "id": "esmalte-vibora-diamante-cobre-4N",
+    "note": "Un colmillo reforjado en diamante es entero de diamante: sin esmalte, lo de la 1.x.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "diamante", "claw": "vibora", "target": "cobre", "type": "aranazo", "force": 4, "length": 25, "tear": false, "method": "rayado", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "verdict": { "value": "RAYA" },
+      "depthUm": { "value": 53.55300367079045, "tol": 0.000001 },
+      "tipHv": { "value": 10000.0 },
+      "ratio": { "value": 111.11111111111111, "tol": 0.000001 }
+    },
+    "source": "FISICA §13 (reforjados)"
+  }
+]

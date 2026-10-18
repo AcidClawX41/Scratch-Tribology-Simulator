@@ -1,0 +1,56 @@
+[gd_resource type="AudioBusLayout" format=3 uid="uid://compnfe0c6btk"]
+
+[sub_resource type="AudioEffectHardLimiter" id="AudioEffectHardLimiter_j3pel"]
+
+[sub_resource type="AudioEffectAmplify" id="AudioEffectAmplify_margen"]
+resource_name = "RecuperaMargen"
+volume_db = 12.0
+
+[sub_resource type="AudioEffectHighPassFilter" id="AudioEffectHighPassFilter_maq25"]
+resource_name = "SinInfrasonidos"
+cutoff_hz = 25.0
+resonance = 0.707
+
+[sub_resource type="AudioEffectPanner" id="AudioEffectPanner_maqpan"]
+resource_name = "Paneo"
+
+[sub_resource type="AudioEffectBandPassFilter" id="AudioEffectBandPassFilter_corte"]
+resource_name = "BandaDelCorte"
+cutoff_hz = 3000.0
+resonance = 1.0
+
+[sub_resource type="AudioEffectLowPassFilter" id="AudioEffectLowPassFilter_corte"]
+resource_name = "ApagadoDelCorte"
+cutoff_hz = 16000.0
+
+[resource]
+bus/0/effect/0/effect = SubResource("AudioEffectHardLimiter_j3pel")
+bus/0/effect/0/enabled = true
+bus/1/name = &"Lab"
+bus/1/solo = false
+bus/1/mute = false
+bus/1/bypass_fx = false
+bus/1/volume_db = 0.0
+bus/1/send = &"Master"
+bus/2/name = &"Maquina"
+bus/2/solo = false
+bus/2/mute = false
+bus/2/bypass_fx = false
+bus/2/volume_db = 0.0
+bus/2/send = &"Master"
+bus/2/effect/0/effect = SubResource("AudioEffectAmplify_margen")
+bus/2/effect/0/enabled = true
+bus/2/effect/1/effect = SubResource("AudioEffectHighPassFilter_maq25")
+bus/2/effect/1/enabled = true
+bus/2/effect/2/effect = SubResource("AudioEffectPanner_maqpan")
+bus/2/effect/2/enabled = true
+bus/3/name = &"MaquinaCorte"
+bus/3/solo = false
+bus/3/mute = false
+bus/3/bypass_fx = false
+bus/3/volume_db = 0.0
+bus/3/send = &"Maquina"
+bus/3/effect/0/effect = SubResource("AudioEffectBandPassFilter_corte")
+bus/3/effect/0/enabled = true
+bus/3/effect/1/effect = SubResource("AudioEffectLowPassFilter_corte")
+bus/3/effect/1/enabled = true

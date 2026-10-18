@@ -1,0 +1,22 @@
+# Convenciones de GDScript del proyecto para gdlint (gdtoolkit 4). Solo cambia lo que difiere de los valores por
+# defecto (gdlint --dump-default-config):
+# · sin límite de longitud de línea, de líneas por archivo ni de métodos públicos: las tablas de datos llevan su fuente
+#   en la misma línea (hasta ~800 caracteres) y los motores son archivos grandes a propósito (un módulo por física);
+# · el orden de las definiciones es el de cada archivo (constantes junto a lo que describen), no el de la guía de estilo;
+# · argumentos, variables y funciones con mayúsculas para la notación física (F, R, H, Dp, Estar…) y los atajos de los
+#   tests (C, T), como en physics.js;
+# · constantes de preload privadas en PascalCase (const _Js = preload(…)) y variables de clase privadas con
+#   mayúsculas;
+# · sin límite de return por función: los comparadores del oráculo (tests/case.gd) salen pronto por tipo.
+function-name: '(_on_([A-Z][a-z0-9]*|[a-z0-9]+)(_[a-z0-9]+)*|_?[a-zA-Z][a-zA-Z0-9]*(_[a-zA-Z0-9]+)*)'
+function-argument-name: _?[a-zA-Z][a-zA-Z0-9]*(_[a-zA-Z0-9]+)*
+function-variable-name: '[a-zA-Z][a-zA-Z0-9]*(_[a-zA-Z0-9]+)*'
+loop-variable-name: _?[a-zA-Z][a-zA-Z0-9]*(_[a-zA-Z0-9]+)*
+load-constant-name: (_?([A-Z][a-z0-9]*)+|_?[A-Z][A-Z0-9]*(_[A-Z0-9]+)*)
+class-variable-name: _?[a-zA-Z][a-zA-Z0-9]*(_[a-zA-Z0-9]+)*
+disable:
+  - max-returns
+  - max-line-length
+  - max-file-lines
+  - max-public-methods
+  - class-definitions-order

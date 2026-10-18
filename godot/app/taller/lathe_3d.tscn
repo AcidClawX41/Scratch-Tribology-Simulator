@@ -1,0 +1,33 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://app/taller/lathe_3d.gd" id="1_lathe"]
+[ext_resource type="Script" path="res://app/taller/lathe3d/orbit_camera.gd" id="2_orbit"]
+
+[node name="Lathe3D" type="Node3D"]
+script = ExtResource("1_lathe")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.2, 4, 2.6)
+light_color = Color(1, 0.98, 0.95, 1)
+light_energy = 1.35
+shadow_enabled = true
+shadow_blur = 1.5
+directional_shadow_max_distance = 5.0
+
+[node name="ReflectionProbe" type="ReflectionProbe" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.05, 1.2, 0.1)
+size = Vector3(3.2, 1.8, 2.6)
+box_projection = true
+
+[node name="CameraRig" type="Node3D" parent="."]
+script = ExtResource("2_orbit")
+
+[node name="Camera3D" type="Camera3D" parent="CameraRig"]
+current = true
+fov = 38.0
+near = 0.005
+far = 60.0
+
+[node name="Machine" type="Node3D" parent="."]

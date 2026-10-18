@@ -1,0 +1,5 @@
+# Botón «Sponsor» del repositorio en GitHub (petición 39): los mismos enlaces que el botón «Dona o invítame» del programa
+# (godot/core/shared/app_info.gd → DONATE_LINKS).
+github: AcidClawX41
+ko_fi: ericdev
+custom: ["https://paypal.me/EricValls"]

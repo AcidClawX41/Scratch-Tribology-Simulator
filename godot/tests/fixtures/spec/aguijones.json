@@ -1,0 +1,333 @@
+[
+  {
+    "id": "abeja-piel",
+    "note": "La abeja perfora con ~4 mN (modelo; medido 1,3-5,8), entra hasta el bulbo (1,32 mm, dermis), las púas se enganchan y pierde el aguijón.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "abeja", "target": "piel", "type": "aranazo", "force": 0.00575, "length": 25, "tear": false, "method": "puncion", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "pierces": { "value": true },
+      "depthUm": { "value": 1320.0, "tol": 1e-9 },
+      "layer": { "value": "Dermis" },
+      "inject": { "value": true },
+      "bleeds": { "value": true },
+      "fPuncture": { "min": 0.00134, "max": 0.00575 },
+      "sting.pierces": { "value": true },
+      "sting.punctureRegime": { "value": "fractura" },
+      "sting.fPunctureN": { "min": 0.00134, "max": 0.00575 },
+      "sting.fBuckleN": { "min": 0.0034, "max": 0.0134 },
+      "sting.buckled": { "value": false },
+      "sting.layerId": { "value": "dermis" },
+      "sting.engaged": { "value": true },
+      "sting.stuck": { "value": true },
+      "sting.stuckRisk": { "value": "casi siempre" },
+      "sting.autotomy": { "value": true },
+      "sting.anchorN": { "min": 0.1135, "max": 0.13604 },
+      "sting.pullToWeight": { "min": 100.0 },
+      "sting.twistDeg": { "value": -8.4, "tol": 1e-9 },
+      "sting.venomUg": { "value": 147.0 },
+      "sting.pumpT90S": { "value": 20.0 },
+      "sting.schmidt": { "value": 2.0 },
+      "sting.wingbeatHz": { "min": 200.0, "max": 260.0 }
+    },
+    "source": "Zhao et al. 2015; Ling et al. 2016 y 2017; Ramirez-Esquivel & Ravi 2023; Wu et al. 2014; Schumacher et al. 1990 y 1994; Bissessarsingh & Starr 2021; Herrera et al. 2023"
+  },
+  {
+    "id": "abeja-piel-1mN",
+    "note": "Con 1 mN (menos que la menor fuerza medida, 1,34 mN) la piel se hunde pero no se rompe.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "abeja", "target": "piel", "type": "aranazo", "force": 0.001, "length": 25, "tear": false, "method": "puncion", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "pierces": { "value": false },
+      "depthUm": { "max": 0.0 },
+      "sting.pierces": { "value": false },
+      "sting.buckled": { "value": false },
+      "sting.layerId": { "value": null },
+      "sting.stuck": { "value": false },
+      "sting.autotomy": { "value": false }
+    },
+    "source": "Ling et al. 2016 (1,34 mN, la menor medida); modelo de fractura (docs/fisica/aguijones.md)"
+  },
+  {
+    "id": "abeja-piel-20mN",
+    "note": "Más empuje no dobla el aguijón en la piel: la piel cede a ~4 mN, antes de que el aguijón pandee a ~9 mN.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "abeja", "target": "piel", "type": "aranazo", "force": 0.02, "length": 25, "tear": false, "method": "puncion", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "pierces": { "value": true },
+      "depthUm": { "value": 1320.0, "tol": 1e-9 },
+      "sting.buckled": { "value": false },
+      "sting.stuck": { "value": true }
+    },
+    "source": "Pandeo de Euler con E de Das et al. 2018, contrastado con Ling et al. 2016 (6,72 mN)"
+  },
+  {
+    "id": "abeja-piel-impacto",
+    "note": "El aguijón no golpea: ½·m·v² ≈ 3·10⁻¹¹ J no cambia nada respecto al empuje estático.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "abeja", "target": "piel", "type": "aranazo", "force": 0.00575, "length": 25, "tear": false, "method": "puncion", "strike": true, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "pierces": { "value": true },
+      "depthUm": { "value": 1320.0, "tol": 1e-9 },
+      "sting.stuck": { "value": true },
+      "sting.autotomy": { "value": true }
+    },
+    "source": "Zhao et al. 2015 (la inserción dura ~1,5 s)"
+  },
+  {
+    "id": "abeja-acero-piel",
+    "note": "Abeja reforjada en acero: la misma fuerza de perforación (manda la geometría), no pandea hasta ~0,73 N y se queda clavada igual: la autotomía es del abdomen, no de la aguja.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "acero", "claw": "abeja", "target": "piel", "type": "aranazo", "force": 0.00575, "length": 25, "tear": false, "method": "puncion", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "pierces": { "value": true },
+      "depthUm": { "value": 1320.0, "tol": 1e-9 },
+      "sting.fPunctureN": { "value": 0.00425, "tol": 0.001 },
+      "sting.fBuckleN": { "value": 0.72831, "tol": 0.001 },
+      "sting.bucklingMode": { "value": "euler" },
+      "sting.reforged": { "value": true },
+      "sting.material": { "value": "acero" },
+      "sting.stuck": { "value": true },
+      "sting.autotomy": { "value": true }
+    },
+    "source": "Modelo de docs/fisica/aguijones.md (Shergold & Fleck 2005; Euler; Bissessarsingh & Starr 2021)"
+  },
+  {
+    "id": "avispa-piel",
+    "note": "La avispa común pica hasta la dermis y se retira: enfunda sus 8 púas (a veces se queda si la aplastas).",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "avispa", "target": "piel", "type": "aranazo", "force": 0.0099, "length": 25, "tear": false, "method": "puncion", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "pierces": { "value": true },
+      "depthUm": { "value": 1550.0, "tol": 1e-9 },
+      "layer": { "value": "Dermis" },
+      "sting.layerId": { "value": "dermis" },
+      "sting.fPunctureN": { "value": 0.0070584, "tol": 0.001 },
+      "sting.engaged": { "value": true },
+      "sting.stuck": { "value": false },
+      "sting.stuckRisk": { "value": "a veces" },
+      "sting.autotomy": { "value": false },
+      "sting.schmidt": { "value": 2.0 }
+    },
+    "source": "Das et al. 2018 (1,55 mm); Bissessarsingh & Starr 2021 (±); Mulfinger et al. 1992; Greene et al. 2012"
+  },
+  {
+    "id": "papelera-piel",
+    "note": "La avispa papelera perfora con 6-8 mN (medido en Polistes; el modelo da 5,8) y saca el aguijón sin esfuerzo.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "papelera", "target": "piel", "type": "aranazo", "force": 0.008, "length": 25, "tear": false, "method": "puncion", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "pierces": { "value": true },
+      "depthUm": { "value": 1820.0, "tol": 1e-9 },
+      "sting.fPunctureN": { "min": 0.0045, "max": 0.0104 },
+      "sting.stuck": { "value": false },
+      "sting.stuckRisk": { "value": "nunca" },
+      "sting.autotomy": { "value": false }
+    },
+    "source": "Zhao et al. 2015 (6-8 mN en piel de cerdo); Bissessarsingh & Starr 2021 (−)"
+  },
+  {
+    "id": "avispon-piel",
+    "note": "El avispón europeo pasa la dermis del brazo (2,2 mm) y deja el veneno en la grasa.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "avispon", "target": "piel", "type": "aranazo", "force": 0.014, "length": 25, "tear": false, "method": "puncion", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "pierces": { "value": true },
+      "depthUm": { "value": 2770.0, "tol": 1e-9 },
+      "layer": { "value": "Hipodermis (grasa)" },
+      "bleeds": { "value": true },
+      "sting.layerId": { "value": "grasa" },
+      "sting.stuck": { "value": false },
+      "sting.stuckRisk": { "value": "nunca" }
+    },
+    "source": "Bissessarsingh & Starr 2021 (eje de 3,6 mm, −); Gibney et al. 2010 (piel del brazo, 2,2 mm)"
+  },
+  {
+    "id": "avispon-piel-5mN",
+    "note": "Con 5 mN el avispón no rompe la piel: su punta más ancha pide ~10 mN (estimación del modelo).",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "avispon", "target": "piel", "type": "aranazo", "force": 0.005, "length": 25, "tear": false, "method": "puncion", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "pierces": { "value": false },
+      "sting.pierces": { "value": false },
+      "sting.fPunctureN": { "value": 0.0101252, "tol": 0.001 }
+    },
+    "source": "Modelo de fractura con la punta escalada (estimación)"
+  },
+  {
+    "id": "velutina-piel",
+    "note": "La avispa asiática también llega a la grasa (2,5 mm útiles) y no se queda clavada.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "velutina", "target": "piel", "type": "aranazo", "force": 0.014, "length": 25, "tear": false, "method": "puncion", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "pierces": { "value": true },
+      "depthUm": { "value": 2460.0, "tol": 1e-9 },
+      "sting.layerId": { "value": "grasa" },
+      "sting.stuck": { "value": false },
+      "sting.stuckRisk": { "value": "nunca" }
+    },
+    "source": "Bissessarsingh & Starr 2021 (eje de 3,2 mm, −)"
+  },
+  {
+    "id": "abejorro-piel",
+    "note": "El abejorro pica hasta la dermis y no pierde el aguijón.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "abejorro", "target": "piel", "type": "aranazo", "force": 0.0093, "length": 25, "tear": false, "method": "puncion", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "pierces": { "value": true },
+      "depthUm": { "value": 2070.0, "tol": 1e-9 },
+      "sting.layerId": { "value": "dermis" },
+      "sting.stuck": { "value": false },
+      "sting.stuckRisk": { "value": "nunca" },
+      "sting.autotomy": { "value": false }
+    },
+    "source": "Ramirez-Esquivel & Ravi 2023 (entre las abejas, la autotomía solo en Apis); geometría escalada (estimación)"
+  },
+  {
+    "id": "hormigabala-piel",
+    "note": "La hormiga bala (Schmidt 4) no zumba: la obrera no tiene alas.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "hormigabala", "target": "piel", "type": "aranazo", "force": 0.012, "length": 25, "tear": false, "method": "puncion", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "pierces": { "value": true },
+      "depthUm": { "value": 2710.0, "tol": 1e-9 },
+      "sting.layerId": { "value": "grasa" },
+      "sting.stuck": { "value": false },
+      "sting.schmidt": { "value": 4.0 },
+      "sting.wingbeatHz": { "value": null }
+    },
+    "source": "Schmidt 2016; geometría escalada (estimación)"
+  },
+  {
+    "id": "pepsis-piel",
+    "note": "Pepsis: el aguijón más largo del banco y sin púas, así que no hay nada que enganchar.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "pepsis", "target": "piel", "type": "aranazo", "force": 0.023, "length": 25, "tear": false, "method": "puncion", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "pierces": { "value": true },
+      "depthUm": { "value": 5380.0, "tol": 1e-9 },
+      "sting.layerId": { "value": "grasa" },
+      "sting.engaged": { "value": false },
+      "sting.anchorN": { "max": 0.0 },
+      "sting.stuck": { "value": false },
+      "sting.schmidt": { "value": 4.0 }
+    },
+    "source": "Britannica (7 mm); Bissessarsingh & Starr 2021 (pompílidos sin púas); Schmidt 2016"
+  },
+  {
+    "id": "abeja-madera",
+    "note": "La punta de la abeja (~7 HV) se aplasta contra las paredes celulares del pino (~46 HV), aunque el pino en bloque sea blando (2,5 HV).",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "abeja", "target": "madera", "type": "aranazo", "force": 0.00575, "length": 25, "tear": false, "method": "puncion", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "pierces": { "value": false },
+      "depthUm": { "max": 1.0 },
+      "scratched": { "value": false },
+      "toolBroken": { "value": false },
+      "sting.tipCrushed": { "value": true },
+      "sting.hardnessRatio": { "max": 0.8 },
+      "sting.targetMicroHv": { "value": 45.9 },
+      "sting.engaged": { "value": false }
+    },
+    "source": "Das et al. 2018 (punta 0,07 GPa); Konnerth et al. 2009 (pared celular ~0,45 GPa)"
+  },
+  {
+    "id": "abeja-madera-rayado",
+    "note": "Tampoco raya el pino.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "abeja", "target": "madera", "type": "aranazo", "force": 0.00575, "length": 25, "tear": false, "method": "rayado", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "scratched": { "value": false },
+      "depthUm": { "max": 0.05 },
+      "sting.canMark": { "value": false }
+    },
+    "source": "Das et al. 2018; Konnerth et al. 2009; criterio de durezas de FISICA.md §4"
+  },
+  {
+    "id": "abeja-acero-madera",
+    "note": "Reforjada en acero (200 HV) sí perfora el pino.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "acero", "claw": "abeja", "target": "madera", "type": "aranazo", "force": 0.5, "length": 25, "tear": false, "method": "puncion", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "pierces": { "value": true },
+      "depthUm": { "value": 60.33, "tol": 0.2 },
+      "toolBroken": { "value": false },
+      "sting.buckled": { "value": false },
+      "sting.hardnessRatio": { "value": 4.357, "tol": 0.001 },
+      "sting.fBuckleN": { "value": 0.72831, "tol": 0.001 }
+    },
+    "source": "Criterio de durezas (FISICA.md §4) y profundidad del motor 1.x; pandeo de Euler"
+  },
+  {
+    "id": "abeja-acero-madera-1N",
+    "note": "Con 1 N la abeja de acero pandea a ~0,73 N: la profundidad se queda donde la resistencia alcanza esa carga.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "acero", "claw": "abeja", "target": "madera", "type": "aranazo", "force": 1.0, "length": 25, "tear": false, "method": "puncion", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "toolBroken": { "value": true },
+      "sting.buckled": { "value": true },
+      "depthUm": { "value": 73.46, "tol": 0.2 }
+    },
+    "source": "Pandeo de Euler (voladizo, K = 2) con el E del acero"
+  },
+  {
+    "id": "abeja-vidrio",
+    "note": "Ningún aguijón natural raya el vidrio.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "abeja", "target": "vidrio", "type": "aranazo", "force": 0.00575, "length": 25, "tear": false, "method": "puncion", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "pierces": { "value": false },
+      "scratched": { "value": false },
+      "sting.tipCrushed": { "value": true }
+    },
+    "source": "Criterio de durezas de FISICA.md §4"
+  },
+  {
+    "id": "abeja-diamante-vidrio",
+    "note": "Reforjada en diamante perfora el vidrio (microfractura) y no pandea hasta ~3,8 N.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "diamante", "claw": "abeja", "target": "vidrio", "type": "aranazo", "force": 0.5, "length": 25, "tear": false, "method": "puncion", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "pierces": { "value": true },
+      "toolBroken": { "value": false },
+      "depthUm": { "value": 15.19, "tol": 0.2 },
+      "sting.fBuckleN": { "value": 3.8236, "tol": 0.001 },
+      "sting.canMark": { "value": true }
+    },
+    "source": "Criterio de durezas de FISICA.md §4; pandeo de Euler con el E del diamante"
+  },
+  {
+    "id": "abeja-oro-plastico",
+    "note": "Reforjada en oro raya el ABS, pero con 0,4 N cede: el oro es tan blando que la columna plastifica antes de pandear elásticamente (Johnson).",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "oro", "claw": "abeja", "target": "plastico", "type": "aranazo", "force": 0.4, "length": 25, "tear": false, "method": "puncion", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "toolBroken": { "value": true },
+      "sting.buckled": { "value": true },
+      "sting.bucklingMode": { "value": "johnson" },
+      "sting.fBuckleN": { "value": 0.28056, "tol": 0.001 }
+    },
+    "source": "Pandeo de Johnson con Y = H/2,8 (Tabor)"
+  },
+  {
+    "id": "abeja-acero-vidrio",
+    "note": "El acero (200 HV) tampoco raya el vidrio (550 HV): el material importa.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "acero", "claw": "abeja", "target": "vidrio", "type": "aranazo", "force": 0.5, "length": 25, "tear": false, "method": "puncion", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "pierces": { "value": false },
+      "sting.hardnessRatio": { "value": 0.36364, "tol": 0.001 },
+      "sting.tipCrushed": { "value": true }
+    },
+    "source": "Criterio de durezas de FISICA.md §4"
+  },
+  {
+    "id": "avispon-coche",
+    "note": "El avispón no marca la pintura del coche.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "avispon", "target": "coche", "type": "aranazo", "force": 0.014, "length": 25, "tear": false, "method": "puncion", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "scratched": { "value": false },
+      "sting.tipCrushed": { "value": true }
+    },
+    "source": "Criterio de durezas de FISICA.md §4"
+  },
+  {
+    "id": "abeja-una",
+    "note": "Ni siquiera una uña ajena.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "abeja", "target": "una", "type": "aranazo", "force": 0.00575, "length": 25, "tear": false, "method": "puncion", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "pierces": { "value": false },
+      "scratched": { "value": false }
+    },
+    "source": "Criterio de durezas de FISICA.md §4"
+  },
+  {
+    "id": "abeja-tungsteno-acero",
+    "note": "Reforjada en carburo de tungsteno perfora el acero inoxidable.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "tungsteno", "claw": "abeja", "target": "acero", "type": "aranazo", "force": 0.5, "length": 25, "tear": false, "method": "puncion", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "pierces": { "value": true },
+      "depthUm": { "value": 27.26, "tol": 0.2 },
+      "toolBroken": { "value": false }
+    },
+    "source": "Criterio de durezas de FISICA.md §4; profundidad del motor 1.x"
+  }
+]

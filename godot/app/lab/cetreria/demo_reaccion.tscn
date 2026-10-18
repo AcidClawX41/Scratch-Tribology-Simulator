@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://app/lab/cetreria/demo_reaccion.gd" id="1_demo"]
+
+[node name="DemoReaccion" type="Node"]
+script = ExtResource("1_demo")

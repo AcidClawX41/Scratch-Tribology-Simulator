@@ -2,7 +2,7 @@
   "expo": {
     "name": "Scratch Tribology Simulator",
     "slug": "scratch-tribology-simulator",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "scheme": "scratchtribology",
     "userInterfaceStyle": "dark",
@@ -12,7 +12,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.acidclawx41.scratchtribology",
-      "buildNumber": "1",
+      "buildNumber": "2",
       "infoPlist": {
         "UIViewControllerBasedStatusBarAppearance": false,
         "NSHumanReadableCopyright": "© 2026 Eric Valls Gramunt · MIT License"
@@ -20,7 +20,7 @@
     },
     "android": {
       "package": "com.acidclawx41.scratchtribology",
-      "versionCode": 1,
+      "versionCode": 2,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#170E1C"

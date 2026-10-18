@@ -82,6 +82,73 @@ verificar para darla por terminada. Marca con `[x]` al completar.
 - [ ] Actualizar Expo a la SDK más reciente (`npx expo install expo@latest --fix`) y probar en dispositivo.
 - [ ] Firma y notarización de macOS y firma de código en Windows en el workflow de release.
 
+## V2.0 en Godot (prototipo en `godot/`)
+
+El estudio completo, con las mediciones del prototipo, está en `docs/V2-VIABILIDAD.md`. Fases que quedan, con
+agentes (como mucho 2 a la vez):
+
+- [ ] **Laboratorio con paridad total con la 1.x**, comprobada pantalla a pantalla: modo dual, comparativa, logros,
+  cuaderno y fundamentos. Además, hápticos en móvil y precarga de las losas del banco (hoy, al cambiar de material se
+  ve la anterior unos 170 ms).
+- [ ] **Taller, fase 2 del control Fagor:** compensación del radio de la punta G41/G42 (hoy los chaflanes, conos y
+  radios salen con el error de la punta, y así se enseña), roscado, más ciclos y subrutinas. Después, el dialecto
+  Fanuc. Probarlo con los programas reales de la FP.
+- [ ] **Fresadora y taladro** en la interfaz: el modelo de corte ya calcula fresado y taladrado.
+- [ ] **Radial:**
+  - ancho de corte del disco de láminas (falta un dato verificado);
+  - discos de metal duro y de CBN;
+  - Awan 2021 para la energía de corte del acero al carbono;
+  - una sola fuente para la longitud y el color de las chispas (hoy en `radial.gd` y en `sparks.gd`).
+- [ ] **Release en 5 plataformas** (`godot-release.yml`): instaladores, APK e IPA, presets de calidad para móvil,
+  y pruebas en tu iPhone, Android, Windows y macOS.
+- [ ] **Accesibilidad:** AccessKit y prueba con lector de pantalla.
+- [ ] **Emoji:** empaquetar Noto Color Emoji (OFL, ~10 MB) o quitarlos, porque hoy dependen de la fuente del sistema.
+- [ ] **Determinismo entre plataformas:** la física del laboratorio aún usa `pow`, `exp`, `log` y `tan` de la libm de
+  cada plataforma en unos pocos sitios; pasarlos a `core/shared/v8_math.gd` (ya están pow, tan y log) para que dé
+  lo mismo, bit a bit, en todas.
+- [ ] **ThorVG:** los grupos con `clipPath` se componen en 8 bits (el cepillado de la uña de metal sale más tenue).
+- [ ] **Herramientas:** que el ejecutor de tests espere fotogramas (para probar la disposición real de la
+  interfaz) y capturas de teléfono sin el marco (un `override.cfg` temporal con el tamaño).
+
+- [ ] **Coche en marcha, lo que queda tras la 4d:**
+  - integrar `ClawFracture` (rotura de garras reforjadas frágiles) en el banco del laboratorio;
+  - resistencia medida de juntas de goma, barras, retrovisor, antena y limpiaparabrisas;
+  - medir el arado de una garra en la pintura (hoy, Bowden & Tabor como estimación);
+  - que los anclajes frenen el deslizamiento del golpe.
+- [x] **Aguantar puede ser una ventana de velocidades** (señalado en la 4c). Ejemplo: el oso de pie en el techo con una
+  frenada de 0,9 g. El veredicto decía «ni a paso de hombre aguanta», pero de ~62 km/h en adelante el viento de cara
+  compensa la inercia. Ahora `detach` da `holdFromKmh`, `holdToKmh` y `holdToMode`, y los textos, la banda y la gráfica
+  los enseñan. Afecta a ~10 % de los ensayos del barrido. Además:
+  - ningún texto dice «~0 km/h» (`REST_KMH`);
+  - los textos concuerdan con el género del animal (`GRAMMAR`: «sale despedida», «se queda clavada»);
+  - «no corta el acero de horno», con artículo;
+  - el botón de fuerza máxima dice «unos 300 N», porque en Syne la virgulilla parecía un punto;
+  - `defense_block` da `pcsaCm2`, y el estado ya no recalcula la fuerza de defensa para citarlo.
+- [ ] **Coche en marcha, más fallos señalados en la 4c:**
+  - física (para un ingeniero físico): unas garras clavadas que atraviesan la aleta de plástico dan `crush_m` = 0, y
+    entonces `t_crush` = 0 y no hay marcas de arrastre. Falta cuánto rasga una garra clavada al ser arrastrada por el
+    plástico;
+  - datos sin `source` ni `quality`: `IMPACT_ZONES`, `BODIES`, `limbStiffness`, `BIRD_AERO.wing.sustenta` y
+    `MANEUVERS.crucero`;
+  - `impact` no da las componentes de la velocidad ni el tiempo de vuelo del salto, ni bandas;
+  - funciones de formato privadas duplicadas entre `MovingCar` y `MovingCarState`;
+  - la sustentación del ave con viento de cola usa v² sin signo: un ala con el aire por detrás sustenta mucho menos
+    (estimación pendiente de fuente).
+
+## 1.x (Tauri y Expo)
+
+- [x] **AppImage con Mesa reciente** (tauri-apps/tauri#15976): el arreglo de Tauri (#16062, 2.12) no está publicado;
+  la release usa ya su linuxdeploy 07333c6, que deja fuera `libwayland-client`, y lo comprueba. Probado en Docker
+  (Ubuntu 22.04, 26.04 y Fedora 44, sin GPU). Detalle en `docs/AUDIO-NATIVO.md`.
+- [ ] **Probar el AppImage 1.0.1 con GPU de verdad** en Ubuntu 26.04 (NVIDIA y AMD, Wayland y X11). Mientras tanto, el `.deb`.
+- [ ] **Tauri 2.12:** al publicarse, subir `@tauri-apps/cli`, `tauri` y `tauri-build` y quitar el paso «linuxdeploy de
+  Tauri 2.12 para el AppImage» de `release.yml` (la comprobación se queda).
+- [x] **Ejecutor `ubuntu-22.04`:** `release.yml` compila Linux en un contenedor `ubuntu:22.04` sobre `ubuntu-latest`.
+- [ ] **`ci.yml` (job desktop-shell) sigue en `ubuntu-22.04`:** moverlo igual antes de los cortes de aviso (23-03-2027).
+- [ ] **Abril de 2027:** Ubuntu 22.04 sale del soporte estándar; valorar el contenedor `ubuntu:24.04` (glibc 2.39,
+  sin Ubuntu 22.04 ni Debian 12) y rehacer `THIRD-PARTY-NOTICES.md` con noble.
+- [x] **Registro de GStreamer propio del AppImage** (`GST_REGISTRY_1_0`, en `main.rs`).
+
 ## Deuda conocida
 
 - La escala de fuerza es única (0,5–2000 N); los insectos necesitarán otra.

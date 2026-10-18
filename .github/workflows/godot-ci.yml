@@ -1,0 +1,92 @@
+# CI de la V2 (proyecto Godot de godot/): en cada push a main y en cada pull request.
+#   · instala Godot 4.7.2 desde la descarga oficial y comprueba su SHA-512 con el archivo de sumas oficial;
+#   · pasa los tests del proyecto Godot, que comparan la capa física con el oráculo del motor 1.x;
+#   · pasa gdlint (gdtoolkit 4) con las reglas del proyecto;
+#   · pasa los tests del motor 1.x, porque ese motor es el oráculo de los tests de Godot.
+# Convive con ci.yml, que sigue comprobando la 1.x (React/Tauri/Expo).
+name: godot-ci
+
+# Los cambios que solo tocan documentación no lanzan la batería (unos 12 minutos de Actions cada vez)
+on:
+  push:
+    branches: [main]
+    paths-ignore: ["docs/**", "**/*.md"]
+  pull_request:
+    paths-ignore: ["docs/**", "**/*.md"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Un push nuevo a la misma rama cancela la comprobación anterior, que ya no sirve (y no gasta minutos de Actions)
+concurrency:
+  group: godot-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  GODOT_VERSION: "4.7.2"
+
+jobs:
+  godot:
+    name: Godot · tests y gdlint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # El Node del repositorio (.nvmrc). El oráculo de los tests está versionado (lo generó el motor 1.x con Node 22, el
+      # V8 que porta godot/core/shared/v8_math.gd al bit), así que los tests no dependen de esta versión
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      # El editor se descarga de downloads.godotengine.org y su SHA-512 se comprueba con el SHA512-SUMS.txt que el
+      # proyecto Godot publica en su Release de GitHub: dos orígenes distintos, así que una descarga alterada o
+      # corrupta no pasa. Es el editor estándar (no .NET), el mismo con el que se escriben los tests.
+      - name: Godot ${{ env.GODOT_VERSION }} (descarga oficial verificada)
+        run: |
+          dir="$RUNNER_TEMP/godot"
+          zip="Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          mkdir -p "$dir"
+          cd "$dir"
+          curl -fsSL --retry 3 -o "$zip" \
+            "https://downloads.godotengine.org/?version=${GODOT_VERSION}&flavor=stable&slug=linux.x86_64.zip&platform=linux.64"
+          curl -fsSL --retry 3 -o SHA512-SUMS.txt \
+            "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/SHA512-SUMS.txt"
+          awk -v f="$zip" '$2 == f' SHA512-SUMS.txt > esperado.txt
+          sha512sum -c esperado.txt
+          unzip -q -o "$zip"
+          echo "GODOT=$dir/${zip%.zip}" >> "$GITHUB_ENV"
+          "$dir/${zip%.zip}" --version
+
+      - run: npm ci
+
+      # Exporta el oráculo del motor 1.x, importa el proyecto sin ventana y ejecuta todos los tests
+      # (godot/tools/godot.mjs; falla si un test falla o si la salida trae «SCRIPT ERROR» o «Parse Error»)
+      - name: Tests del proyecto Godot
+        run: npm run godot:test
+
+      # Las tres comprobaciones que quedan son independientes: se ejecutan aunque falle una anterior, para ver
+      # todos los fallos de una vez
+      - uses: actions/setup-python@v7
+        if: ${{ !cancelled() }}
+        with:
+          python-version: "3.12"
+
+      # Linter de GDScript. Se lanza desde godot/ para que tome las reglas del proyecto de godot/gdlintrc
+      - name: gdlint
+        if: ${{ !cancelled() }}
+        working-directory: godot
+        run: |
+          pip install --quiet "gdtoolkit==4.*"
+          gdlint --version
+          gdlint .
+
+      # El motor 1.x (packages/core) es el oráculo: si sus tests fallan, los de Godot no prueban nada
+      - name: Tests del motor 1.x
+        if: ${{ !cancelled() }}
+        run: npm test

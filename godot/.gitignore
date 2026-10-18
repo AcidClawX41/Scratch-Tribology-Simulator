@@ -1,0 +1,13 @@
+# Caché de importación de Godot (se regenera al abrir el proyecto)
+.godot/
+# Plantilla de compilación de Android (se instala desde el editor)
+/android/
+# Datos grandes del oráculo: se generan con `npm run godot:fixtures`
+# el oráculo (también los dos archivos grandes de generated/) se versiona: los tests no dependen del Node instalado
+tests/fixtures/generated/scratch_*/
+
+# Ajustes temporales de godot.mjs capture --phone (se borran al acabar)
+/override.cfg
+
+# Ajustes locales del editor (XDG_* de cada árbol de trabajo)
+.godot-home/

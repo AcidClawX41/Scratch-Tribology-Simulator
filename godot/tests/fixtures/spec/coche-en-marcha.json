@@ -1,0 +1,1012 @@
+[
+  {
+    "id": "aguila-techo-plegadas",
+    "note": "Águila real de 5 kg agazapada en el techo con las alas plegadas: sin nada que agarrar, solo la fricción de talones y dedos. El aire va un 20 % más rápido que el coche; a 90 km/h le empuja con ~8 N frente a ~46 N de fricción: aguanta. Se suelta hacia ~196 km/h (79-296 según los datos), dentro del deslizador, que llega a los 230 km/h de un turismo de serie. Raya la pintura hasta el metal, sin cortarlo.",
+    "input": { "claw": "aguila", "target": "coche", "zone": "techo", "posture": "plegadas", "v_kmh": 90.0, "kind": "hold", "model": "2.0" },
+    "expect": {
+      "detach.kmh": { "value": 195.7513, "tol": 0.02 },
+      "detach.minKmh": { "value": 79.3922, "tol": 0.02 },
+      "detach.maxKmh": { "value": 296.0941, "tol": 0.02 },
+      "detach.mode": { "value": "atras" },
+      "detach.atRest": { "value": true },
+      "detach.beyond": { "value": false },
+      "at.holds": { "value": true },
+      "at.dragN": { "value": 7.774, "tol": 0.02 },
+      "at.liftN": { "value": 2.5913, "tol": 0.02 },
+      "at.localKmh": { "value": 108.3744, "tol": 0.02 },
+      "setup.anchor": { "value": "friccion" },
+      "setup.mu": { "value": 1.0, "tol": 0.02 },
+      "marks.verdict": { "value": "HASTA EL METAL" },
+      "marks.reachesBody": { "value": true },
+      "marks.layers": { "value": ["barniz", "color", "imprimación", "anticorrosivo"] },
+      "brakingG": { "value": 1.1057, "tol": 0.02 }
+    },
+    "source": "Pennycuick et al. 1988 (área frontal); Tucker 1990 (Cd del cuerpo); Tucker & Heine 1990 (CL máximo 1,6); Varney et al. 2020, DrivAer Experimental Aerodynamic Dataset (Cp y velocidad local); motor del laboratorio: Physics.compute (arado de la garra, dureza de la pintura y del metal)"
+  },
+  {
+    "id": "aguila-techo-abiertas",
+    "note": "Con las alas abiertas el aire la levanta: a 90 km/h, 600 N de sustentación contra 49 N de peso. Despega a ~24 km/h, por debajo de la velocidad mínima de vuelo de su ala sola en el techo (~26 km/h).",
+    "input": { "claw": "aguila", "target": "coche", "zone": "techo", "posture": "abiertas", "v_kmh": 90.0, "kind": "hold", "model": "2.0" },
+    "expect": {
+      "detach.kmh": { "value": 24.1129, "tol": 0.02 },
+      "detach.minKmh": { "value": 13.8565, "tol": 0.02 },
+      "detach.maxKmh": { "value": 34.9172, "tol": 0.02 },
+      "detach.mode": { "value": "despega" },
+      "at.holds": { "value": false },
+      "at.mode": { "value": "despega" },
+      "at.liftN": { "value": 600.5866, "tol": 0.02 },
+      "at.dragN": { "value": 82.5234, "tol": 0.02 },
+      "verdict.verdict": { "value": "DESPEGA A ~24 km/h" }
+    },
+    "source": "Pennycuick et al. 1988 (área frontal); Tucker 1990 (Cd del cuerpo); Tucker & Heine 1990 (CL máximo 1,6); Alerstam et al. 2007 (superficie alar); Varney et al. 2020, DrivAer Experimental Aerodynamic Dataset (Cp y velocidad local)"
+  },
+  {
+    "id": "aguila-retrovisor-plegadas",
+    "note": "Agarrada al retrovisor con los dos pies (2 × 101 N × k, 78-1195 N según los datos) y con las alas plegadas, el viento no la arranca ni a 400 km/h.",
+    "input": { "claw": "aguila", "target": "coche", "zone": "retrovisor", "posture": "plegadas", "v_kmh": 150.0, "kind": "hold", "model": "2.0" },
+    "expect": {
+      "detach.never": { "value": true },
+      "detach.minKmh": { "value": 209.6421, "tol": 0.02 },
+      "setup.anchor": { "value": "agarre" },
+      "setup.anchorN.value": { "value": 201.8, "tol": 0.02 },
+      "setup.anchorN.min": { "value": 78.48, "tol": 0.02 },
+      "setup.anchorN.max": { "value": 1195.2, "tol": 0.02 },
+      "at.holds": { "value": true },
+      "verdict.verdict": { "value": "NI A 400 km/h SE SUELTA" }
+    },
+    "source": "Sustaita & Hertel 2010 (agarre medido y su escalado; claws_v2.gd); Pennycuick et al. 1988 (área frontal); Tucker 1990 (Cd del cuerpo); Tucker & Heine 1990 (CL máximo 1,6); Varney et al. 2020, DrivAer Experimental Aerodynamic Dataset (Cp y velocidad local) (tomas de las ventanillas)"
+  },
+  {
+    "id": "aguila-retrovisor-abiertas",
+    "note": "Agarrada al retrovisor pero con las alas abiertas: su propia sustentación la arranca a ~60 km/h (37-188 según los datos).",
+    "input": { "claw": "aguila", "target": "coche", "zone": "retrovisor", "posture": "abiertas", "v_kmh": 90.0, "kind": "hold", "model": "2.0" },
+    "expect": {
+      "detach.kmh": { "value": 60.1531, "tol": 0.02 },
+      "detach.minKmh": { "value": 37.2597, "tol": 0.02 },
+      "detach.maxKmh": { "value": 187.5589, "tol": 0.02 },
+      "detach.mode": { "value": "despega" },
+      "at.holds": { "value": false }
+    },
+    "source": "Sustaita & Hertel 2010 (agarre medido y su escalado; claws_v2.gd); Pennycuick et al. 1988 (área frontal); Tucker 1990 (Cd del cuerpo); Tucker & Heine 1990 (CL máximo 1,6)"
+  },
+  {
+    "id": "halcon-capo-plegadas",
+    "note": "Halcón peregrino de 1 kg en el capó: su agarre medido (12,7 N la hembra de 774 g) no cuenta sobre una chapa lisa; aguanta por fricción hasta ~176 km/h (81-256).",
+    "input": { "claw": "halcon", "target": "coche", "zone": "capo", "posture": "plegadas", "v_kmh": 120.0, "kind": "hold", "model": "2.0" },
+    "expect": {
+      "detach.kmh": { "value": 176.1162, "tol": 0.02 },
+      "detach.minKmh": { "value": 80.5487, "tol": 0.02 },
+      "detach.maxKmh": { "value": 255.566, "tol": 0.02 },
+      "detach.mode": { "value": "atras" },
+      "setup.grip.value": { "value": 15.8, "tol": 0.02 },
+      "setup.grip.min": { "value": 12.1, "tol": 0.02 },
+      "setup.grip.max": { "value": 46.9, "tol": 0.02 },
+      "marks.verdict": { "value": "LLEGA AL COLOR" },
+      "at.holds": { "value": true }
+    },
+    "source": "Sustaita & Hertel 2010 (agarre medido y su escalado; claws_v2.gd); Pennycuick et al. 1988 (área frontal); Tucker 1990 (Cd del cuerpo); Tucker & Heine 1990 (CL máximo 1,6); Varney et al. 2020, DrivAer Experimental Aerodynamic Dataset (Cp y velocidad local) (PIV sobre el capó)"
+  },
+  {
+    "id": "lechuza-limpiaparabrisas-abiertas",
+    "note": "Lechuza agarrada al limpiaparabrisas, en el remanso del pie del parabrisas (el aire va a ~0,84 veces el coche: estimación): con las alas abiertas despega a ~49 km/h.",
+    "input": { "claw": "lechuza", "target": "coche", "zone": "limpiaparabrisas", "posture": "abiertas", "v_kmh": 50.0, "kind": "hold", "model": "2.0" },
+    "expect": {
+      "detach.kmh": { "value": 48.7426, "tol": 0.02 },
+      "detach.mode": { "value": "despega" },
+      "setup.anchor": { "value": "agarre" },
+      "setup.localFactor": { "value": 0.8367, "tol": 0.02 },
+      "at.holds": { "value": false }
+    },
+    "source": "Johnson 1997 (superficie alar); Sustaita & Hertel 2010 (agarre medido y su escalado; claws_v2.gd); Mathai et al. 2021 (remanso, estimado)"
+  },
+  {
+    "id": "buitre-techo-abiertas",
+    "note": "El buitre leonado, con 0,89 m² de ala, despega del techo a ~26 km/h: planea antes de que el coche coja velocidad.",
+    "input": { "claw": "buitre", "target": "coche", "zone": "techo", "posture": "abiertas", "v_kmh": 60.0, "kind": "hold", "model": "2.0" },
+    "expect": {
+      "detach.kmh": { "value": 26.3314, "tol": 0.02 },
+      "detach.mode": { "value": "despega" },
+      "at.holds": { "value": false },
+      "at.liftN": { "value": 346.5014, "tol": 0.02 }
+    },
+    "source": "Harel et al. 2016 (carga alar); Pennycuick et al. 1988 (área frontal); Tucker 1990 (Cd del cuerpo); Tucker & Heine 1990 (CL máximo 1,6)"
+  },
+  {
+    "id": "buho-barras-plegadas-viento-lateral",
+    "note": "Búho agarrado a las barras del techo con 40 km/h de viento lateral: con las alas plegadas y agarrado, no se suelta ni a 400 km/h.",
+    "input": { "claw": "buho", "target": "coche", "zone": "barras", "posture": "plegadas", "v_kmh": 120.0, "crosswind_kmh": 40.0, "kind": "hold", "model": "2.0" },
+    "expect": {
+      "detach.kmh": { "value": { "$num": "Infinity" } },
+      "detach.mode": { "value": "" },
+      "at.holds": { "value": true },
+      "setup.anchor": { "value": "agarre" }
+    },
+    "source": "Sustaita & Hertel 2010 (agarre medido y su escalado; claws_v2.gd); Pennycuick et al. 1988 (área frontal); Tucker 1990 (Cd del cuerpo); Tucker & Heine 1990 (CL máximo 1,6); Varney et al. 2020, DrivAer Experimental Aerodynamic Dataset (Cp y velocidad local) (PIV sobre el techo)"
+  },
+  {
+    "id": "tigre-techo-tumbado",
+    "note": "Tigre de 220 kg agazapado en el techo: a 90 km/h el aire le empuja con ~69 N (un 27 % de lo que frena al coche); su peso y la fricción (hasta ~1 g de frenada) mandan. Se soltaría por el viento hacia ~340 km/h. Sus garras rayan la pintura hasta el metal.",
+    "input": { "claw": "tigre", "target": "coche", "zone": "techo", "posture": "tumbado", "v_kmh": 90.0, "kind": "hold", "model": "2.0" },
+    "expect": {
+      "detach.beyond": { "value": true },
+      "detach.kmh": { "value": 340.6621, "tol": 0.02 },
+      "detach.minKmh": { "value": 164.2275, "tol": 0.02 },
+      "at.holds": { "value": true },
+      "at.dragN": { "value": 68.7476, "tol": 0.02 },
+      "at.dragShare": { "value": 0.2717, "tol": 0.02 },
+      "at.weightN": { "value": 2157.54, "tol": 0.02 },
+      "brakingG": { "value": 0.9939, "tol": 0.02 },
+      "marks.verdict": { "value": "HASTA EL METAL" },
+      "marks.reachesBody": { "value": true },
+      "verdict.verdict": { "value": "AGUANTA A 230 km/h" }
+    },
+    "source": "Hoerner 1965 (cuerpo romo, estimación); Varney et al. 2020, DrivAer Experimental Aerodynamic Dataset (Cp y velocidad local); motor del laboratorio: Physics.compute (arado de la garra, dureza de la pintura y del metal)"
+  },
+  {
+    "id": "tigre-capo-frenada-emergencia",
+    "note": "Una frenada de emergencia de 1 g en el capó inclinado: el tigre sale despedido hacia delante incluso a poca velocidad (manda la inercia, no el aire).",
+    "input": { "claw": "tigre", "target": "coche", "zone": "capo", "posture": "tumbado", "v_kmh": 50.0, "accel_g": -1.0, "kind": "hold", "model": "2.0" },
+    "expect": {
+      "detach.atRest": { "value": false },
+      "detach.mode": { "value": "delante" },
+      "at.holds": { "value": false },
+      "at.mode": { "value": "delante" },
+      "verdict.verdict": { "value": "SALE DESPEDIDO HACIA DELANTE" }
+    },
+    "source": "Wong, Theory of Ground Vehicles (adherencia en asfalto seco); equilibrio de fuerzas"
+  },
+  {
+    "id": "oso-techo-de-pie-frenada-emergencia",
+    "note": "Oso pardo de 300 kg de pie en el techo con una frenada de emergencia de 0,9 g: la inercia lo empuja hacia delante con ~2648 N y el roce de sus patas solo da ~2530 N. Parado sale despedido; más deprisa, el viento de cara le devuelve lo que falta (~118 N a ~62 km/h). Aguantar es una ventana: de ~62 km/h en adelante. Al frenar hasta parar, sale despedido al bajar de ~62 km/h.",
+    "input": { "claw": "oso", "target": "coche", "zone": "techo", "posture": "de_pie", "v_kmh": 90.0, "accel_g": -0.9, "kind": "hold", "model": "2.0" },
+    "expect": {
+      "detach.atRest": { "value": false },
+      "detach.mode": { "value": "delante" },
+      "detach.holdFromKmh": { "value": 62.3874, "tol": 0.02 },
+      "detach.holdToMode": { "value": "" },
+      "at.holds": { "value": true },
+      "at.inertiaN": { "value": -2647.89, "tol": 0.02 },
+      "at.availN": { "value": 2529.9099, "tol": 0.02 },
+      "verdict.verdict": { "value": "SALE DESPEDIDO HACIA DELANTE AL BAJAR DE ~62 km/h" }
+    },
+    "source": "Wong, Theory of Ground Vehicles (adherencia en asfalto seco); Hoerner 1965 (cuerpo romo, estimación); Varney et al. 2020, DrivAer (Cp y velocidad local); equilibrio de fuerzas"
+  },
+  {
+    "id": "oso-techo-de-pie",
+    "note": "Oso pardo de pie en el techo a 100 km/h: ~303 N de resistencia, casi la del coche entero (~312 N, DrivAer): el motor gasta ~8,4 kW más.",
+    "input": { "claw": "oso", "target": "coche", "zone": "techo", "posture": "de_pie", "v_kmh": 100.0, "kind": "hold", "model": "2.0" },
+    "expect": {
+      "at.dragN": { "value": 303.1201, "tol": 0.02 },
+      "at.carDragN": { "value": 312.3572, "tol": 0.02 },
+      "at.dragShare": { "value": 0.9704, "tol": 0.02 },
+      "at.powerW": { "value": 8420.0017, "tol": 0.02 },
+      "at.holds": { "value": true },
+      "brakingG": { "value": 0.9629, "tol": 0.02 }
+    },
+    "source": "Hoerner 1965 (estimación); Varney et al. 2020, DrivAer Experimental Aerodynamic Dataset (Cp y velocidad local) (Cd 0,309 del coche)"
+  },
+  {
+    "id": "oso-parabrisas-tumbado",
+    "note": "Un oso de 300 kg sobre el parabrisas lo agrieta con su peso (~637 N por pata contra ~517 N que aguanta el laminado); el PVB lo sujeta.",
+    "input": { "claw": "oso", "target": "coche", "zone": "parabrisas", "posture": "tumbado", "v_kmh": 50.0, "kind": "hold", "model": "2.0" },
+    "expect": {
+      "setup.windshield.cracked": { "value": true },
+      "setup.windshield.loadN": { "value": 636.9833, "tol": 0.02 },
+      "setup.windshield.bendN": { "value": 516.822, "tol": 0.02 },
+      "marks.verdict": { "value": "NO RAYA" },
+      "brakingG": { "value": 0.0244, "tol": 0.02 }
+    },
+    "source": "unidad 1f: core/lab/glazing.gd (parabrisas laminado, EN 572-1, JIS R 3212 / CEPE R43)"
+  },
+  {
+    "id": "aguila-techo-plegadas-frio",
+    "note": "La misma águila agazapada en el techo con el aire a 0 °C: más denso (1,292 kg/m³ frente a 1,204 a 20 °C), el viento empuja un 7 % más y se soltaría antes, hacia ~189 km/h en vez de ~196. Sin viento, la fuerza del aire depende de ρ·v²: la velocidad de despegue escala con 1/√ρ.",
+    "input": { "claw": "aguila", "target": "coche", "zone": "techo", "posture": "plegadas", "v_kmh": 90.0, "temp_c": 0.0, "altitude_m": 0.0, "kind": "hold", "model": "2.0" },
+    "expect": {
+      "setup.rho": { "value": 1.2923, "tol": 0.02 },
+      "air.speedFactor": { "value": 0.9653, "tol": 0.02 },
+      "at.qPa": { "value": 585.566, "tol": 0.02 },
+      "at.dragN": { "value": 8.3432, "tol": 0.02 },
+      "detach.kmh": { "value": 188.9559, "tol": 0.02 },
+      "detach.minKmh": { "value": 76.6361, "tol": 0.02 },
+      "detach.maxKmh": { "value": 285.8152, "tol": 0.02 },
+      "detachRef.kmh": { "value": 195.7513, "tol": 0.02 }
+    },
+    "source": "ISO 2533:1975 (atmósfera tipo: presión con la altitud) y ρ = p/(R·T) con R = 287,05 J/(kg·K); Pennycuick et al. 1988 (área frontal); Tucker 1990 (Cd del cuerpo); Tucker & Heine 1990 (CL máximo 1,6); Varney et al. 2020, DrivAer Experimental Aerodynamic Dataset (Cp y velocidad local)"
+  },
+  {
+    "id": "aguila-techo-plegadas-calor",
+    "note": "Con el aire a 35 °C, un 5 % menos denso (1,146 kg/m³): el viento empuja menos y se soltaría hacia ~201 km/h.",
+    "input": { "claw": "aguila", "target": "coche", "zone": "techo", "posture": "plegadas", "v_kmh": 90.0, "temp_c": 35.0, "altitude_m": 0.0, "kind": "hold", "model": "2.0" },
+    "expect": {
+      "setup.rho": { "value": 1.1455, "tol": 0.02 },
+      "air.speedFactor": { "value": 1.0253, "tol": 0.02 },
+      "at.qPa": { "value": 519.0568, "tol": 0.02 },
+      "at.dragN": { "value": 7.3956, "tol": 0.02 },
+      "detach.kmh": { "value": 200.697, "tol": 0.02 },
+      "detach.minKmh": { "value": 81.398, "tol": 0.02 },
+      "detach.maxKmh": { "value": 303.5749, "tol": 0.02 },
+      "detachRef.kmh": { "value": 195.7513, "tol": 0.02 }
+    },
+    "source": "ISO 2533:1975 (atmósfera tipo: presión con la altitud) y ρ = p/(R·T) con R = 287,05 J/(kg·K); Pennycuick et al. 1988 (área frontal); Tucker 1990 (Cd del cuerpo); Tucker & Heine 1990 (CL máximo 1,6); Varney et al. 2020, DrivAer Experimental Aerodynamic Dataset (Cp y velocidad local)"
+  },
+  {
+    "id": "aguila-techo-abiertas-2000m",
+    "note": "A 2000 m (79 495 Pa en la atmósfera tipo) y 20 °C el aire es un 22 % menos denso: con las alas abiertas despega a ~27 km/h en vez de ~24. En altura, las aves necesitan más velocidad para volar.",
+    "input": { "claw": "aguila", "target": "coche", "zone": "techo", "posture": "abiertas", "v_kmh": 30.0, "temp_c": 20.0, "altitude_m": 2000.0, "kind": "hold", "model": "2.0" },
+    "expect": {
+      "air.pPa": { "value": 79495.0091, "tol": 0.02 },
+      "setup.rho": { "value": 0.9447, "tol": 0.02 },
+      "detach.kmh": { "value": 27.2232, "tol": 0.02 },
+      "detach.minKmh": { "value": 15.6438, "tol": 0.02 },
+      "detach.maxKmh": { "value": 39.4211, "tol": 0.02 },
+      "detach.mode": { "value": "despega" },
+      "detachRef.kmh": { "value": 24.1129, "tol": 0.02 },
+      "at.holds": { "value": false },
+      "verdict.verdict": { "value": "DESPEGA A ~27 km/h" }
+    },
+    "source": "ISO 2533:1975 (atmósfera tipo: presión con la altitud) y ρ = p/(R·T) con R = 287,05 J/(kg·K); Alerstam et al. 2007 (superficie alar); Tucker & Heine 1990 (CL máximo 1,6)"
+  },
+  {
+    "id": "oso-techo-de-pie-2000m-calor",
+    "note": "El oso de pie en el techo a 100 km/h en un puerto a 2000 m y 35 °C: aire un 25 % menos denso, 226 N de resistencia en vez de 303 (el coche también frena menos: la proporción no cambia) y ~6,3 kW de motor en vez de ~8,4.",
+    "input": { "claw": "oso", "target": "coche", "zone": "techo", "posture": "de_pie", "v_kmh": 100.0, "temp_c": 35.0, "altitude_m": 2000.0, "kind": "hold", "model": "2.0" },
+    "expect": {
+      "setup.rho": { "value": 0.8987, "tol": 0.02 },
+      "at.dragN": { "value": 226.2381, "tol": 0.02 },
+      "at.carDragN": { "value": 233.1323, "tol": 0.02 },
+      "at.dragShare": { "value": 0.9704, "tol": 0.02 },
+      "at.powerW": { "value": 6284.3904, "tol": 0.02 },
+      "detach.kmh": { "value": 334.4026, "tol": 0.02 },
+      "detachRef.kmh": { "value": 288.8984, "tol": 0.02 }
+    },
+    "source": "ISO 2533:1975 (atmósfera tipo: presión con la altitud) y ρ = p/(R·T) con R = 287,05 J/(kg·K); Hoerner 1965 (estimación); Varney et al. 2020, DrivAer Experimental Aerodynamic Dataset (Cp y velocidad local) (Cd 0,309 del coche)"
+  },
+  {
+    "id": "tigre-puerta-coche-cruza",
+    "note": "Tigre que cruza a 40 km/h y se estampa contra la puerta de un coche a 50 km/h: 64 km/h relativos y 11,7 kJ contra la puerta (masa reducida con un coche de 1400 kg). La hunde hasta el fondo (15 cm), sus garras rayan la pintura hasta el metal sin cortarlo y cae a ~35 km/h. De sus 34,8 kJ respecto al coche, ~10 kJ abollan la puerta, ~19 kJ acaban en calor al resbalar, ~1,8 kJ empujan al coche, ~1,7 kJ se los queda el animal y ~2 kJ se los lleva al caer.",
+    "input": { "claw": "tigre", "target": "coche", "zone": "puerta", "v_kmh": 50.0, "animal_kmh": 40.0, "angle_deg": 90.0, "drop_m": 0.5, "car_mass_kg": 1400.0, "kind": "impact", "model": "2.0" },
+    "expect": {
+      "vRelKmh": { "value": 64.0312, "tol": 0.02 },
+      "vNormalKmh": { "value": 40.0, "tol": 0.02 },
+      "normalJ": { "value": 11736.0159, "tol": 0.02 },
+      "reducedMassKg": { "value": 190.1235, "tol": 0.02 },
+      "stays": { "value": false },
+      "groundKmh": { "value": 34.5679, "tol": 0.02 },
+      "marks.count": { "value": 8 },
+      "marks.depthUm": { "value": 110.0, "tol": 0.02 },
+      "marks.reachesBody": { "value": true },
+      "marks.lengthMm": { "value": 245.3704, "tol": 0.02 },
+      "puncture.through": { "value": false },
+      "puncture.reachesBody": { "value": true },
+      "dent.applies": { "value": true },
+      "dent.bottomsOut": { "value": true },
+      "dent.depthMm": { "value": 150.0, "tol": 0.02 },
+      "dent.limbSaturated": { "value": true },
+      "verdict": { "value": "ABOLLA Y RAYA" },
+      "energy.totalJ": { "value": 34799.3827, "tol": 0.02 },
+      "energy.clawsJ": { "value": 0.0097, "tol": 0.02 },
+      "energy.panelJ": { "value": 10052.7555, "tol": 0.02 },
+      "energy.animalJ": { "value": 1683.2506, "tol": 0.02 },
+      "energy.carJ": { "value": 1844.2311, "tol": 0.02 },
+      "energy.frictionJ": { "value": 19197.8037, "tol": 0.02 },
+      "energy.exitJ": { "value": 2021.3321, "tol": 0.02 }
+    },
+    "source": "unidad 1f: core/lab/dent.gd (Nippon Steel 2013) con el tope de recorrido de la pata (estimación); motor del laboratorio: Physics.compute (arado de la garra, dureza de la pintura y del metal); balance de energía (primer principio): punción del motor, abolladura de la unidad 1f, conservación del momento con la masa reducida y trabajo del rozamiento"
+  },
+  {
+    "id": "tigre-techo-coche-cruza",
+    "note": "El mismo tigre cayendo sobre el techo desde 0,5 m: 932 J normales, abolladuras de ~2,3 cm bajo cada pata; el techo se le escapa por debajo y cae a ~33 km/h.",
+    "input": { "claw": "tigre", "target": "coche", "zone": "techo", "v_kmh": 50.0, "animal_kmh": 40.0, "angle_deg": 90.0, "drop_m": 0.5, "car_mass_kg": 1400.0, "kind": "impact", "model": "2.0" },
+    "expect": {
+      "normalJ": { "value": 932.2704, "tol": 0.02 },
+      "stays": { "value": false },
+      "groundKmh": { "value": 33.4475, "tol": 0.02 },
+      "slideM": { "value": 1.6, "tol": 0.02 },
+      "dent.depthMm": { "value": 22.9381, "tol": 0.02 },
+      "dent.visible": { "value": true },
+      "marks.count": { "value": 8 },
+      "verdict": { "value": "ABOLLA Y RAYA" }
+    },
+    "source": "unidad 1f: core/lab/dent.gd (Nippon Steel 2013) con el tope de recorrido de la pata (estimación); motor del laboratorio: Physics.compute (arado de la garra, dureza de la pintura y del metal)"
+  },
+  {
+    "id": "tigre-techo-persigue",
+    "note": "Si persigue al coche casi a su velocidad (56 frente a 50 km/h) y salta al techo, se queda encima y aguanta. No se lleva nada al salir: de sus 1,4 kJ, dos tercios abollan el techo o los absorben sus patas, ~0,15 kJ empujan al coche y ~0,3 kJ acaban en calor al frenar resbalando.",
+    "input": { "claw": "tigre", "target": "coche", "zone": "techo", "v_kmh": 50.0, "animal_kmh": 56.0, "angle_deg": 0.0, "drop_m": 0.5, "car_mass_kg": 1400.0, "kind": "impact", "model": "2.0" },
+    "expect": {
+      "stays": { "value": true },
+      "groundKmh": { "value": 0.0, "tol": 0.02 },
+      "vTangKmh": { "value": 6.0, "tol": 0.02 },
+      "hold.holds": { "value": true },
+      "energy.totalJ": { "value": 1384.3256, "tol": 0.02 },
+      "energy.panelJ": { "value": 482.2607, "tol": 0.02 },
+      "energy.frictionJ": { "value": 305.5556, "tol": 0.02 },
+      "energy.exitJ": { "value": 0.0, "tol": 0.02 }
+    },
+    "source": "Garland 1983 (56 km/h del tigre, dato anecdótico); equilibrio de fuerzas; balance de energía (primer principio): punción del motor, abolladura de la unidad 1f, conservación del momento con la masa reducida y trabajo del rozamiento"
+  },
+  {
+    "id": "tigre-aleta-plastico",
+    "note": "Contra la aleta de plástico (PPE/PA de ~2,5 mm) las garras sí entran: la atraviesan y se quedan clavadas. El plástico no se abolla: se hunde y recupera. Unidad 4g: como el tigre sigue a lo largo de la aleta, sus garras trabadas la rajan. A mano: μ_red = 220·1400/1620 = 190,12 kg; v_n = 40/3,6 = 11,11 m/s y v_t = 50/3,6 = 13,89 m/s; tras el impulso de fricción del golpe (μ = 1) le quedan v_t1 = 13,89 − (190,12/220)·11,11 = 4,287 m/s a lo largo del panel. Cada garra pide R·t = 45 kJ/m² × 2,5 mm = 112,5 N (la resiliencia con entalla Charpy de la ficha de SABIC por el espesor), y las 8 frenan con F = 900 N, menos de los 2158 N de su anclaje (2 manos × media vez su peso): a = 900/220 = 4,091 m/s². Para pararse necesitaría v_t1²/(2a) = 2,25 m, más que los 0,8 m de la aleta: la raja entera (L = 0,8 m, E = F·L = 720 J) y sale por el final con √(4,287² − 2·4,091·0,8) = 3,440 m/s = 12,4 km/h, en t = (4,287 − 3,440)/4,091 = 0,207 s; cae a 13,89 − 3,44 = 10,45 m/s = 37,6 km/h respecto al asfalto (antes de la 4g, sin desgarro, a 34,6). El término de las garras pasa de 184,9 J (la punción) a 904,9 J (punción y desgarro); los 720 J salen de lo que se llevaba al salir (de 2021 a 1301 J); el rozamiento del golpe no cambia.",
+    "input": { "claw": "tigre", "target": "cocheplastico", "zone": "aleta", "v_kmh": 50.0, "animal_kmh": 40.0, "angle_deg": 90.0, "drop_m": 0.0, "car_mass_kg": 1400.0, "kind": "impact", "model": "2.0" },
+    "expect": {
+      "puncture.through": { "value": true },
+      "embedded": { "value": true },
+      "dent.applies": { "value": false },
+      "dent.recovers": { "value": false },
+      "verdict": { "value": "PERFORA EL PLÁSTICO" },
+      "energy.clawsJ": { "value": 904.8614, "tol": 0.02 },
+      "energy.punctureJ": { "value": 184.8614, "tol": 0.02 },
+      "energy.tearJ": { "value": 720.0, "tol": 0.02 },
+      "energy.panelJ": { "value": 0.0, "tol": 0.02 },
+      "energy.frictionJ": { "value": 19197.8037, "tol": 0.02 },
+      "energy.exitJ": { "value": 1301.3321, "tol": 0.02 },
+      "tear.holds": { "value": true },
+      "tear.perClawN": { "value": 112.5, "tol": 0.02 },
+      "tear.forceN": { "value": 900.0, "tol": 0.02 },
+      "tear.lengthMm": { "value": 800.0, "tol": 0.02 },
+      "tear.reachesEnd": { "value": true },
+      "tear.timeS": { "value": 0.2071, "tol": 0.02 },
+      "marks.count": { "value": 8 },
+      "marks.lengthMm": { "value": 800.0, "tol": 0.02 },
+      "marks.verdict": { "value": "RAJA EL PLÁSTICO" },
+      "exitKmh": { "value": 12.3823, "tol": 0.02 },
+      "groundKmh": { "value": 37.6177, "tol": 0.02 }
+    },
+    "source": "motor del laboratorio: Physics.compute (arado de la garra, dureza de la pintura y del metal) (pétalos de Wierzbicki 1999); unidad 1f: core/lab/dent.gd (Nippon Steel 2013) con el tope de recorrido de la pata (estimación); unidad 4g: desgarro R·t·L con la resiliencia con entalla de SABIC, NORYL GTX964 (revisión 20241014: Charpy 45 kJ/m² a 23 °C; estimación: caso medido más parecido)"
+  },
+  {
+    "id": "tigre-aleta-plastico-se-para",
+    "note": "Unidad 4g. El mismo tigre contra la aleta de plástico de un coche más lento, a 40 km/h: las garras la atraviesan igual (la normal es la misma, 40 km/h), pero le queda menos velocidad a lo largo del panel. A mano: v_t1 = 40/3,6 − (190,12/220)·11,11 = 1,509 m/s; con F = 8 × 112,5 = 900 N (a = 4,091 m/s²) se para respecto al coche en L = v_t1²/(2a) = 1,509²/8,182 = 0,278 m, antes del final de la aleta, en t = 1,509/4,091 = 0,369 s, y el desgarro se lleva toda esa energía, ½·220·1,509² = 250 J. El coche se lo lleva a su velocidad: se desengancha y cae a 40 km/h respecto al asfalto. Banda del desgarro: 250 mm (a 50 kJ/m², Izod) a 626 mm (a 20 kJ/m², el plástico a −30 °C).",
+    "input": { "claw": "tigre", "target": "cocheplastico", "zone": "aleta", "v_kmh": 40.0, "animal_kmh": 40.0, "angle_deg": 90.0, "drop_m": 0.0, "car_mass_kg": 1400.0, "kind": "impact", "model": "2.0" },
+    "expect": {
+      "puncture.through": { "value": true },
+      "tear.holds": { "value": true },
+      "tear.stopped": { "value": true },
+      "tear.reachesEnd": { "value": false },
+      "tear.lengthMm": { "value": 278.279, "tol": 0.02 },
+      "tear.minMm": { "value": 250.4511, "tol": 0.02 },
+      "tear.maxMm": { "value": 626.1278, "tol": 0.02 },
+      "tear.timeS": { "value": 0.3688, "tol": 0.02 },
+      "tear.energyJ": { "value": 250.4511, "tol": 0.02 },
+      "energy.tearJ": { "value": 250.4511, "tol": 0.02 },
+      "energy.exitJ": { "value": 0.0 },
+      "exitKmh": { "value": 0.0 },
+      "groundKmh": { "value": 40.0, "tol": 0.02 },
+      "marks.count": { "value": 8 },
+      "marks.lengthMm": { "value": 278.279, "tol": 0.02 },
+      "stays": { "value": false },
+      "verdict": { "value": "PERFORA EL PLÁSTICO" }
+    },
+    "source": "unidad 4g: desgarro R·t·L con la resiliencia con entalla de SABIC, NORYL GTX964 (revisión 20241014: Charpy 45 kJ/m² a 23 °C, Izod 50 kJ/m², 20 kJ/m² a −30 °C; estimación: caso medido más parecido); motor del laboratorio: Physics.compute (punción con golpe)"
+  },
+  {
+    "id": "tigre-parabrisas",
+    "note": "Contra el parabrisas: ~5 kN por pata contra ~470 N que aguanta el laminado. Se agrieta, no cae, y con 8,9 kJ puede atravesarlo (la homologación solo garantiza 88,7 J). El vidrio solo se queda ~2 J al agrietarse: la energía normal la reciben el animal y la lámina de PVB.",
+    "input": { "claw": "tigre", "target": "coche", "zone": "parabrisas", "v_kmh": 50.0, "animal_kmh": 40.0, "angle_deg": 90.0, "drop_m": 0.5, "car_mass_kg": 1400.0, "kind": "impact", "model": "2.0" },
+    "expect": {
+      "windshield.cracked": { "value": true },
+      "windshield.penetrationRisk": { "value": true },
+      "windshield.bendN": { "value": 470.0506, "tol": 0.02 },
+      "windshield.peakN": { "value": 5077.1624, "tol": 0.02 },
+      "verdict": { "value": "AGRIETA EL PARABRISAS" },
+      "marks.count": { "value": 0 },
+      "energy.terms.1.id": { "value": "vidrio" },
+      "energy.panelJ": { "value": 1.9868, "tol": 0.02 },
+      "energy.animalJ": { "value": 8862.3301, "tol": 0.02 }
+    },
+    "source": "unidad 1f: core/lab/glazing.gd (parabrisas laminado, EN 572-1, JIS R 3212 / CEPE R43); balance de energía (primer principio): punción del motor, abolladura de la unidad 1f, conservación del momento con la masa reducida y trabajo del rozamiento"
+  },
+  {
+    "id": "oso-capo-de-frente",
+    "note": "Oso que corre de frente a 30 km/h contra un coche a 50: el capó inclinado recibe 1,8 kJ normales y se abolla ~4 cm bajo cada pata.",
+    "input": { "claw": "oso", "target": "coche", "zone": "capo", "v_kmh": 50.0, "animal_kmh": 30.0, "angle_deg": 180.0, "drop_m": 0.0, "car_mass_kg": 1400.0, "kind": "impact", "model": "2.0" },
+    "expect": {
+      "normalJ": { "value": 1839.4408, "tol": 0.02 },
+      "dent.depthMm": { "value": 39.1749, "tol": 0.02 },
+      "dent.visible": { "value": true },
+      "stays": { "value": false },
+      "groundKmh": { "value": 16.8243, "tol": 0.02 },
+      "puncture.through": { "value": false },
+      "verdict": { "value": "ABOLLA Y RAYA" }
+    },
+    "source": "unidad 1f: core/lab/dent.gd (Nippon Steel 2013) con el tope de recorrido de la pata (estimación); motor del laboratorio: Physics.compute (arado de la garra, dureza de la pintura y del metal)"
+  },
+  {
+    "id": "oso-puerta-aluminio",
+    "note": "El oso contra la puerta de un coche de aluminio: la hunde hasta el fondo, y las garras solo rayan la pintura (la queratina no corta el aluminio).",
+    "input": { "claw": "oso", "target": "cochealu", "zone": "puerta", "v_kmh": 50.0, "animal_kmh": 40.0, "angle_deg": 90.0, "drop_m": 0.0, "car_mass_kg": 1400.0, "kind": "impact", "model": "2.0" },
+    "expect": {
+      "dent.bottomsOut": { "value": true },
+      "puncture.through": { "value": false },
+      "marks.reachesBody": { "value": true },
+      "verdict": { "value": "ABOLLA Y RAYA" }
+    },
+    "source": "unidad 1f: core/lab/dent.gd (Nippon Steel 2013) con el tope de recorrido de la pata (estimación); motor del laboratorio: Physics.compute (arado de la garra, dureza de la pintura y del metal)"
+  },
+  {
+    "id": "lechuza-parabrisas-de-frente",
+    "note": "Una lechuza de 0,35 kg que choca de frente a 130 km/h relativos agrieta el parabrisas (~650 N contra ~330 N), sin llegar a los 88,7 J de la homologación.",
+    "input": { "claw": "lechuza", "target": "coche", "zone": "parabrisas", "v_kmh": 90.0, "animal_kmh": 40.0, "angle_deg": 180.0, "drop_m": 0.0, "car_mass_kg": 1400.0, "kind": "impact", "model": "2.0" },
+    "expect": {
+      "windshield.cracked": { "value": true },
+      "windshield.penetrationRisk": { "value": false },
+      "windshield.peakN": { "value": 647.6722, "tol": 0.02 },
+      "verdict": { "value": "AGRIETA EL PARABRISAS" }
+    },
+    "source": "unidad 1f: core/lab/glazing.gd (parabrisas laminado, EN 572-1, JIS R 3212 / CEPE R43)"
+  },
+  {
+    "id": "aguila-techo-se-posa",
+    "note": "Un águila que se posa sobre el techo de un coche a 90 km/h (ella a 60, cayendo 20 cm): abolladura de ~0,35 mm bajo cada pie y el techo se le escapa: sale volando. De sus 183 J respecto al coche, el 82 % acaba en calor al resbalar.",
+    "input": { "claw": "aguila", "target": "coche", "zone": "techo", "v_kmh": 90.0, "animal_kmh": 60.0, "angle_deg": 0.0, "drop_m": 0.2, "car_mass_kg": 1400.0, "kind": "impact", "model": "2.0" },
+    "expect": {
+      "dent.depthMm": { "value": 0.347, "tol": 0.02 },
+      "dent.visible": { "value": true },
+      "marks.reachesBody": { "value": true },
+      "puncture.through": { "value": false },
+      "stays": { "value": false },
+      "groundKmh": { "value": 79.1313, "tol": 0.02 },
+      "landing": { "value": true },
+      "energy.totalJ": { "value": 183.4181, "tol": 0.02 },
+      "energy.frictionJ": { "value": 150.824, "tol": 0.02 }
+    },
+    "source": "unidad 1f: core/lab/dent.gd (Nippon Steel 2013) con el tope de recorrido de la pata (estimación); motor del laboratorio: Physics.compute (arado de la garra, dureza de la pintura y del metal); balance de energía (primer principio): punción del motor, abolladura de la unidad 1f, conservación del momento con la masa reducida y trabajo del rozamiento"
+  },
+  {
+    "id": "halcon-techo-se-posa",
+    "note": "El halcón, de 1 kg, en la misma maniobra no llega a abollar el techo: solo raya el barniz hasta el color.",
+    "input": { "claw": "halcon", "target": "coche", "zone": "techo", "v_kmh": 90.0, "animal_kmh": 60.0, "angle_deg": 0.0, "drop_m": 0.2, "car_mass_kg": 1400.0, "kind": "impact", "model": "2.0" },
+    "expect": {
+      "dent.visible": { "value": false },
+      "dent.depthMm": { "value": 0.0, "tol": 0.02 },
+      "marks.verdict": { "value": "LLEGA AL COLOR" },
+      "puncture.through": { "value": false },
+      "verdict": { "value": "ARAÑA LA PINTURA" }
+    },
+    "source": "unidad 1f: core/lab/dent.gd (Nippon Steel 2013) con el tope de recorrido de la pata (estimación); motor del laboratorio: Physics.compute (arado de la garra, dureza de la pintura y del metal)"
+  },
+  {
+    "id": "aguila-aleta-plastico-cruza",
+    "note": "Un águila que choca contra la aleta de plástico cruzando a 50 km/h con el coche a 90: los talones la atraviesan. Unidad 4g: rajarla pediría 4 × 112,5 = 450 N (45 kJ/m² × 2,5 mm por talón) y su agarre medido solo sujeta 2 × 100,9 = 202 N: los dedos ceden y los talones salen del plástico sin rajarlo (con el plástico frío y el agarre más alto medido sí lo rajaría: banda de 0 a 800 mm).",
+    "input": { "claw": "aguila", "target": "cocheplastico", "zone": "aleta", "v_kmh": 90.0, "animal_kmh": 50.0, "angle_deg": 90.0, "drop_m": 0.0, "car_mass_kg": 1400.0, "kind": "impact", "model": "2.0" },
+    "expect": {
+      "puncture.through": { "value": true },
+      "embedded": { "value": true },
+      "verdict": { "value": "PERFORA EL PLÁSTICO" },
+      "tear.holds": { "value": false },
+      "tear.forceN": { "value": 450.0, "tol": 0.02 },
+      "tear.anchorN.value": { "value": 201.8, "tol": 0.02 },
+      "tear.lengthMm": { "value": 0.0 },
+      "tear.maxMm": { "value": 800.0, "tol": 0.02 },
+      "marks.count": { "value": 0 },
+      "energy.tearJ": { "value": 0.0 }
+    },
+    "source": "motor del laboratorio: Physics.compute (arado de la garra, dureza de la pintura y del metal) (pétalos de Wierzbicki 1999)"
+  },
+  {
+    "id": "casuario-puerta-hembra",
+    "note": "Unidad 4d. Una hembra de casuario de 58 kg, parada junto a la carretera, patea la puerta de un coche que pasa a 50 km/h: salta con los pies por delante a ~17 km/h (el trabajo muscular medido en el salto de un ave con la masa muscular de la pata de una ratite) y su pata aguanta como mucho 5,1 veces su peso (~2,9 kN, la patada medida del secretario). La puerta se abolla ~6,2 mm bajo el pie, y la daga raya la pintura hasta el metal a lo largo de toda la puerta (el coche la arrastra durante los ~93 ms del contacto), sin cortar el acero. Rebota y cae a ~17 km/h respecto al asfalto. De sus 6,3 kJ respecto al coche, la chapa solo se lleva 9 J: casi todo es el rozamiento y lo que se lleva al salir.",
+    "input": { "claw": "casuario", "target": "coche", "zone": "puerta", "v_kmh": 50.0, "animal_kmh": 0.0, "angle_deg": 90.0, "drop_m": 0.5, "car_mass_kg": 1400.0, "sex": "hembra", "kind": "impact", "model": "2.0" },
+    "expect": {
+      "attack": { "value": "patada" },
+      "massKg": { "value": 58.0, "tol": 0.02 },
+      "kick.leapKmh": { "value": 17.4237, "tol": 0.02 },
+      "kick.forceCapN": { "value": 2900.9106, "tol": 0.02 },
+      "kick.contactS": { "value": 0.0929, "tol": 0.02 },
+      "vNormalKmh": { "value": 17.4237, "tol": 0.02 },
+      "normalJ": { "value": 652.2958, "tol": 0.02 },
+      "dent.depthMm": { "value": 6.1731, "tol": 0.02 },
+      "dent.capped": { "value": true },
+      "dent.visible": { "value": true },
+      "marks.count": { "value": 1 },
+      "marks.lengthMm": { "value": 1000.0, "tol": 0.02 },
+      "marks.depthUm": { "value": 110.0, "tol": 0.02 },
+      "marks.reachesBody": { "value": true },
+      "puncture.through": { "value": false },
+      "stays": { "value": false },
+      "groundKmh": { "value": 16.7306, "tol": 0.02 },
+      "verdict": { "value": "ABOLLA Y RAYA" },
+      "energy.totalJ": { "value": 6273.4553, "tol": 0.02 },
+      "energy.panelJ": { "value": 9.4342, "tol": 0.02 },
+      "energy.animalJ": { "value": 642.8606, "tol": 0.02 },
+      "energy.frictionJ": { "value": 3117.3787, "tol": 0.02 },
+      "energy.exitJ": { "value": 2476.7571, "tol": 0.02 },
+      "clawFracture": { "value": null }
+    },
+    "source": "Kofron 2003 (ataque: salta y patea); Henry et al. 2005 (45 J por kg de músculo en el salto) y Hutchinson et al. 2015 (13,0 % de la masa en cada pata): salto a √(4·w·f); Portugal et al. 2016 (patada de 5,1 pesos corporales); Grzimek 2003 (hembra de 58 kg); unidad 1f: core/lab/dent.gd (Nippon Steel 2013); motor del laboratorio: Physics.compute (queratina contra pintura y acero)"
+  },
+  {
+    "id": "casuario-puerta-macho",
+    "note": "Unidad 4d. El macho, de ~31,5 kg (29-34 kg), en la misma patada: la misma velocidad del salto (no depende de la masa), la mitad de fuerza (5,1 veces un peso menor, ~1,6 kN) y la mitad de abolladura, ~3,2 mm.",
+    "input": { "claw": "casuario", "target": "coche", "zone": "puerta", "v_kmh": 50.0, "animal_kmh": 0.0, "angle_deg": 90.0, "car_mass_kg": 1400.0, "sex": "macho", "kind": "impact", "model": "2.0" },
+    "expect": {
+      "massKg": { "value": 31.5, "tol": 0.02 },
+      "kick.leapKmh": { "value": 17.4237, "tol": 0.02 },
+      "kick.forceCapN": { "value": 1575.4945, "tol": 0.02 },
+      "dent.depthMm": { "value": 3.1927, "tol": 0.02 },
+      "marks.count": { "value": 1 },
+      "energy.totalJ": { "value": 3407.1352, "tol": 0.02 },
+      "verdict": { "value": "ABOLLA Y RAYA" }
+    },
+    "source": "Grzimek 2003 (macho de 29-34 kg); Henry et al. 2005 y Hutchinson et al. 2015 (salto); Portugal et al. 2016 (fuerza de la pata); unidad 1f: core/lab/dent.gd (Nippon Steel 2013)"
+  },
+  {
+    "id": "casuario-capo-hembra",
+    "note": "Unidad 4d. La hembra salta y patea el capó (inclinado 10°) de un coche a 50 km/h: la misma abolladura que en la puerta (la pata no pasa de 2,9 kN) y una marca de la daga de ~1,1 m, todo el capó.",
+    "input": { "claw": "casuario", "target": "coche", "zone": "capo", "v_kmh": 50.0, "animal_kmh": 0.0, "angle_deg": 90.0, "car_mass_kg": 1400.0, "sex": "hembra", "kind": "impact", "model": "2.0" },
+    "expect": {
+      "vNormalKmh": { "value": 17.4237, "tol": 0.02 },
+      "vTangKmh": { "value": 49.2404, "tol": 0.02 },
+      "dent.depthMm": { "value": 6.1731, "tol": 0.02 },
+      "dent.capped": { "value": true },
+      "marks.count": { "value": 1 },
+      "marks.lengthMm": { "value": 1055.0146, "tol": 0.02 },
+      "marks.reachesBody": { "value": true },
+      "groundKmh": { "value": 17.9841, "tol": 0.02 },
+      "energy.totalJ": { "value": 6104.7714, "tol": 0.02 },
+      "verdict": { "value": "ABOLLA Y RAYA" }
+    },
+    "source": "Kofron 2003; Henry et al. 2005 y Hutchinson et al. 2015 (salto); Portugal et al. 2016 (fuerza de la pata); unidad 1f: core/lab/dent.gd (Nippon Steel 2013); motor del laboratorio: Physics.compute"
+  },
+  {
+    "id": "casuario-diamante-puerta-parado",
+    "note": "Unidad 4d, garras experimentales. El mismo casuario con la daga reforjada en diamante, contra la puerta de un coche parado: la daga atraviesa la chapa de acero, entra entera (sus 11 cm) y queda clavada. Abrir el agujero en pétalos hasta su base (Wierzbicki 1999) cuesta ~70 J, y el resto de la patada abolla la puerta. El instante más cargado es cuando la punta sale por detrás de la chapa (~330 N a 0,35 mm del vértice), pero de frente, sin nada que resbalar, no hay carga lateral: la daga no se rompe. Unidad 4i-B2: unas garras reforjadas pesan más que las de queratina y el golpe se hace con su masa (la velocidad la impone el coche): el cono del motor de cada garra, π·(0,15·L)²·L/3, por la densidad del material menos la de la queratina (1310 kg/m³; ClawMass, docs/fisica/velociraptor.md §4). Con L = 110 mm, 31 361 mm³ en su daga; de diamante (3515 kg/m³), +69 g. La patada lleva 680,1 J en vez de 679,3; el tope de la pata sigue siendo el de su cuerpo (5,1 pesos de 58 kg).",
+    "input": { "claw": "casuario", "target": "coche", "zone": "puerta", "v_kmh": 0.0, "animal_kmh": 0.0, "angle_deg": 90.0, "car_mass_kg": 1400.0, "inlay": "diamante", "kind": "impact", "model": "2.0" },
+    "expect": {
+      "inlay": { "value": "diamante" },
+      "puncture.through": { "value": true },
+      "puncture.depthUm": { "value": 110000.0, "tol": 0.02 },
+      "embedded": { "value": true },
+      "dent.depthMm": { "value": 6.1731, "tol": 0.02 },
+      "marks.count": { "value": 0 },
+      "verdict": { "value": "PERFORA LA CHAPA" },
+      "clawFracture.mode": { "value": "intacta" },
+      "clawFracture.lateralN": { "value": 0.0, "tol": 0.02 },
+      "clawFracture.normalN": { "value": 326.2205, "tol": 0.02 },
+      "clawFracture.forceBasis": { "value": "perforacion" },
+      "clawFracture.depthMm": { "value": 0.81, "tol": 0.02 },
+      "clawFracture.loadXmm": { "value": 0.35, "tol": 0.02 },
+      "energy.clawsJ": { "value": 69.5581, "tol": 0.02 },
+      "clawMass.addedKg": { "value": 0.069151, "tol": 0.001 },
+      "energy.totalJ": { "value": 680.1294, "tol": 0.02 }
+    },
+    "source": "motor del laboratorio: Physics.compute con la daga de diamante (Data.INLAYS) y los pétalos de Wierzbicki 1999; ISO 6508-2 (un cono de diamante aguanta de frente contra el acero); core/lab/claw_fracture.gd"
+  },
+  {
+    "id": "aguila-tungsteno-techo-se-posa",
+    "note": "Unidad 4d, garras experimentales. El águila que se posa en el techo de un coche a 90 km/h (ella a 60, cayendo 20 cm), con los talones de carburo de tungsteno: perforan la chapa (se hunden ~5,5 mm) y se quedan con toda la energía normal que se disipa. Como resbala mientras se clavan, el instante más cargado es cuando cada punta sale por detrás de la chapa: la chapa la empuja con ~350 N a 0,35 mm del vértice (y la fricción, de lado, otro tanto) contra los ~140 N que aguanta ahí su punta de metal duro (3068 MPa a flexión): se les desprenden ~2 mm de la punta. Se desengancha y sale volando. Unidad 4i-B2: unas garras reforjadas pesan más que las de queratina y el golpe se hace con su masa (la velocidad la impone el coche): el cono del motor de cada garra, π·(0,15·L)²·L/3, por la densidad del material menos la de la queratina (1310 kg/m³; ClawMass, docs/fisica/velociraptor.md §4). Con L = 35 mm, 1010 mm³ por talón; de carburo de tungsteno (14 930 kg/m³), 13,8 g más cada uno: +55 g en los cuatro (el 1,1 % del águila). La energía del golpe sube lo mismo, de 183,4 a 185,4 J; la normal que se quedan las garras, de 9,77 a 9,88 J, y la punción, de 5472 a 5516 µm.",
+    "input": { "claw": "aguila", "target": "coche", "zone": "techo", "v_kmh": 90.0, "animal_kmh": 60.0, "angle_deg": 0.0, "drop_m": 0.2, "car_mass_kg": 1400.0, "inlay": "tungsteno", "kind": "impact", "model": "2.0" },
+    "expect": {
+      "puncture.through": { "value": true },
+      "puncture.depthUm": { "value": 5516.3063, "tol": 0.02 },
+      "embedded": { "value": true },
+      "energy.clawsJ": { "value": 9.8793, "tol": 0.02 },
+      "clawMass.addedKg": { "value": 0.055037, "tol": 0.001 },
+      "energy.panelJ": { "value": 0.0, "tol": 0.02 },
+      "verdict": { "value": "PERFORA LA CHAPA" },
+      "clawFracture.breaks": { "value": true },
+      "clawFracture.mode": { "value": "mella" },
+      "clawFracture.forceBasis": { "value": "perforacion" },
+      "clawFracture.depthMm": { "value": 0.81, "tol": 0.02 },
+      "clawFracture.loadXmm": { "value": 0.35, "tol": 0.02 },
+      "clawFracture.normalN": { "value": 351.8522, "tol": 0.02 },
+      "clawFracture.limitN": { "value": 141.7784, "tol": 0.02 },
+      "clawFracture.brokenMm": { "value": 1.9984, "tol": 0.02 },
+      "clawFracture.strengthMPa": { "value": 3068.0, "tol": 0.02 },
+      "landing": { "value": true }
+    },
+    "source": "General Carbide 2018 (GC-005: 3068 MPa de rotura transversal a ~2000 HV); motor del laboratorio: Physics.compute (pétalos de Wierzbicki 1999); core/lab/claw_fracture.gd (voladizo esfero-cónico con la carga donde empuja la chapa: el mellado de la unidad 1f, con la base) y MovingCar.claw_load (el instante más cargado del camino de la punta)"
+  },
+  {
+    "id": "aguila-tungsteno-techo-clavada",
+    "note": "Unidad 4d, garras experimentales. Con los talones de tungsteno clavados en el techo, el anclaje pasa a ser su agarre (2 pies × 101 N), como con las garras clavadas en el plástico: con las alas plegadas no se suelta ni a 400 km/h (con los datos más desfavorables, desde ~200 km/h). El metal duro aguanta ese tirón de lado incluso con las puntas recién asomadas (~570 N las cuatro), así que manda el agarre. Sin clavarlos, se soltaría hacia 196 km/h, como con la queratina.",
+    "input": { "claw": "aguila", "target": "coche", "zone": "techo", "posture": "plegadas", "v_kmh": 150.0, "embedded": true, "inlay": "tungsteno", "kind": "hold", "model": "2.0" },
+    "expect": {
+      "setup.anchor": { "value": "agarre" },
+      "setup.embedded": { "value": true },
+      "setup.inlay": { "value": "tungsteno" },
+      "setup.anchorN.value": { "value": 201.8, "tol": 0.02 },
+      "setup.anchorN.min": { "value": 78.48, "tol": 0.02 },
+      "setup.clawHoldN.min": { "value": 567.1133, "tol": 0.02 },
+      "detach.never": { "value": true },
+      "detach.minKmh": { "value": 199.8249, "tol": 0.02 },
+      "at.holds": { "value": true },
+      "verdict.verdict": { "value": "NI A 400 km/h SE SUELTA" }
+    },
+    "source": "Sustaita & Hertel 2010 (agarre medido y su escalado; claws_v2.gd); Pennycuick et al. 1988 (área frontal); Tucker 1990 (Cd del cuerpo); Varney et al. 2020, DrivAer (Cp del techo); motor del laboratorio: Physics.compute con los talones de tungsteno"
+  },
+  {
+    "id": "tigre-zafiro-puerta",
+    "note": "Unidad 4d, garras experimentales. El tigre que cruza a 40 km/h y choca con la puerta de un coche a 50, con las garras reforjadas en zafiro: atraviesan la chapa y, al resbalar, la rajan (~25 cm). Justo al llegar a la cara de atrás de la chapa, la chapa empuja cada punta con ~352 N a 0,35 mm del vértice (y la fricción, de lado, otro tanto) contra los ~48 N que aguanta ahí (760 MPa a flexión; ~66 N con los 1035 MPa paralelos al eje c): se les desprenden ~4,2 mm de la punta. El zafiro es duro, pero frágil. La puerta se hunde igual hasta el fondo de sus 150 mm de hueco. Unidad 4p, la punta y la abolladura comparten el hueco: con la puerta hundida hasta el fondo, a la punta no le queda hueco por debajo de la chapa hundida y se queda en su cara de atrás (810 µm, la pintura y la chapa; antes asomaba ~1,7 mm, la pintura y la chapa más el hueco entero de detrás, como si la puerta no se hubiera movido). Los agujeros son los de la garra a esa profundidad (~0,67 mm) y las ocho garras se quedan 1,03 J en vez de 136,4 (8 × 0,129 J; lo demás va al animal y a lo que hay bajo la chapa); el instante que más flexa cada garra es el de la indentación (antes, recién perforada: ~390 N y ~4,5 mm de punta). Unidad 4i-B2: unas garras reforjadas pesan más que las de queratina y el golpe se hace con su masa (la velocidad la impone el coche): el cono del motor de cada garra, π·(0,15·L)²·L/3, por la densidad del material menos la de la queratina (1310 kg/m³; ClawMass, docs/fisica/velociraptor.md §4). Con L = 40 mm, 1508 mm³ por garra; de zafiro (3980 kg/m³), 4,0 g más cada una: +32 g en las ocho. La energía del golpe, ½·m·v_rel², pasa de 34 799,4 a 34 804,5 J (+5,1 J = ½·0,0322·17,79²); lo demás no se mueve de sus cifras.",
+    "input": { "claw": "tigre", "target": "coche", "zone": "puerta", "v_kmh": 50.0, "animal_kmh": 40.0, "angle_deg": 90.0, "drop_m": 0.5, "car_mass_kg": 1400.0, "inlay": "zafiro", "kind": "impact", "model": "2.0" },
+    "expect": {
+      "puncture.through": { "value": true },
+      "embedded": { "value": true },
+      "marks.verdict": { "value": "RAJA LA CHAPA" },
+      "dent.depthMm": { "value": 150.0, "tol": 0.02 },
+      "verdict": { "value": "RAJA LA CHAPA" },
+      "clawFracture.breaks": { "value": true },
+      "clawFracture.mode": { "value": "mella" },
+      "clawFracture.forceBasis": { "value": "indentacion" },
+      "clawFracture.depthMm": { "value": 0.81, "tol": 0.02 },
+      "clawFracture.loadXmm": { "value": 0.35, "tol": 0.02 },
+      "clawFracture.normalN": { "value": 352.1499, "tol": 0.02 },
+      "clawFracture.limitN": { "value": 48.3161, "tol": 0.02 },
+      "clawFracture.limitMaxN": { "value": 65.7989, "tol": 0.02 },
+      "clawFracture.brokenMm": { "value": 4.2348, "tol": 0.02 },
+      "clawFracture.strengthMPa": { "value": 760.0, "tol": 0.02 },
+      "energy.totalJ": { "value": 34804.4777, "tol": 0.02 },
+      "energy.clawsJ": { "value": 1.0339, "tol": 0.02 },
+      "puncture.depthUm": { "value": 810.0, "tol": 1e-9 },
+      "puncture.belowMm": { "value": 0.0, "tol": 1e-9 },
+      "puncture.bottoms": { "value": true },
+      "clawMass.addedKg": { "value": 0.03221, "tol": 0.001 }
+    },
+    "source": "Saint-Gobain Crystals, Sapphire Products (760 MPa ⊥ c y 1035 MPa ∥ c); motor del laboratorio: Physics.compute (pétalos de Wierzbicki 1999); unidad 1f: core/lab/dent.gd (Nippon Steel 2013); core/lab/claw_fracture.gd"
+  },
+  {
+    "id": "oso-acero-capo",
+    "note": "Unidad 4d, garras experimentales. El oso que corre de frente a 30 km/h contra un coche a 50, con garras de acero (200 HV, el doble que la chapa): atraviesan el capó y siguen abollándolo (~3,5 cm). Justo antes de que cada punta salga por detrás de la chapa, la chapa la empuja con ~1,3 kN a 0,35 mm del vértice (y la fricción, de lado, otro tanto) contra los ~320 N con los que ahí empieza a fluir (700 MPa, Tabor): el acero no estalla, se dobla (los últimos ~3,5 mm). Unidad 4i-B2: unas garras reforjadas pesan más que las de queratina y el golpe se hace con su masa (la velocidad la impone el coche): el cono del motor de cada garra, π·(0,15·L)²·L/3, por la densidad del material menos la de la queratina (1310 kg/m³; ClawMass, docs/fisica/velociraptor.md §4). Con L = 60 mm, 5089 mm³ por garra; de acero (7900 kg/m³), 33,5 g más cada una: +335 g en las diez (el 0,11 % del oso). La energía del golpe pasa de 74 074 a 74 157 J y la abolladura, de 34,63 a 34,66 mm.",
+    "input": { "claw": "oso", "target": "coche", "zone": "capo", "v_kmh": 50.0, "animal_kmh": 30.0, "angle_deg": 180.0, "drop_m": 0.0, "car_mass_kg": 1400.0, "inlay": "acero", "kind": "impact", "model": "2.0" },
+    "expect": {
+      "puncture.through": { "value": true },
+      "embedded": { "value": true },
+      "dent.depthMm": { "value": 34.657, "tol": 0.02 },
+      "verdict": { "value": "PERFORA LA CHAPA" },
+      "clawMass.addedKg": { "value": 0.33539, "tol": 0.001 },
+      "clawFracture.bends": { "value": true },
+      "clawFracture.breaks": { "value": false },
+      "clawFracture.mode": { "value": "dobla" },
+      "clawFracture.forceBasis": { "value": "indentacion" },
+      "clawFracture.depthMm": { "value": 0.81, "tol": 0.02 },
+      "clawFracture.loadXmm": { "value": 0.35, "tol": 0.02 },
+      "clawFracture.normalN": { "value": 1293.0113, "tol": 0.02 },
+      "clawFracture.limitN": { "value": 319.4979, "tol": 0.02 },
+      "clawFracture.brokenMm": { "value": 3.4737, "tol": 0.02 },
+      "clawFracture.strengthMPa": { "value": 700.5, "tol": 0.02 }
+    },
+    "source": "Tabor 1951 (tensión de flujo H/2,8 con los 200 HV del catálogo); motor del laboratorio: Physics.compute (pétalos de Wierzbicki 1999); unidad 1f: core/lab/dent.gd (Nippon Steel 2013); core/lab/claw_fracture.gd"
+  },
+  {
+    "id": "aguila-defensa-techo",
+    "note": "Unidad 4d, defensa. El águila asustada en el techo de un coche a 150 km/h aprieta cada pie con su agarre medido, ~101 N (65-299), la pinza entre el talón trasero y los delanteros: ~2,5 GPa nominales en la punta de cada talón, diez veces lo que aguanta la queratina (la punta se aplasta y reparte). Desgarra la pintura hasta el metal, sin cortar el acero. En la chapa lisa no tiene nada que agarrar, y con su peso sus garras ya araban la pintura hasta el metal: asustada no la ara más hondo, así que no sujeta más (el arado de más es 0) y se soltaría igual, hacia 196 km/h.",
+    "input": { "claw": "aguila", "target": "coche", "zone": "techo", "posture": "plegadas", "v_kmh": 150.0, "defense": true, "kind": "hold", "model": "2.0" },
+    "expect": {
+      "defense.forceN.value": { "value": 100.9, "tol": 0.02 },
+      "defense.forceN.min": { "value": 65.4, "tol": 0.02 },
+      "defense.forceN.max": { "value": 298.8, "tol": 0.02 },
+      "defense.per": { "value": "pie" },
+      "defense.perClawN": { "value": 100.9, "tol": 0.02 },
+      "defense.tipPressureMPa": { "value": 2522.5, "tol": 0.02 },
+      "defense.tipYields": { "value": true },
+      "defense.tear.depthUm": { "value": 110.0, "tol": 0.02 },
+      "defense.stuck": { "value": false },
+      "defense.verdict": { "value": "DESGARRA HASTA EL METAL" },
+      "setup.anchor": { "value": "friccion" },
+      "setup.mu": { "value": 1.0, "tol": 0.02 },
+      "detach.kmh": { "value": 195.7513, "tol": 0.02 },
+      "marks.depthUm": { "value": 110.0, "tol": 0.02 },
+      "defense.rakeN.value": { "value": 0.0, "tol": 0.02 },
+      "defense.rakeN.perClawN": { "value": 2.504, "tol": 0.02 },
+      "defense.rakeN.restPerClawN": { "value": 2.504, "tol": 0.02 }
+    },
+    "source": "Sustaita & Hertel 2010 (agarre medido in vivo y su escalado; claws_v2.gd); motor del laboratorio: Physics.compute en modo desgarro (la garra curva tira como un gancho); McKittrick et al. 2012 (dureza de la queratina de garra); Bowden & Tabor 1950 (arado, F = H·A)"
+  },
+  {
+    "id": "lechuza-defensa-techo",
+    "note": "Unidad 4d, defensa. La lechuza (0,35 kg) quieta en el techo solo araña el barniz con su peso (14 µm); asustada, cada pie aprieta con ~8 N y desgarra la pintura hasta el metal (110 µm). La defensa nunca deja menos marca que el reposo. No tiene nada que agarrar y la fricción es la de su peso (~2,8 N), pero para arrastrarla el viento tiene que hacer arar la pintura a sus dos garras que tiran hacia atrás (las otras dos resbalan por su propio surco): la dureza de la pintura por la sección del surco (Bowden & Tabor), ~1,7 N por garra, menos lo que las cuatro ya araban en reposo (~0,11 N cada una), que iba en la fricción. Son ~3,0 N más (hasta 6,5 con la pintura más dura medida), más que la fricción de su peso: se suelta hacia 167 km/h en vez de 115. Con los datos más desfavorables (la garra se sale del surco o la pintura se desconcha), a 51 km/h, como en reposo.",
+    "input": { "claw": "lechuza", "target": "coche", "zone": "techo", "posture": "plegadas", "v_kmh": 90.0, "defense": true, "kind": "hold", "model": "2.0" },
+    "expect": {
+      "defense.forceN.value": { "value": 8.0, "tol": 0.02 },
+      "defense.perClawN": { "value": 8.0, "tol": 0.02 },
+      "defense.tipPressureMPa": { "value": 533.3333, "tol": 0.02 },
+      "defense.tear.depthUm": { "value": 110.0, "tol": 0.02 },
+      "defense.tear.verdict": { "value": "HASTA EL METAL" },
+      "defense.verdict": { "value": "DESGARRA HASTA EL METAL" },
+      "marks.depthUm": { "value": 110.0, "tol": 0.02 },
+      "detach.kmh": { "value": 166.8711, "tol": 0.02 },
+      "detach.minKmh": { "value": 50.9224, "tol": 0.02 },
+      "detach.maxKmh": { "value": 332.9532, "tol": 0.02 },
+      "setup.mu": { "value": 0.802, "tol": 0.02 },
+      "setup.anchor": { "value": "friccion" },
+      "setup.anchorN.value": { "value": 3.0101, "tol": 0.02 },
+      "defense.rakeN.value": { "value": 3.0101, "tol": 0.02 },
+      "defense.rakeN.min": { "value": 0.0, "tol": 0.02 },
+      "defense.rakeN.max": { "value": 6.5223, "tol": 0.02 },
+      "defense.rakeN.perClawN": { "value": 1.7338, "tol": 0.02 },
+      "defense.rakeN.restPerClawN": { "value": 0.1144, "tol": 0.02 },
+      "defense.rakeN.claws": { "value": 2 }
+    },
+    "source": "Sustaita & Hertel 2010 (escalado del agarre con la masa; claws_v2.gd); motor del laboratorio: Physics.compute (rayado con su peso y desgarro con su agarre); Bowden & Tabor 1950 (arado, F = H·A) con la dureza de la pintura del motor y la de Vodnick 2006 (banda alta)"
+  },
+  {
+    "id": "aguila-defensa-capo-plastico",
+    "note": "Unidad 4d, defensa. El águila asustada sobre el capó de plástico: con ~101 N por talón desgarra la pintura y el plástico (~2,6 mm, lo raja) y se queda clavada. Clavada, se sujeta con su agarre (2 pies × 101 N) en vez de solo con la fricción: no se suelta ni a 400 km/h (con los datos más desfavorables, desde ~221 km/h). Sin asustarse, se soltaría hacia 230 km/h.",
+    "input": { "claw": "aguila", "target": "cocheplastico", "zone": "capo", "posture": "plegadas", "v_kmh": 150.0, "defense": true, "kind": "hold", "model": "2.0" },
+    "expect": {
+      "defense.tear.depthUm": { "value": 2610.0, "tol": 0.02 },
+      "defense.tear.verdict": { "value": "RAJA EL PLÁSTICO" },
+      "defense.stuck": { "value": true },
+      "defense.stuckIn": { "value": "plastico" },
+      "defense.verdict": { "value": "SE QUEDA CLAVADA" },
+      "defense.restAnchor": { "value": "friccion" },
+      "setup.anchor": { "value": "agarre" },
+      "setup.embedded": { "value": true },
+      "setup.anchorN.value": { "value": 201.8, "tol": 0.02 },
+      "detach.never": { "value": true },
+      "detach.minKmh": { "value": 221.3601, "tol": 0.02 },
+      "verdict.verdict": { "value": "NI A 400 km/h SE SUELTA" }
+    },
+    "source": "Sustaita & Hertel 2010 (agarre; claws_v2.gd); SABIC Noryl GTX964W (el plástico de la aleta, data.gd); motor del laboratorio: Physics.compute en modo desgarro; Pennycuick et al. 1988, Tucker 1990 y DrivAer (el aire)"
+  },
+  {
+    "id": "tigre-defensa-barras",
+    "note": "Unidad 4d, defensa. El tigre agazapado con las manos enganchadas en las barras de techo, con el coche a 90 km/h frenando a 0,9 g: asustado, cada mano tira con la fuerza teórica de los flexores de sus garras, ~2,8 kN (la sección fisiológica del flexor profundo de los dedos de un félido de 220 kg por la tensión específica del músculo). El anclaje pasa de ~2,2 kN a ~5,6 kN: sin asustarse, con los datos más desfavorables esa frenada ya lo echa ni con el coche parado; asustado, ni con esos se suelta. En la pintura de las barras solo desgarra hasta el metal.",
+    "input": { "claw": "tigre", "target": "coche", "zone": "barras", "posture": "tumbado", "v_kmh": 90.0, "accel_g": -0.9, "defense": true, "kind": "hold", "model": "2.0" },
+    "expect": {
+      "defense.forceN.value": { "value": 2784.4972, "tol": 0.02 },
+      "defense.forceN.min": { "value": 1905.8336, "tol": 0.02 },
+      "defense.per": { "value": "mano" },
+      "defense.perClawN": { "value": 556.8994, "tol": 0.02 },
+      "defense.restAnchorN.value": { "value": 2157.54, "tol": 0.02 },
+      "setup.anchor": { "value": "gancho" },
+      "setup.anchorN.value": { "value": 5568.9943, "tol": 0.02 },
+      "setup.anchorN.min": { "value": 3811.6672, "tol": 0.02 },
+      "detach.never": { "value": true },
+      "detach.minKmh": { "value": { "$num": "Infinity" } },
+      "at.holds": { "value": true },
+      "defense.verdict": { "value": "DESGARRA HASTA EL METAL" }
+    },
+    "source": "Martens et al. 2023 (sección fisiológica del flexor profundo de los dedos de los félidos con uñas, recta RMA de su tabla 2) y Powell et al. 1984 (tensión específica de 22,5 N/cm²; 15,4 en un músculo lento): estimación con el caso medido más parecido; AASHTO 2011 y Wong 2008 (frenadas)"
+  },
+  {
+    "id": "oso-defensa-parabrisas",
+    "note": "Unidad 4d, defensa. El oso agazapado sobre el parabrisas: asustado, cada mano aprieta con ~3,7 kN (la recta de los félidos llevada a sus 300 kg: estimación), pero la queratina no raya el vidrio (r < 0,8) ni lo agrieta por contacto; sin nada que agarrar, el vidrio solo nota su peso, que sí lo agrieta por flexión (~637 N por pata contra ~517 N): el laminado no cae.",
+    "input": { "claw": "oso", "target": "coche", "zone": "parabrisas", "posture": "tumbado", "v_kmh": 30.0, "defense": true, "kind": "hold", "model": "2.0" },
+    "expect": {
+      "defense.forceN.value": { "value": 3673.4785, "tol": 0.02 },
+      "defense.tear.depthUm": { "value": 0.0, "tol": 0.02 },
+      "defense.windshield.cracked": { "value": true },
+      "defense.windshield.contactCracks": { "value": false },
+      "defense.windshield.loadN": { "value": 636.9833, "tol": 0.02 },
+      "defense.windshield.bendN": { "value": 516.822, "tol": 0.02 },
+      "defense.verdict": { "value": "AGRIETA EL PARABRISAS" },
+      "setup.mu": { "value": 0.6, "tol": 0.02 }
+    },
+    "source": "Martens et al. 2023 y Powell et al. 1984 (estimación: el oso con la recta de los félidos); unidad 1f: core/lab/glazing.gd (laminado 2,1 + 0,76 + 2,1 mm, EN 572-1) y core/lab/fracture.gd (la queratina nunca agrieta un frágil por contacto)"
+  },
+  {
+    "id": "aguila-diamante-parabrisas-defensa",
+    "note": "Unidad 4d, defensa con garras experimentales. El águila con los talones reforjados en diamante, asustada sobre el parabrisas: aprieta con ~101 N por talón, raya el vidrio (~270 µm) y lo agrieta por contacto (grietas laterales de un surco afilado, el modelo de la unidad 1f), aunque su peso no bastaría para partirlo por flexión.",
+    "input": { "claw": "aguila", "target": "coche", "zone": "parabrisas", "posture": "plegadas", "v_kmh": 60.0, "inlay": "diamante", "defense": true, "kind": "hold", "model": "2.0" },
+    "expect": {
+      "defense.tipYields": { "value": false },
+      "defense.tear.depthUm": { "value": 267.76, "tol": 0.02 },
+      "defense.tear.verdict": { "value": "RAYA" },
+      "defense.windshield.cracked": { "value": true },
+      "defense.windshield.contactCracks": { "value": true },
+      "defense.verdict": { "value": "AGRIETA EL PARABRISAS" }
+    },
+    "source": "Sustaita & Hertel 2010 (agarre); motor del laboratorio: Physics.compute en modo desgarro sobre el vidrio; unidad 1f: core/lab/fracture.gd (Lawn & Evans 1977, Anstis et al. 1981) y core/lab/glazing.gd"
+  },
+  {
+    "id": "tigre-defensa-aleta",
+    "note": "Unidad 4d, defensa. El tigre que cruza a 40 km/h y choca con la aleta de plástico de un coche a 50: sus garras ya la atraviesan en el golpe y, asustado, con ~560 N por garra la raja hasta la base de las garras y se queda clavado. Unidad 4g: como sin asustarse, las garras trabadas rajan la aleta entera (0,8 m, 720 J: aguanta de sobra los 900 N que pide) y sale por el final: se desengancha y cae a ~38 km/h (antes de la 4g, a ~35). La fricción y el balance de energía son los mismos que sin asustarse.",
+    "input": { "claw": "tigre", "target": "cocheplastico", "zone": "aleta", "v_kmh": 50.0, "animal_kmh": 40.0, "angle_deg": 90.0, "drop_m": 0.5, "car_mass_kg": 1400.0, "defense": true, "kind": "impact", "model": "2.0" },
+    "expect": {
+      "defense.forceN.value": { "value": 2784.4972, "tol": 0.02 },
+      "defense.perClawN": { "value": 556.8994, "tol": 0.02 },
+      "defense.stuck": { "value": true },
+      "defense.stuckIn": { "value": "plastico" },
+      "embedded": { "value": true },
+      "marks.verdict": { "value": "RAJA EL PLÁSTICO" },
+      "mu": { "value": 1.0, "tol": 0.02 },
+      "groundKmh": { "value": 37.6177, "tol": 0.02 },
+      "energy.totalJ": { "value": 34799.3827, "tol": 0.02 },
+      "tear.holds": { "value": true },
+      "tear.lengthMm": { "value": 800.0, "tol": 0.02 },
+      "energy.tearJ": { "value": 720.0, "tol": 0.02 },
+      "verdict": { "value": "PERFORA EL PLÁSTICO" }
+    },
+    "source": "Martens et al. 2023 y Powell et al. 1984 (fuerza de los flexores de las garras, estimación); motor del laboratorio: Physics.compute (punción con golpe y desgarro); SABIC Noryl GTX964W; unidad 4g: desgarro R·t·L con la resiliencia con entalla de SABIC, NORYL GTX964 (revisión 20241014)"
+  },
+  {
+    "id": "velocirraptor-cine-capo",
+    "note": "Unidad 4i-B2, FICCIÓN (el experimento «El velocirraptor de cine»). El de cine (99,8 kg, el tamaño de Deinonychus) cruza a 39 km/h delante de un coche a 50 y salta sobre el capó. Carrera: pidió 39 km/h (10,83 m/s), pero corre como mucho a 10,8 m/s = 38,88 km/h (Sellers & Manning 2007). Salto: v = √(4·w·f) = √(4 × 45 × 8,498/65,3) = 4,8399 m/s, el de la patada del casuario; sube v²/2g = 23,425/19,614 = 1,1943 m. El capó está a 0,70 + ½ × 1,1 × sen 10° = 0,7955 m (Cui et al. 2025): sin aire caería a √(23,425 − 2 × 9,807 × 0,7955) = 2,797 m/s; el aire (CdA 0,105 m²) lo deja en 2,785 m/s de bajada y 10,742 m/s de carrera. Respecto al coche: (−13,889; 10,742; −2,785) m/s, |v| = 17,777 m/s = 64,0 km/h; E = ½ × 99,8 × 316,04 = 15 770 J; masa reducida 99,8 × 1400/1499,8 = 93,16 kg. Su garra de película (200 HV, ficción) frente al acero de horno (101 HV): r = 1,98 ≥ 0,8, así que corta: «SALTA SOBRE EL CAPÓ Y LO RAJA». La de verdad, de queratina (32 HV, r = 0,32), no lo cortaría (caso siguiente). Unidad 4o, la hondura de las marcas que atraviesan la chapa: es la del panel, 110 µm de pintura + 0,70 mm de acero = 810 µm («de lado a lado»), no la de la punta. La punta llegaría hasta el largo de la garra, 120 mm, pero bajo el capó solo hay 80 mm de hueco: tipUm = 810 + 80 000 = 80 810 µm, hasta el fondo (bottoms): las marcas resbalan por el capó fuera de la abolladura, con el hueco entero. Unidad 4p, la punta y la abolladura comparten el hueco: en la punción, las garras están en el pie que abolla el capó, y con la chapa hundida δ a la punta le quedan 80 − δ mm por debajo. Se resuelve a la vez: la punta topa a 810 + (80 000 − 45 823) = 34 987 µm (antes, 80 810: el hueco entero, como si la chapa no se hubiera hundido; y antes de la 4o, 120 000), antes de que la garra tenga su ancho entero (36 mm a 66,8 mm de la punta): el agujero es el de la garra a esa profundidad, 2 × (0,10 + (34,99 − 0,13) × tan 15°) ≈ 19,0 mm (antes, 36 mm), y cada garra se queda el trabajo de la chapa hasta ahí, 32,25 J (antes, 78,53). Lo que no se quedan las dos garras (64,5 J en vez de 157,1) abolla más el capó: 45,8 mm en vez de 43,5, con 948 J para la chapa en vez de 855.",
+    "input": { "claw": "velociraptor_pelicula", "target": "coche", "zone": "capo", "v_kmh": 50.0, "animal_kmh": 39.0, "angle_deg": 90.0, "car_mass_kg": 1400.0, "kind": "impact", "model": "2.0" },
+    "expect": {
+      "verdict": { "value": "SALTA SOBRE EL CAPÓ Y LO RAJA" },
+      "film": { "value": true },
+      "cutsBody": { "value": true },
+      "attack": { "value": "salto" },
+      "marks.verdict": { "value": "RAJA LA CHAPA" },
+      "marks.through": { "value": true },
+      "marks.depthUm": { "value": 810.0, "tol": 1e-9 },
+      "marks.tipUm": { "value": 80810.0, "tol": 1e-9 },
+      "marks.bottoms": { "value": true },
+      "puncture.through": { "value": true },
+      "puncture.depthUm": { "value": 34987.234, "tol": 1e-6 },
+      "puncture.holeUm": { "value": 18961.688, "tol": 1e-6 },
+      "puncture.bottoms": { "value": true },
+      "energy.clawsJ": { "value": 64.5046, "tol": 0.001 },
+      "massKg": { "value": 99.8, "tol": 1e-9 },
+      "leap.runCapped": { "value": true },
+      "leap.runKmh": { "value": 38.88, "tol": 1e-9 },
+      "leap.leapMs": { "value": 4.839918, "tol": 1e-6 },
+      "leap.reachM": { "value": 1.19429, "tol": 1e-5 },
+      "leap.panelM": { "value": 0.795506, "tol": 1e-5 },
+      "leap.uz": { "value": -2.785, "tol": 0.02 },
+      "leap.uy": { "value": 10.7417, "tol": 0.02 },
+      "vRelKmh": { "value": 63.9992, "tol": 0.02 },
+      "reducedMassKg": { "value": 93.1591, "tol": 0.001 },
+      "energy.totalJ": { "value": 15770.4766, "tol": 0.02 },
+      "dent.depthMm": { "value": 45.8228, "tol": 0.02 },
+      "groundKmh": { "value": 31.9534, "tol": 0.02 }
+    },
+    "source": "FICCIÓN: la garra de película (velociraptor_film.gd, la dureza de la tachuela de acero del banco). Datos: Campione et al. 2014 (masa por el fémur de Deinonychus); Sellers & Manning 2007 (carrera); Henry et al. 2005 y Hutchinson et al. 2015 (salto); Cui et al. 2025 (altura del capó); Pennycuick et al. 1988 y Tucker 1990 (aire); motor del laboratorio: Physics.compute y la abolladura de la unidad 1f"
+  },
+  {
+    "id": "velocirraptor-capo",
+    "note": "Unidad 4i-B2, la reconstrucción (el experimento «Y el de verdad, en el mismo salto»). El mismo salto que el de cine (38,88 km/h de carrera, 4,8399 m/s de salto, al capó a 0,7955 m), con 19,7 kg: el aire le quita algo más (CdA 0,0355 m² para 19,7 kg: 2,777 m/s de bajada, 10,700 de carrera) y llega a 17,751 m/s respecto al coche: E = ½ × 19,7 × 17,751² = 3104 J. Su queratina (32 HV) no corta el acero de horno (101 HV: r = 0,32 < 0,8), pero raya la pintura (20 HV: r = 1,6) hasta el metal, a 110 µm: «ABOLLA Y RAYA», con ~8,2 mm de abolladura. Pinchaba y sujetaba, no rajaba (Manning et al. 2006; Fowler et al. 2011).",
+    "input": { "claw": "velociraptor", "target": "coche", "zone": "capo", "v_kmh": 50.0, "animal_kmh": 39.0, "angle_deg": 90.0, "car_mass_kg": 1400.0, "kind": "impact", "model": "2.0" },
+    "expect": {
+      "verdict": { "value": "ABOLLA Y RAYA" },
+      "film": { "value": false },
+      "cutsBody": { "value": false },
+      "marks.verdict": { "value": "HASTA EL METAL" },
+      "marks.depthUm": { "value": 110.0, "tol": 1e-9 },
+      "puncture.through": { "value": false },
+      "massKg": { "value": 19.7, "tol": 1e-9 },
+      "leap.leapMs": { "value": 4.839918, "tol": 1e-6 },
+      "leap.uz": { "value": -2.7766, "tol": 0.02 },
+      "vRelKmh": { "value": 63.9046, "tol": 0.02 },
+      "energy.totalJ": { "value": 3103.8089, "tol": 0.02 },
+      "dent.depthMm": { "value": 8.1714, "tol": 0.02 }
+    },
+    "source": "velociraptor.gd (masa por el fémur, Campione et al. 2014; queratina de 32 HV, McKittrick et al. 2012); Sellers & Manning 2007; Henry et al. 2005; Hutchinson et al. 2015; Cui et al. 2025; docs/FISICA.md §4 (r < 0,8) y §14 (acero de horno de 101 HV); abolladura de la unidad 1f"
+  },
+  {
+    "id": "velocirraptor-cine-puerta",
+    "note": "Unidad 4i-B2, FICCIÓN. Contra un costado no le hace falta saltar: golpea con la carrera, 10,8 m/s de lado, como el tigre. Respecto al coche a 50 km/h: √(13,889² + 10,8²) = 17,594 m/s = 63,34 km/h; E = ½ × 99,8 × 309,54 = 15 446 J; contra la puerta, ½ × 93,16 × 10,8² = 5433 J. La garra de película corta la chapa: «SE ABALANZA Y RAJA LA PUERTA», con una abolladura de ~107 mm. Unidad 4p: la punta comparte con ella los 150 mm de hueco de la puerta y se queda a 810 + (150 000 − 106 949) = 43 861 µm (antes entraba sus 120 mm); el agujero, ~23,7 mm en vez de 36, y las garras se quedan 88 J en vez de ~157: la abolladura pasa de 106,2 a 106,9 mm.",
+    "input": { "claw": "velociraptor_pelicula", "target": "coche", "zone": "puerta", "v_kmh": 50.0, "animal_kmh": 39.0, "angle_deg": 90.0, "car_mass_kg": 1400.0, "kind": "impact", "model": "2.0" },
+    "expect": {
+      "verdict": { "value": "SE ABALANZA Y RAJA LA PUERTA" },
+      "leap.side": { "value": true },
+      "vNormalKmh": { "value": 38.88, "tol": 1e-9 },
+      "vRelKmh": { "value": 63.3376, "tol": 0.02 },
+      "energy.totalJ": { "value": 15446.1076, "tol": 0.02 },
+      "normalJ": { "value": 5433.038, "tol": 0.02 },
+      "marks.verdict": { "value": "RAJA LA CHAPA" },
+      "dent.depthMm": { "value": 106.9494, "tol": 0.02 },
+      "puncture.depthUm": { "value": 43860.62, "tol": 1e-6 },
+      "puncture.bottoms": { "value": true }
+    },
+    "source": "FICCIÓN: la garra de película (velociraptor_film.gd). Datos: Sellers & Manning 2007 (carrera); Campione et al. 2014 (masa); motor del laboratorio y la abolladura de la unidad 1f"
+  },
+  {
+    "id": "velocirraptor-barras-agarre",
+    "note": "Unidad 4i-B2, la reconstrucción agazapada en las barras de techo a 90 km/h. Agarra con los pies como las rapaces, con el agarre de su ficha (el de los gavilanes escalado a 19,7 kg: 381,5 N, 193,3-1129,9): 2 pies × 381,5 N × k = 1 → 763 N (de 2 × 193,3 × 0,6 = 231,96 a 2 × 1129,9 × 2 = 4519,6 N). Pesa 19,7 × 9,807 = 193,2 N y el aire solo le pide ~17 N: no se suelta ni a 400 km/h (con los datos más desfavorables, desde ~243 km/h).",
+    "input": { "claw": "velociraptor", "target": "coche", "zone": "barras", "posture": "tumbado", "v_kmh": 90.0, "kind": "hold", "model": "2.0" },
+    "expect": {
+      "setup.anchor": { "value": "agarre" },
+      "setup.anchorN.value": { "value": 763.0, "tol": 1e-9 },
+      "setup.anchorN.min": { "value": 231.96, "tol": 1e-9 },
+      "setup.anchorN.max": { "value": 4519.6, "tol": 1e-9 },
+      "at.weightN": { "value": 193.1979, "tol": 1e-9 },
+      "detach.never": { "value": true },
+      "detach.minKmh": { "value": 242.5028, "tol": 0.02 },
+      "verdict.verdict": { "value": "NI A 400 km/h SE SUELTA" }
+    },
+    "source": "Sustaita & Hertel 2010 (agarre de los gavilanes, escalado); Fowler et al. 2011 (el pie de un dromeosáurido agarraba como el de un gavilán); Pennycuick et al. 1988 (área frontal, extrapolada); DrivAer (Cp de las barras)"
+  },
+  {
+    "id": "velocirraptor-cine-techo",
+    "note": "Unidad 4i-B2, FICCIÓN. El de cine agazapado en el techo a 90 km/h: sin nada que agarrar, lo sujeta la fricción de su peso (99,8 × 9,807 = 978,7 N; μ = 1 del motor, acotado). Con su masa, el aire le pide poco: se soltaría hacia ~323 km/h (con los datos más desfavorables, desde ~131). Su garra de película raja la chapa solo con su peso: «RAJA LA CHAPA».",
+    "input": { "claw": "velociraptor_pelicula", "target": "coche", "zone": "techo", "posture": "tumbado", "v_kmh": 90.0, "kind": "hold", "model": "2.0" },
+    "expect": {
+      "setup.anchor": { "value": "friccion" },
+      "setup.film": { "value": true },
+      "setup.scratch.verdict": { "value": "RAJA LA CHAPA" },
+      "at.weightN": { "value": 978.7386, "tol": 1e-9 },
+      "detach.kmh": { "value": 322.7242, "tol": 0.02 },
+      "detach.minKmh": { "value": 130.8894, "tol": 0.02 },
+      "verdict.verdict": { "value": "AGUANTA A 230 km/h" }
+    },
+    "source": "FICCIÓN: la garra de película (velociraptor_film.gd). Datos: Campione et al. 2014 (masa); Pennycuick et al. 1988, Tucker 1990 y Ponitz et al. 2014 (aire de un ave, extrapolado); DrivAer (Cp del techo); Roderick et al. 2019 y Derler & Gerhardt 2012 (banda de la fricción)"
+  },
+  {
+    "id": "velocirraptor-tungsteno-afilado-capo",
+    "note": "Unidad 4i-B2, garras experimentales. La reconstrucción con garras de carburo de tungsteno afiladas a media escala (s = 0,5) salta sobre el capó, como en el experimento. Masa de las garras: el cono del motor de cada falciforme, π·(0,15 × 92,7)²·92,7/3 = 18 769 mm³, por 14 930 − 1310 kg/m³: 255,6 g más cada una, +511,3 g en las dos que golpean; a 63,9 km/h relativos suman ½ × 0,5113 × 17,753² = 80,6 J. Punta: R = 138,2 × (0,04/138,2)^0,5 = 2,351 µm. Corta el acero (r = 2000/101) y, afilada, lo raja al resbalar: «RAJA LA CHAPA»; la punta tan fina se mella (aguanta ~14 mN de lado).",
+    "input": { "claw": "velociraptor", "target": "coche", "zone": "capo", "v_kmh": 50.0, "animal_kmh": 39.0, "angle_deg": 90.0, "car_mass_kg": 1400.0, "inlay": "tungsteno", "sharpness": 0.5, "kind": "impact", "model": "2.0" },
+    "expect": {
+      "verdict": { "value": "RAJA LA CHAPA" },
+      "marks.verdict": { "value": "RAJA LA CHAPA" },
+      "cutsBody": { "value": true },
+      "clawMass.addedKg": { "value": 0.511278, "tol": 1e-5 },
+      "clawMass.claws": { "value": 2 },
+      "clawMass.extraJ": { "value": 80.5682, "tol": 0.02 },
+      "massKg": { "value": 20.211278, "tol": 1e-6 },
+      "sharpness.tipRadiusUm": { "value": 2.35115, "tol": 1e-4 },
+      "sharpness.naturalTipRadiusUm": { "value": 138.1977, "tol": 1e-5 },
+      "clawFracture.mode": { "value": "mella" }
+    },
+    "source": "ClawMass (unidad 4e: General Carbide 2018, densidad del GC-005; queratina de cuernos y púas, estimación); ClawSharpness (unidad 4e: R(s) = R0·(0,04 µm/R0)^s; Roscioli et al. 2020); General Carbide 2018 (3068 MPa); motor del laboratorio"
+  },
+  {
+    "id": "aguila-diamante-ventanilla",
+    "note": "Unidad 4m. El águila real con garras de diamante cruza a 20 km/h contra la ventanilla de un coche a 50. m = 5 kg + 8,9 g de las cuatro garras de diamante = 5,0089 kg; μ_red = 5,0089·1400/1405,0089 = 4,9911 kg; v_n = 20/3,6 = 5,556 m/s. Hoja templada (placa redonda apoyada de 250 mm, t = 4 mm, 120 MPa) con un apoyo de 30 mm: F = 120·2π·4²/(3·(1,22·ln(250/30) + 1)) = 12 064/10,760 = 1121 N; k = 4π·72 000·4³/(3·250²·3,22·0,78) = 122,96 N/mm. Dos apoyos con la pata en serie: k = 1/(2/122,96 + 1/10) = 8,601 N/mm y F_pico = 5,556·√(4,9911/2·8,601·1000) = 813,9 N por apoyo, menos de 1121: al flexar no se parte. Por garra, 813,9·2/4 = 407,0 N. La grieta que atraviesa la capa comprimida (punta de 15°): d0 = 0,2113·4 = 0,8453 mm; K_res = 1,12·(2/π)·(0,4553·100 MPa)·√(π·d0) = 1,673 MPa·√m; χ = 0,016·√(72 000/5394)·(tan 68°/tan 15°)^(2/3) = 0,2573; P = d0^1,5·(0,75 + 1,673) MPa·√m/χ = 2,458·10⁻⁵·2,423·10⁶/0,2573 = 231,4 N < 407 N: estalla por la grieta. La hoja se queda la carga del apoyo al abrirse la grieta, 231,4·4/2 = 462,8 N: U = 462,8²/(2·122,96) = 0,871 J. Trozos: U_D = 0,78·100²/(5·72 000) MPa = 21,67 kJ/m³ y δ = 122,1/21 667 = 5,635 mm (~91 por cada 5 × 5 cm).",
+    "input": { "claw": "aguila", "target": "coche", "zone": "luna", "v_kmh": 50.0, "animal_kmh": 20.0, "angle_deg": 90.0, "car_mass_kg": 1400.0, "inlay": "diamante", "kind": "impact", "model": "2.0" },
+    "expect": {
+      "verdict": { "value": "ESTALLA LA VENTANILLA" },
+      "sideWindow.shattered": { "value": true },
+      "sideWindow.cause": { "value": "grieta" },
+      "sideWindow.pane": { "value": "front" },
+      "sideWindow.peakN": { "value": 813.9238, "tol": 0.02 },
+      "sideWindow.perClawN": { "value": 406.9619, "tol": 0.02 },
+      "sideWindow.bendN": { "value": 1121.146, "tol": 0.02 },
+      "sideWindow.pierceN": { "value": 231.3952, "tol": 0.02 },
+      "sideWindow.fragmentMm": { "value": 5.6354, "tol": 0.02 },
+      "sideWindow.fragments25": { "value": 90.8997, "tol": 0.02 },
+      "sideWindow.glassJ": { "value": 0.8709, "tol": 0.02 },
+      "reducedMassKg": { "value": 4.991053, "tol": 1e-6 },
+      "energy.terms.1.id": { "value": "vidrio" },
+      "energy.panelJ": { "value": 0.8709, "tol": 0.02 }
+    },
+    "source": "Glazing.SIDE_WINDOW y tempered_result (unidad 1f: EN 12150-1, Nielsen, Schneider & Kraus 2022, Achintha 2020, CEPE R43); placa redonda apoyada de Roark (FISICA.md §15); la grieta de Anstis con el cierre de la capa comprimida (pierce_load); ClawMass (unidad 4e)"
+  },
+  {
+    "id": "aguila-ventanilla-aguanta",
+    "note": "Unidad 4m. El mismo golpe con sus talones de queratina: m = 5 kg, μ_red = 5·1400/1405 = 4,9822 kg, F_pico = 5,556·√(4,9822/2·8,601·1000) = 813,2 N por apoyo, menos de los 1121 N que la parten al flexar; la queratina (32 HV) es más blanda que el vidrio (550 HV) y no puede abrir la grieta (en tempered_result, la punta no es dura: pierceN = null). Aguanta entera; la hoja le devuelve al animal lo que la cargó (el término del vidrio, 0).",
+    "input": { "claw": "aguila", "target": "coche", "zone": "luna", "v_kmh": 50.0, "animal_kmh": 20.0, "angle_deg": 90.0, "car_mass_kg": 1400.0, "kind": "impact", "model": "2.0" },
+    "expect": {
+      "verdict": { "value": "LA VENTANILLA AGUANTA" },
+      "sideWindow.shattered": { "value": false },
+      "sideWindow.cause": { "value": null },
+      "sideWindow.hardTip": { "value": false },
+      "sideWindow.pierceN": { "value": null },
+      "sideWindow.peakN": { "value": 813.2021, "tol": 0.02 },
+      "sideWindow.bendN": { "value": 1121.146, "tol": 0.02 },
+      "sideWindow.glassJ": { "value": 0.0 },
+      "energy.panelJ": { "value": 0.0 }
+    },
+    "source": "Glazing.SIDE_WINDOW y tempered_result (unidad 1f); queratina de garra, 26-33 HV (McKittrick et al. 2012)"
+  },
+  {
+    "id": "oso-ventanilla",
+    "note": "Unidad 4m. El oso pardo (300 kg) cruza a 10 km/h contra la ventanilla de un coche a 50. Llega: su cruz está a ~1,20 m (90-150 cm, Animal Diversity Web) y el centro de su apoyo (65 mm), a 1,135 m, por encima de la cintura (0,70 + 1,1·sen 10° = 0,891 m). μ_red = 300·1400/1700 = 247,06 kg; v_n = 2,778 m/s; con el apoyo de 65 mm, F = 12 064/(3·(1,22·ln(250/65) + 1)) = 12 064/7,930 = 1521 N; F_pico = 2,778·√(247,06/2·8,601·1000) = 2863 N por apoyo > 1521 N: estalla al flexar. La hoja se queda U = 1521²/(2·122,96) = 9,41 J; el resto de la energía normal (953 J), el animal y lo que hay tras el hueco.",
+    "input": { "claw": "oso", "target": "coche", "zone": "luna", "v_kmh": 50.0, "animal_kmh": 10.0, "angle_deg": 90.0, "car_mass_kg": 1400.0, "kind": "impact", "model": "2.0" },
+    "expect": {
+      "verdict": { "value": "ESTALLA LA VENTANILLA" },
+      "sideWindow.shattered": { "value": true },
+      "sideWindow.cause": { "value": "flexión" },
+      "sideWindow.peakN": { "value": 2863.2404, "tol": 0.02 },
+      "sideWindow.bendN": { "value": 1521.2201, "tol": 0.02 },
+      "sideWindow.glassJ": { "value": 9.4099, "tol": 0.02 },
+      "normalJ": { "value": 953.159, "tol": 0.02 },
+      "energy.panelJ": { "value": 9.4099, "tol": 0.02 },
+      "energy.animalJ": { "value": 943.7492, "tol": 0.02 }
+    },
+    "source": "Glazing.SIDE_WINDOW y tempered_result (unidad 1f); placa de Roark (FISICA.md §15); cruz del oso: Animal Diversity Web (Nowak & Paradiso 1983; Wilson & Ruff 1999); cintura: Cui et al. 2025 (borde del capó) con el capó del modelo"
+  },
+  {
+    "id": "velocirraptor-cine-ventanilla",
+    "note": "Unidad 4m. El velocirraptor de cine (99,8 kg) corre como mucho a 38,88 km/h y salta para llegar a la ventanilla: sus pies suben v²/2g = 4,84²/(2·9,807) = 1,194 m, por encima de la cintura (0,891 m), y golpea en lo alto del salto con su carrera (v_n = 10,8 m/s). μ_red = 99,8·1400/1499,8 = 93,159 kg; con el apoyo de 50 mm, F = 12 064/(3·(1,22·ln 5 + 1)) = 1357 N; F_pico = 10,8·√(93,159/2·8,601·1000) = 6836 N > 1357 N: estalla al flexar (la garra de película, 200 HV, no la agrieta: es más blanda que el vidrio). U = 1357²/(2·122,96) = 7,49 J. Veredicto de película, con su contraste.",
+    "input": { "claw": "velociraptor_pelicula", "target": "coche", "zone": "luna", "v_kmh": 50.0, "animal_kmh": 39.0, "angle_deg": 90.0, "car_mass_kg": 1400.0, "kind": "impact", "model": "2.0" },
+    "expect": {
+      "verdict": { "value": "SE ESTRELLA CONTRA LA VENTANILLA Y LA REVIENTA" },
+      "sideWindow.shattered": { "value": true },
+      "sideWindow.cause": { "value": "flexión" },
+      "sideWindow.hardTip": { "value": false },
+      "sideWindow.peakN": { "value": 6835.9126, "tol": 0.02 },
+      "sideWindow.bendN": { "value": 1356.9156, "tol": 0.02 },
+      "sideWindow.glassJ": { "value": 7.487, "tol": 0.02 },
+      "leap.window": { "value": true },
+      "leap.hitM": { "value": 1.19429, "tol": 1e-4 },
+      "leap.sillM": { "value": 0.891013, "tol": 1e-4 },
+      "vNormalKmh": { "value": 38.88, "tol": 1e-9 }
+    },
+    "source": "Glazing.SIDE_WINDOW y tempered_result (unidad 1f); el salto de la 4i-B2 (Henry et al. 2005; Hutchinson et al. 2015) y la carrera (Sellers & Manning 2007); la garra de película es ficción"
+  }
+]

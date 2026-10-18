@@ -1,0 +1,515 @@
+[
+  {
+    "id": "zafiro-cuadrada-vidrio-raya-30N",
+    "note": "El ejemplo de la hoja de ruta: la uña maciza de zafiro cuadrada no raya el vidrio (contacto elástico) pero, al deslizar, abre conos parciales de Hertz desde ~0,8 N (μ = 0,6 limitado a 0,5).",
+    "input": { "geom": "cuadrada", "base": "zafiro", "inlay": "none", "claw": null, "target": "vidrio", "type": "aranazo", "force": 30, "length": 25, "tear": false, "method": "rayado", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "verdict": { "value": "GRIETAS DE HERTZ" },
+      "fracture.cracks": { "value": true },
+      "fracture.mode": { "value": "hertz" },
+      "fracture.pattern": { "value": "herradura" },
+      "fracture.hertzN": { "value": 0.7911230806036121, "tol": 1e-06 },
+      "fracture.harderTool": { "value": true },
+      "fracture.toolElastic": { "value": true },
+      "depthUm": { "max": 0.05 },
+      "nail.broken": { "value": false }
+    },
+    "source": "Ren & Zhang 2014 (ec. 4-8); Rhee et al. 2001 (A = 8,63·10³); Lawn & Marshall 1984; datos del material en fracture.gd"
+  },
+  {
+    "id": "zafiro-cuadrada-vidrio-raya-4N",
+    "note": "Con 4 N también: la fricción baja la carga crítica de 127 N (apretando) a 0,8 N (deslizando).",
+    "input": { "geom": "cuadrada", "base": "zafiro", "inlay": "none", "claw": null, "target": "vidrio", "type": "aranazo", "force": 4, "length": 25, "tear": false, "method": "rayado", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "verdict": { "value": "GRIETAS DE HERTZ" },
+      "fracture.cracks": { "value": true },
+      "fracture.mode": { "value": "hertz" },
+      "fracture.pattern": { "value": "herradura" },
+      "fracture.hertzN": { "value": 0.7911230806036121, "tol": 1e-06 },
+      "fracture.harderTool": { "value": true },
+      "fracture.toolElastic": { "value": true },
+      "depthUm": { "max": 0.05 },
+      "nail.broken": { "value": false }
+    },
+    "source": "Ren & Zhang 2014 (ec. 4-8); Rhee et al. 2001 (A = 8,63·10³); Lawn & Marshall 1984; datos del material en fracture.gd"
+  },
+  {
+    "id": "zafiro-cuadrada-vidrio-raya-0.5N",
+    "note": "Por debajo de la carga crítica al deslizar (0,79 N) no hay grietas: el veredicto del 1.x se mantiene.",
+    "input": { "geom": "cuadrada", "base": "zafiro", "inlay": "none", "claw": null, "target": "vidrio", "type": "aranazo", "force": 0.5, "length": 25, "tear": false, "method": "rayado", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "verdict": { "value": "ROZA SIN MARCAR" },
+      "fracture.cracks": { "value": false },
+      "fracture.mode": { "value": "none" },
+      "fracture.pattern": { "value": null },
+      "fracture.hertzN": { "value": 0.7911230806036121, "tol": 1e-06 },
+      "fracture.harderTool": { "value": true },
+      "fracture.toolElastic": { "value": true },
+      "nail.broken": { "value": false }
+    },
+    "source": "Ren & Zhang 2014 (ec. 4-8); Rhee et al. 2001 (A = 8,63·10³); Lawn & Marshall 1984; datos del material en fracture.gd"
+  },
+  {
+    "id": "zafiro-cuadrada-movil-raya-4N",
+    "note": "La pantalla reforzada (1000 MPa de compresión superficial) aguanta 4 N arrastrando la misma punta que agrieta el vidrio de ventana.",
+    "input": { "geom": "cuadrada", "base": "zafiro", "inlay": "none", "claw": null, "target": "movil", "type": "aranazo", "force": 4, "length": 25, "tear": false, "method": "rayado", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "verdict": { "value": "ROZA SIN MARCAR" },
+      "fracture.cracks": { "value": false },
+      "fracture.mode": { "value": "none" },
+      "fracture.pattern": { "value": null },
+      "fracture.hertzN": { "value": 13.724452174395308, "tol": 1e-06 },
+      "fracture.harderTool": { "value": true },
+      "fracture.toolElastic": { "value": true },
+      "nail.broken": { "value": false }
+    },
+    "source": "Ren & Zhang 2014 (ec. 4-8); Rhee et al. 2001 (A = 8,63·10³); Lawn & Marshall 1984; datos del material en fracture.gd"
+  },
+  {
+    "id": "zafiro-cuadrada-movil-raya-30N",
+    "note": "Con 30 N ya pasa de su carga crítica al deslizar (13,7 N).",
+    "input": { "geom": "cuadrada", "base": "zafiro", "inlay": "none", "claw": null, "target": "movil", "type": "aranazo", "force": 30, "length": 25, "tear": false, "method": "rayado", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "verdict": { "value": "GRIETAS DE HERTZ" },
+      "fracture.cracks": { "value": true },
+      "fracture.mode": { "value": "hertz" },
+      "fracture.pattern": { "value": "herradura" },
+      "fracture.hertzN": { "value": 13.724452174395308, "tol": 1e-06 },
+      "fracture.harderTool": { "value": true },
+      "fracture.toolElastic": { "value": true },
+      "depthUm": { "max": 0.05 },
+      "nail.broken": { "value": false }
+    },
+    "source": "Ren & Zhang 2014 (ec. 4-8); Rhee et al. 2001 (A = 8,63·10³); Lawn & Marshall 1984; datos del material en fracture.gd"
+  },
+  {
+    "id": "zafiro-cuadrada-zafiro-raya-30N",
+    "note": "Zafiro contra zafiro (r = 1): no se rayan, pero al deslizar con fuerza se agrietan (desde ~2 N).",
+    "input": { "geom": "cuadrada", "base": "zafiro", "inlay": "none", "claw": null, "target": "zafiro", "type": "aranazo", "force": 30, "length": 25, "tear": false, "method": "rayado", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "verdict": { "value": "GRIETAS DE HERTZ" },
+      "fracture.cracks": { "value": true },
+      "fracture.mode": { "value": "hertz" },
+      "fracture.pattern": { "value": "herradura" },
+      "fracture.hertzN": { "value": 1.954847939717171, "tol": 1e-06 },
+      "fracture.harderTool": { "value": true },
+      "fracture.toolElastic": { "value": true },
+      "depthUm": { "max": 0.05 },
+      "nail.broken": { "value": false }
+    },
+    "source": "Ren & Zhang 2014 (ec. 4-8); Rhee et al. 2001 (A = 8,63·10³); Lawn & Marshall 1984; datos del material en fracture.gd"
+  },
+  {
+    "id": "diamante-cuadrada-zafiro-raya-30N",
+    "note": "La uña maciza de diamante roma sobre el cristal de zafiro: grietas en herradura desde ~1,4 N.",
+    "input": { "geom": "cuadrada", "base": "diamante", "inlay": "none", "claw": null, "target": "zafiro", "type": "aranazo", "force": 30, "length": 25, "tear": false, "method": "rayado", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "verdict": { "value": "GRIETAS DE HERTZ" },
+      "fracture.cracks": { "value": true },
+      "fracture.mode": { "value": "hertz" },
+      "fracture.pattern": { "value": "herradura" },
+      "fracture.hertzN": { "value": 1.3517311173059365, "tol": 1e-06 },
+      "fracture.harderTool": { "value": true },
+      "fracture.toolElastic": { "value": true },
+      "depthUm": { "max": 0.05 },
+      "nail": { "value": null }
+    },
+    "source": "Ren & Zhang 2014 (ec. 4-8); Rhee et al. 2001 (A = 8,63·10³); Lawn & Marshall 1984; datos del material en fracture.gd"
+  },
+  {
+    "id": "diamante-cuadrada-cuarzo-puncion-300N",
+    "note": "Apretando sin deslizar hace falta la carga de Auerbach entera: ~200 N para la punta de 1,7 mm sobre la encimera (tenacidad estimada).",
+    "input": { "geom": "cuadrada", "base": "diamante", "inlay": "none", "claw": null, "target": "cuarzo", "type": "aranazo", "force": 300, "length": 25, "tear": false, "method": "puncion", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "verdict": { "value": "CONO DE HERTZ" },
+      "fracture.cracks": { "value": true },
+      "fracture.mode": { "value": "hertz" },
+      "fracture.pattern": { "value": "cono" },
+      "fracture.hertzN": { "value": 199.6272003467026, "tol": 1e-06 },
+      "fracture.harderTool": { "value": true },
+      "fracture.toolElastic": { "value": true },
+      "depthUm": { "max": 0.05 },
+      "nail": { "value": null }
+    },
+    "source": "Ren & Zhang 2014 (ec. 4-8); Rhee et al. 2001 (A = 8,63·10³); Lawn & Marshall 1984; datos del material en fracture.gd"
+  },
+  {
+    "id": "diamante-cuadrada-cuarzo-puncion-150N",
+    "note": "Por debajo de la carga de Auerbach (200 N) no hay cono.",
+    "input": { "geom": "cuadrada", "base": "diamante", "inlay": "none", "claw": null, "target": "cuarzo", "type": "aranazo", "force": 150, "length": 25, "tear": false, "method": "puncion", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "verdict": { "value": "APENAS MARCA" },
+      "fracture.cracks": { "value": false },
+      "fracture.mode": { "value": "none" },
+      "fracture.pattern": { "value": null },
+      "fracture.hertzN": { "value": 199.6272003467026, "tol": 1e-06 },
+      "fracture.harderTool": { "value": true },
+      "fracture.toolElastic": { "value": true },
+      "nail": { "value": null }
+    },
+    "source": "Ren & Zhang 2014 (ec. 4-8); Rhee et al. 2001 (A = 8,63·10³); Lawn & Marshall 1984; datos del material en fracture.gd"
+  },
+  {
+    "id": "gato-vidrio-raya-15N",
+    "note": "La queratina nunca agrieta el vidrio: es más blanda (r < 1) y se aplasta antes de llegar a la presión que lo rompería.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "gato", "target": "vidrio", "type": "aranazo", "force": 15, "length": 25, "tear": false, "method": "rayado", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "verdict": { "value": "NO RAYA" },
+      "fracture.cracks": { "value": false },
+      "fracture.mode": { "value": "none" },
+      "fracture.pattern": { "value": null },
+      "fracture.hertzN": { "value": 1.1271624781340237, "tol": 1e-06 },
+      "fracture.harderTool": { "value": false }
+    },
+    "source": "Ren & Zhang 2014 (ec. 4-8); Rhee et al. 2001 (A = 8,63·10³); Lawn & Marshall 1984; datos del material en fracture.gd"
+  },
+  {
+    "id": "stiletto-zafiro-vidrio-raya-30N",
+    "note": "Punta afilada: surco plástico con grietas laterales (astillado); la grieta de Anstis con el afilado de la stiletto mide ~0,4 mm.",
+    "input": { "geom": "stiletto", "base": "zafiro", "inlay": "none", "claw": null, "target": "vidrio", "type": "aranazo", "force": 30, "length": 25, "tear": false, "method": "rayado", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "verdict": { "value": "RAYA" },
+      "fracture.cracks": { "value": true },
+      "fracture.mode": { "value": "radial" },
+      "fracture.pattern": { "value": "astillado" },
+      "fracture.hertzN": { "value": 0.10213355053260327, "tol": 1e-06 },
+      "fracture.harderTool": { "value": true },
+      "fracture.toolElastic": { "value": true },
+      "fracture.crackUm": { "value": 394.26603478779873, "tol": 1e-06 },
+      "nail.broken": { "value": false }
+    },
+    "source": "Ren & Zhang 2014 (ec. 4-8); Rhee et al. 2001 (A = 8,63·10³); Lawn & Marshall 1984; datos del material en fracture.gd; Anstis et al. 1981 y Lawn, Evans & Marshall 1980 (afilado)"
+  },
+  {
+    "id": "stiletto-natural-piel-30N",
+    "note": "Una stiletto natural (8 mm libres, 0,49 mm, «C» de 7,4 mm) se dobla a ~14 N: el daño es el de 14 N, no el de 30 N (en el 1.x, «ARAÑAZO PROFUNDO» de 0,9 mm).",
+    "input": { "geom": "stiletto", "base": "natural", "inlay": "none", "claw": null, "target": "piel", "type": "aranazo", "force": 30, "length": 25, "tear": false, "method": "rayado", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "nail.broken": { "value": true },
+      "nail.breakN": { "value": 13.751035527497447, "tol": 1e-06 },
+      "nail.mode": { "value": "dobla" },
+      "verdict": { "value": "SE DOBLA LA UÑA" },
+      "depthUm": { "value": 75, "tol": 1e-06 }
+    },
+    "source": "Baraldi et al. 2014 (espesor y resistencia de la uña); Boike et al. 2025 (anchura); ángulo de ataque de 45° (estimación); bending.gd"
+  },
+  {
+    "id": "cuadrada-natural-piel-4N",
+    "note": "Una uña cuadrada natural (4 mm libres) aguanta 4 N de sobra: nada cambia (se dobla a ~28 N).",
+    "input": { "geom": "cuadrada", "base": "natural", "inlay": "none", "claw": null, "target": "piel", "type": "aranazo", "force": 4, "length": 25, "tear": false, "method": "rayado", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "nail.broken": { "value": false },
+      "nail.breakN": { "value": 27.502071054994893, "tol": 1e-06 },
+      "nail.mode": { "value": "dobla" },
+      "verdict": { "value": "SIN MARCA" },
+      "depthUm": { "max": 1e-06 }
+    },
+    "source": "Baraldi et al. 2014 (espesor y resistencia de la uña); Boike et al. 2025 (anchura); ángulo de ataque de 45° (estimación); bending.gd"
+  },
+  {
+    "id": "almendra-natural-humeda-coche-30N",
+    "note": "Empapada pierde el 80 % de su resistencia: se dobla a ~3,7 N. Como no deja daño, el veredicto no cambia y la flexión va en el subtítulo.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": null, "target": "coche", "type": "aranazo", "force": 30, "length": 25, "tear": false, "method": "rayado", "strike": false, "passes": 1, "wet": true, "model": "2.0" },
+    "expect": {
+      "nail.broken": { "value": true },
+      "nail.breakN": { "value": 3.666942807332653, "tol": 1e-06 },
+      "nail.mode": { "value": "dobla" },
+      "verdict": { "value": "ROZA / REMOLINO" },
+      "depthUm": { "max": 1e-06 }
+    },
+    "source": "Baraldi et al. 2014 (espesor y resistencia de la uña); Boike et al. 2025 (anchura); ángulo de ataque de 45° (estimación); bending.gd"
+  },
+  {
+    "id": "stilettoxl-acrilico-piel-30N",
+    "note": "La Stiletto XL de acrílico (12 mm libres) se parte a ~13 N: el acrílico es frágil (resistencia y espesor estimados).",
+    "input": { "geom": "stilettoxl", "base": "acrilico", "inlay": "none", "claw": null, "target": "piel", "type": "aranazo", "force": 30, "length": 25, "tear": false, "method": "rayado", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "nail.broken": { "value": true },
+      "nail.breakN": { "value": 13.699034567590301, "tol": 1e-06 },
+      "nail.mode": { "value": "parte" },
+      "verdict": { "value": "SE PARTE LA UÑA" },
+      "depthUm": { "value": 402.91278139971473, "tol": 1e-06 }
+    },
+    "source": "Baraldi et al. 2014 (espesor y resistencia de la uña); Boike et al. 2025 (anchura); ángulo de ataque de 45° (estimación); bending.gd; resistencia del acrílico estimada (ISO 20795-1)"
+  },
+  {
+    "id": "stilettoxl-acrilico-vidrio-30N",
+    "note": "Sobre el vidrio también se parte (~12 N), pero el acrílico no lo raya: el veredicto sigue siendo «NO RAYA» y la rotura va en el subtítulo.",
+    "input": { "geom": "stilettoxl", "base": "acrilico", "inlay": "none", "claw": null, "target": "vidrio", "type": "aranazo", "force": 30, "length": 25, "tear": false, "method": "rayado", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "nail.broken": { "value": true },
+      "nail.breakN": { "value": 12.842844907115909, "tol": 1e-06 },
+      "nail.mode": { "value": "parte" },
+      "verdict": { "value": "NO RAYA" },
+      "depthUm": { "max": 1e-06 }
+    },
+    "source": "Baraldi et al. 2014 (espesor y resistencia de la uña); Boike et al. 2025 (anchura); ángulo de ataque de 45° (estimación); bending.gd; resistencia del acrílico estimada (ISO 20795-1)"
+  },
+  {
+    "id": "cuadrada-zafiro-cuarzo-puncion-300N",
+    "note": "La uña maciza de zafiro aguanta (~490 N apretando) y la encimera llega antes a su cono de Hertz (~220 N).",
+    "input": { "geom": "cuadrada", "base": "zafiro", "inlay": "none", "claw": null, "target": "cuarzo", "type": "aranazo", "force": 300, "length": 25, "tear": false, "method": "puncion", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "nail.broken": { "value": false },
+      "nail.breakN": { "value": 492.18777084292276, "tol": 1e-06 },
+      "nail.mode": { "value": "parte" },
+      "verdict": { "value": "CONO DE HERTZ" },
+      "depthUm": { "max": 1e-06 },
+      "fracture.cracks": { "value": true },
+      "fracture.mode": { "value": "hertz" },
+      "fracture.hertzStaticN": { "value": 220.19853989462501, "tol": 1e-06 }
+    },
+    "source": "Baraldi et al. 2014 (espesor y resistencia de la uña); Boike et al. 2025 (anchura); ángulo de ataque de 45° (estimación); bending.gd; zafiro 760 MPa (hojas técnicas)"
+  },
+  {
+    "id": "stiletto-metal-coche-golpe",
+    "note": "El golpe con la stiletto de acero pide ~700 N en la punta para perforar la chapa; la uña de 0,49 mm se dobla a ~207 N (ataque de 45°) con la punta ya clavada en el metal. En el 1.x, «PERFORA LA CHAPA». (Unidad 4a: la resistencia del acero pasa de la estimación por Tabor, 700 MPa, a la medida de un acero de 200 HV, 640 MPa; antes, 227 N y 303 µm.)",
+    "input": { "geom": "stiletto", "base": "metal", "inlay": "none", "claw": null, "target": "coche", "type": "aranazo", "force": 30, "length": 25, "tear": false, "method": "puncion", "strike": true, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "verdict": { "value": "SE DOBLA LA UÑA" },
+      "nail.broken": { "value": true },
+      "nail.breakN": { "value": 207.23695614438853, "tol": 1e-06 },
+      "nail.mode": { "value": "dobla" },
+      "depthUm": { "value": 273.6816824035257, "tol": 1e-06 }
+    },
+    "source": "Baraldi et al. 2015 (espesor de la uña); Boike et al. 2025 (anchura); Jung et al. 2015 (curvatura); ángulo de ataque de 45° (estimación); bending.gd; acero de 200 HV: Rm 640 MPa (DIN EN ISO 18265; EN 10088-2)"
+  },
+  {
+    "id": "almendra-natural-coche-4N",
+    "note": "La uña roma a 4 N se hunde 3,5 µm en el barniz, pero el barniz recupera todo al retirarla: no queda surco (en el 1.x, «ARAÑAZO EN BARNIZ»).",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": null, "target": "coche", "type": "aranazo", "force": 4, "length": 25, "tear": false, "method": "rayado", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "verdict": { "value": "ROZA / REMOLINO" },
+      "depthUm": { "value": 3.4857664928608507, "tol": 1e-06 },
+      "residualDepthUm": { "max": 0 },
+      "recovery.fraction": { "value": 1, "tol": 1e-06 }
+    },
+    "source": "Oliver & Pharr 1992 (m = 1,5; S = 2E'a); Stilwell & Tabor 1961; recovery.gd"
+  },
+  {
+    "id": "almendra-natural-coche-4N-20pasadas",
+    "note": "Veinte pasadas: 11,6 µm bajo carga, ~3,1 µm después.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": null, "target": "coche", "type": "aranazo", "force": 4, "length": 25, "tear": false, "method": "rayado", "strike": false, "passes": 20, "wet": false, "model": "2.0" },
+    "expect": {
+      "verdict": { "value": "ARAÑAZO EN BARNIZ" },
+      "depthUm": { "value": 11.553412755771761, "tol": 1e-06 },
+      "residualDepthUm": { "value": 3.1300850622486838, "tol": 1e-06 },
+      "recovery.fraction": { "value": 0.7290770157341621, "tol": 1e-06 }
+    },
+    "source": "Oliver & Pharr 1992 (m = 1,5; S = 2E'a); Stilwell & Tabor 1961; recovery.gd"
+  },
+  {
+    "id": "gato-plastico-15N",
+    "note": "La garra afilada en el ABS: recupera solo un 5 %.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "gato", "target": "plastico", "type": "aranazo", "force": 15, "length": 25, "tear": false, "method": "rayado", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "verdict": { "value": "RAYA" },
+      "depthUm": { "value": 682.2932842253473, "tol": 1e-06 },
+      "residualDepthUm": { "value": 648.29046887872, "tol": 1e-06 },
+      "recovery.fraction": { "value": 0.04983606922825408, "tol": 1e-06 }
+    },
+    "source": "Oliver & Pharr 1992 (m = 1,5; S = 2E'a); Stilwell & Tabor 1961; recovery.gd"
+  },
+  {
+    "id": "stiletto-zafiro-acero-30N",
+    "note": "En el acero la recuperación es pequeña (H/E' ≈ 0,009).",
+    "input": { "geom": "stiletto", "base": "zafiro", "inlay": "none", "claw": null, "target": "acero", "type": "aranazo", "force": 30, "length": 25, "tear": false, "method": "rayado", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "verdict": { "value": "RAYA" },
+      "depthUm": { "value": 23.550071801229468, "tol": 1e-06 },
+      "residualDepthUm": { "value": 21.39987038886571, "tol": 1e-06 },
+      "recovery.fraction": { "value": 0.09130339094131772, "tol": 1e-06 }
+    },
+    "source": "Oliver & Pharr 1992 (m = 1,5; S = 2E'a); Stilwell & Tabor 1961; recovery.gd"
+  },
+  {
+    "id": "gato-coche-15N",
+    "note": "La garra corta los 110 µm de pintura y llega al metal: lo cortado no vuelve y el metal queda al aire (el veredicto del 1.x no cambia).",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "gato", "target": "coche", "type": "aranazo", "force": 15, "length": 25, "tear": false, "method": "rayado", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "verdict": { "value": "HASTA EL METAL" },
+      "depthUm": { "value": 110.00000000000001, "tol": 1e-06 },
+      "residualDepthUm": { "value": 110, "tol": 1e-06 },
+      "recovery.fraction": { "max": 1e-09 }
+    },
+    "source": "Oliver & Pharr 1992 (m = 1,5; S = 2E'a); Stilwell & Tabor 1961; recovery.gd"
+  },
+  {
+    "id": "oso-golpe-coche",
+    "note": "El zarpazo del oso (98 J) no perfora el acero, pero lo abolla ~2,8 mm; el resto de la energía se lo queda la pata.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "oso", "target": "coche", "type": "aranazo", "force": 300, "length": 25, "tear": false, "method": "puncion", "strike": true, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "dent.depthMm": { "value": 2.7636020323474226, "tol": 1e-06 },
+      "dent.visible": { "value": true },
+      "verdict": { "value": "ABOLLA LA CHAPA" }
+    },
+    "source": "Nippon Steel 2013 (fig. 6, calibración C = 0,766); Jones 1989 (mecanismo rígido-plástico); muelle de la pata de physics.gd (estimación); dent.gd"
+  },
+  {
+    "id": "oso-golpe-cocheclasico",
+    "note": "El clásico, más grueso, se abolla algo menos (~2,5 mm).",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "oso", "target": "cocheclasico", "type": "aranazo", "force": 300, "length": 25, "tear": false, "method": "puncion", "strike": true, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "dent.depthMm": { "value": 2.539137444432016, "tol": 1e-06 },
+      "dent.visible": { "value": true },
+      "verdict": { "value": "ABOLLA LA CHAPA" }
+    },
+    "source": "Nippon Steel 2013 (fig. 6, calibración C = 0,766); Jones 1989 (mecanismo rígido-plástico); muelle de la pata de physics.gd (estimación); dent.gd"
+  },
+  {
+    "id": "oso-golpe-cochealu",
+    "note": "El aluminio de 1 mm, el que menos (~2,2 mm).",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "oso", "target": "cochealu", "type": "aranazo", "force": 300, "length": 25, "tear": false, "method": "puncion", "strike": true, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "dent.depthMm": { "value": 2.2312197755501857, "tol": 1e-06 },
+      "dent.visible": { "value": true },
+      "verdict": { "value": "ABOLLA LA CHAPA" }
+    },
+    "source": "Nippon Steel 2013 (fig. 6, calibración C = 0,766); Jones 1989 (mecanismo rígido-plástico); muelle de la pata de physics.gd (estimación); dent.gd"
+  },
+  {
+    "id": "gato-golpe-coche",
+    "note": "El zarpazo del gato (1,2 J) se queda justo por debajo de la carga de colapso: no abolla.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "gato", "target": "coche", "type": "aranazo", "force": 15, "length": 25, "tear": false, "method": "puncion", "strike": true, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "dent.depthMm": { "max": 0 },
+      "dent.visible": { "value": false },
+      "verdict": { "value": "PUNCIÓN" }
+    },
+    "source": "Nippon Steel 2013 (fig. 6, calibración C = 0,766); Jones 1989 (mecanismo rígido-plástico); muelle de la pata de physics.gd (estimación); dent.gd"
+  },
+  {
+    "id": "avestruz-900N-coche",
+    "note": "Rayando con 900 N la chapa también se abolla (~1,7 mm): surco abollado.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "avestruz", "target": "coche", "type": "aranazo", "force": 900, "length": 25, "tear": false, "method": "rayado", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "dent.depthMm": { "value": 1.6737734786701282, "tol": 1e-06 },
+      "dent.visible": { "value": true },
+      "verdict": { "value": "HASTA EL METAL" }
+    },
+    "source": "Nippon Steel 2013 (fig. 6, calibración C = 0,766); Jones 1989 (mecanismo rígido-plástico); muelle de la pata de physics.gd (estimación); dent.gd"
+  },
+  {
+    "id": "oso-golpe-aleta-plastico",
+    "note": "El termoplástico no se abolla en el modelo (recupera): la abolladura es solo de las chapas metálicas.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "oso", "target": "cocheplastico", "type": "aranazo", "force": 300, "length": 25, "tear": false, "method": "puncion", "strike": true, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "dent": { "value": null }
+    },
+    "source": "Nippon Steel 2013 (fig. 6, calibración C = 0,766); Jones 1989 (mecanismo rígido-plástico); muelle de la pata de physics.gd (estimación); dent.gd"
+  },
+  {
+    "id": "oso-golpe-ventanilla",
+    "note": "El zarpazo del oso da ~1350 N de pico: flexa la ventanilla templada por encima de su resistencia (se parte desde ~540 N) y estalla en ~90 trozos por cada 5 × 5 cm.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "oso", "target": "ventanilla", "type": "aranazo", "force": 300, "length": 25, "tear": false, "method": "puncion", "strike": true, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "glazing.kind": { "value": "templado" },
+      "glazing.shattered": { "value": true },
+      "glazing.cause": { "value": "flexión" },
+      "glazing.bendN": { "min": 520, "max": 560 },
+      "glazing.fragmentMm": { "value": 5.635384615384615, "tol": 1e-06 },
+      "glazing.fragments25": { "value": 90.89965877299267, "tol": 1e-06 },
+      "verdict": { "value": "ESTALLA LA VENTANILLA" }
+    },
+    "source": "Nielsen, Schneider & Kraus 2022 (perfil y trozos); EN 12150-1 (120 MPa); CEPE R43; Roark (pane_break); glazing.gd"
+  },
+  {
+    "id": "gato-golpe-ventanilla",
+    "note": "El gato se queda en ~150 N de pico: la templada ni se inmuta.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "gato", "target": "ventanilla", "type": "aranazo", "force": 15, "length": 25, "tear": false, "method": "puncion", "strike": true, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "glazing.kind": { "value": "templado" },
+      "glazing.shattered": { "value": false },
+      "glazing.cause": { "value": null },
+      "glazing.bendN": { "min": 520, "max": 560 },
+      "glazing.fragmentMm": { "value": 5.635384615384615, "tol": 1e-06 },
+      "glazing.fragments25": { "value": 90.89965877299267, "tol": 1e-06 },
+      "verdict": { "value": "NO PERFORA" }
+    },
+    "source": "Nielsen, Schneider & Kraus 2022 (perfil y trozos); EN 12150-1 (120 MPa); CEPE R43; Roark (pane_break); glazing.gd"
+  },
+  {
+    "id": "tigre-diamante-ventanilla-260N",
+    "note": "Una garra de diamante afilada apretada con 260 N (sin fuerza para romperla por flexión, ~540 N) abre una grieta que atraviesa la capa comprimida (~0,85 mm): la ventanilla estalla. Es el truco del martillo de emergencia.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "diamante", "claw": "tigre", "target": "ventanilla", "type": "aranazo", "force": 260, "length": 25, "tear": false, "method": "puncion", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "glazing.kind": { "value": "templado" },
+      "glazing.shattered": { "value": true },
+      "glazing.cause": { "value": "grieta" },
+      "glazing.bendN": { "min": 520, "max": 560 },
+      "glazing.fragmentMm": { "value": 5.635384615384615, "tol": 1e-06 },
+      "glazing.fragments25": { "value": 90.89965877299267, "tol": 1e-06 },
+      "glazing.pierceN": { "value": 242.09377066474397, "tol": 1e-06 },
+      "verdict": { "value": "ESTALLA LA VENTANILLA" }
+    },
+    "source": "Nielsen, Schneider & Kraus 2022 (perfil y trozos); EN 12150-1 (120 MPa); CEPE R43; Roark (pane_break); glazing.gd; Anstis et al. 1981; Lawn, Evans & Marshall 1980"
+  },
+  {
+    "id": "gato-diamante-ventanilla-15N",
+    "note": "La misma idea con la fuerza de un gato (15 N): lejos de los ~220 N que harían falta.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "diamante", "claw": "gato", "target": "ventanilla", "type": "aranazo", "force": 15, "length": 25, "tear": false, "method": "puncion", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "glazing.kind": { "value": "templado" },
+      "glazing.shattered": { "value": false },
+      "glazing.cause": { "value": null },
+      "glazing.bendN": { "min": 520, "max": 560 },
+      "glazing.fragmentMm": { "value": 5.635384615384615, "tol": 1e-06 },
+      "glazing.fragments25": { "value": 90.89965877299267, "tol": 1e-06 },
+      "glazing.pierceN": { "value": 220.54642795680414, "tol": 1e-06 },
+      "verdict": { "value": "PERFORA · ASTILLA" }
+    },
+    "source": "Nielsen, Schneider & Kraus 2022 (perfil y trozos); EN 12150-1 (120 MPa); CEPE R43; Roark (pane_break); glazing.gd; Anstis et al. 1981; Lawn, Evans & Marshall 1980"
+  },
+  {
+    "id": "oso-golpe-parabrisas",
+    "note": "El parabrisas se agrieta en telaraña (se parte desde ~210 N) pero no cae; con 98 J el oso pasa de los 88,7 J que garantiza la homologación: podría atravesarlo.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "oso", "target": "parabrisas", "type": "aranazo", "force": 300, "length": 25, "tear": false, "method": "puncion", "strike": true, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "glazing.kind": { "value": "laminado" },
+      "glazing.cracked": { "value": true },
+      "glazing.penetrationRisk": { "value": true },
+      "glazing.bendN": { "min": 200, "max": 220 },
+      "glazing.penetrationJ": { "value": 88.6824, "tol": 1e-06 },
+      "verdict": { "value": "SE AGRIETA (NO CAE)" }
+    },
+    "source": "Nielsen, Schneider & Kraus 2022 (perfil y trozos); EN 12150-1 (120 MPa); CEPE R43; Roark (pane_break); glazing.gd"
+  },
+  {
+    "id": "gato-golpe-parabrisas",
+    "note": "El gato (~140 N de pico) no lo agrieta.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "none", "claw": "gato", "target": "parabrisas", "type": "aranazo", "force": 15, "length": 25, "tear": false, "method": "puncion", "strike": true, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "glazing.kind": { "value": "laminado" },
+      "glazing.cracked": { "value": false },
+      "glazing.penetrationRisk": { "value": false },
+      "glazing.bendN": { "min": 200, "max": 220 },
+      "glazing.penetrationJ": { "value": 88.6824, "tol": 1e-06 },
+      "verdict": { "value": "NO PERFORA" }
+    },
+    "source": "Nielsen, Schneider & Kraus 2022 (perfil y trozos); EN 12150-1 (120 MPa); CEPE R43; Roark (pane_break); glazing.gd"
+  },
+  {
+    "id": "aguila-zafiro-raya-coche-110N",
+    "note": "Arrastrando con 110 N, la fricción (55 N) mella la punta de zafiro del talón (aguanta ~8 N de lado). Solo informativo: la profundidad no cambia.",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "zafiro", "claw": "aguila", "target": "coche", "type": "aranazo", "force": 110, "length": 25, "tear": false, "method": "rayado", "strike": false, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "tipChip.chipped": { "value": true },
+      "tipChip.chipN": { "value": 8.093478772863389, "tol": 1e-06 },
+      "verdict": { "value": "HASTA EL METAL" },
+      "depthUm": { "value": 669.1936238612836, "tol": 1e-06 }
+    },
+    "source": "Resistencia a flexión del zafiro (hojas técnicas de McDanel y UQG Optics); voladizo de la punta (estimación); fracture.gd"
+  },
+  {
+    "id": "aguila-zafiro-golpe-cochealu",
+    "note": "Golpe de frente: la carga es axial y la punta no se mella (golden 1.x sin cambios).",
+    "input": { "geom": "almendra", "base": "natural", "inlay": "zafiro", "claw": "aguila", "target": "cochealu", "type": "aranazo", "force": 20, "length": 25, "tear": false, "method": "puncion", "strike": true, "passes": 1, "wet": false, "model": "2.0" },
+    "expect": {
+      "tipChip.chipped": { "value": false },
+      "tipChip.chipN": { "value": 8.093478772863389, "tol": 1e-06 },
+      "verdict": { "value": "ATRAVIESA LA CHAPA" },
+      "depthUm": { "value": 35000, "tol": 1e-06 }
+    },
+    "source": "Resistencia a flexión del zafiro (hojas técnicas de McDanel y UQG Optics); voladizo de la punta (estimación); fracture.gd"
+  }
+]

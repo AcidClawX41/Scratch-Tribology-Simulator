@@ -1,6 +1,6 @@
 [package]
 name = "scratch-tribology-simulator"
-version = "1.0.0"
+version = "1.0.1"
 description = "Scratch Tribology Simulator · banco de tribología de uñas, garras y colmillos"
 authors = ["Eric Valls Gramunt"]
 license = "MIT"

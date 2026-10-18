@@ -1,0 +1,303 @@
+[
+  {
+    "id": "masa-por-el-femur",
+    "note": "Fase A. La circunferencia mínima del fémur de Velociraptor (64 mm, α² = 2,008) en la recta de los cuadrúpedos actuales corregida para bípedos: 19,7 kg, ±25 %. Las cuatro reconstrucciones volumétricas recopiladas (9,9-18,3 kg) quedan por debajo.",
+    "input": { "kind": "masa", "femurCircMm": 64.0, "alpha2": 2.008 },
+    "expect": {
+      "cqeKg": { "value": 19.684540, "tol": 0.0001 },
+      "cqeMinKg": { "value": 14.757500, "tol": 0.0001 },
+      "cqeMaxKg": { "value": 24.611581, "tol": 0.0001 },
+      "value": { "value": 19.7, "tol": 1e-12 },
+      "min": { "value": 14.1, "tol": 1e-12 },
+      "max": { "value": 24.6, "tol": 1e-12 }
+    },
+    "source": "Campione et al. 2014, Methods Ecol. Evol. 5:913 (circunferencia y α²); Campione & Evans 2012, BMC Biol. 10:60 (log10 M = 2,754·log10 C − 1,097); Campione & Evans 2020, Biol. Rev. 95:1759 (reconstrucciones volumétricas); paquete MASSTIMATE 2.0-1"
+  },
+  {
+    "id": "agarre-de-un-pie",
+    "note": "Fase A. El agarre de un pie de 19,7 kg escalado desde el gavilán de Cooper hembra (9,77 N con 450 g) con la pendiente de los accipítridos: 382 N (193-1130). Extrapolación de ×44 en masa: por eso la banda es ancha.",
+    "input": { "kind": "agarre", "massKg": 19.7 },
+    "expect": {
+      "value": { "value": 381.536747, "tol": 0.0001 },
+      "min": { "value": 193.276993, "tol": 0.0001 },
+      "max": { "value": 1129.935751, "tol": 0.0001 }
+    },
+    "source": "Sustaita & Hertel 2010, J. Exp. Biol. 213:2617 (tabla 1 y pendientes RMA); Ward et al. 2002 (dispersión entre técnicas); Fowler et al. 2011, PLoS ONE 6:e28964 (el pie agarra como el de un gavilán)"
+  },
+  {
+    "id": "fuerzas-de-la-garra",
+    "note": "Fase A. La réplica de Manning et al. (2006) cargaba 2,5 pesos (981 N con 40 kg): con 19,7 kg, 483 N. La garra sola, con sus músculos, apenas 10 N (19 N con el doble de músculo; Bishop 2019): la fuerza grande la pone el peso del animal.",
+    "input": { "kind": "fuerzas", "massKg": 19.7 },
+    "expect": {
+      "replicaN": { "value": 482.994750, "tol": 0.0001 },
+      "clawMuscleN": { "value": 10.162472, "tol": 0.0001 },
+      "clawMuscleStrongN": { "value": 19.318859, "tol": 0.0001 }
+    },
+    "source": "Manning et al. 2006, Biol. Lett. 2:110 (F = 2,5·m·g); Bishop 2019, PeerJ 7:e7577 (18,9 N con 490 N de peso; ×1,901 con el doble de músculo), escalado con m^(2/3)"
+  },
+  {
+    "id": "carrera-y-salto",
+    "note": "Fase A. Carrera: 10,8 m/s (39 km/h) con el modelo de 20 kg de Sellers & Manning (2007); hasta 13,7 m/s si subestima como a la persona (21 %). Salto: v = √(4·w·f) con 45 J/kg de músculo (gallina de Guinea) y el 13,0 % de la masa en cada pata (avestruz): 4,84 m/s (17 km/h), hasta 5,93 m/s; sube el centro de masas 1,2 m (hasta 1,8).",
+    "input": { "kind": "locomocion" },
+    "expect": {
+      "runMs": { "value": 10.8, "tol": 1e-12 },
+      "runHiMs": { "value": 13.670886, "tol": 0.0001 },
+      "leapMs": { "value": 4.839930, "tol": 0.0001 },
+      "leapHiMs": { "value": 5.927679, "tol": 0.0001 },
+      "leapHeightM": { "value": 1.194296, "tol": 0.0001 },
+      "leapHeightHiM": { "value": 1.791444, "tol": 0.0001 }
+    },
+    "source": "Sellers & Manning 2007, Proc. R. Soc. B 274:2711; Henry et al. 2005, J. Exp. Biol. 208:3293 (45 J/kg, dos tercios del máximo); Hutchinson et al. 2015, PeerJ 3:e1001, tabla 2 (8,498 kg de músculo en una pata de 65,3 kg)"
+  },
+  {
+    "id": "garra-falciforme",
+    "note": "Fase A. El núcleo óseo medido (64,8 mm por la curva exterior) entre la proporción núcleo/estuche de las aves (0,699): una garra de queratina de 92,7 mm; con el 15 % de Manning et al. (2006), 76,2 mm; con el núcleo mayor y la proporción más baja, 95,7. La punta (138 µm) es la de la arpía del banco: sin medición, pregunta abierta.",
+    "input": { "kind": "garra" },
+    "expect": {
+      "keratinMm": { "value": 92.703863, "tol": 0.0001 },
+      "keratinMinMm": { "value": 76.235294, "tol": 0.0001 },
+      "keratinMaxMm": { "value": 95.670996, "tol": 0.0001 },
+      "tipRadiusUm": { "value": 138.197660, "tol": 0.0001 },
+      "tipOpen": { "value": true }
+    },
+    "source": "Norell & Makovicky 1999, Am. Mus. Novit. 3282, tabla 3 (falange ungueal II-3 de IGM 100/985 y 100/982); Hedrick et al. 2019, Ecol. Evol. 9:11545 (IC 95 % 0,693-0,705); Manning et al. 2006, Biol. Lett. 2:110 (≤ 15 %); Fowler et al. 2011 (análogo: el talón del dedo II de las accipítridas)"
+  },
+  {
+    "id": "area-frontal",
+    "note": "Fase A (para el coche en marcha de la fase B). El cuerpo emplumado frena como el de un ave grande: S_b = 0,00813·m^0,666 = 0,059 m² con 19,7 kg (extrapolado desde las aves medidas).",
+    "input": { "kind": "frontal", "massKg": 19.7 },
+    "expect": {
+      "areaM2": { "value": 0.0591841, "tol": 0.0001 }
+    },
+    "source": "Pennycuick et al. 1988, J. Exp. Biol. 135:253"
+  },
+  {
+    "id": "diamante-afilado-a-1-micra",
+    "note": "Fase A. Garra de diamante con el semiángulo de 15°: con la punta natural (138 µm) aguanta ~45 N de lado; afilada a 1 µm, 2,3 mN (la carga crece con R²). La presión elástica con la misma fuerza sube ×26,7. Su distancia crítica (0,47 µm) es menor que la sección más cargada (1,15 µm): la resistencia medida manda y se mella de verdad.",
+    "input": {
+      "kind": "afilado", "material": "diamante", "r0Um": 138.2, "rUm": 1.0, "alphaDeg": 15.0, "lateralN": 0.001,
+      "strength": { "value": 2790.0, "min": 1740.0, "max": 3840.0, "kind": "flexion", "kic": 3.4, "source": "Balmer et al. 2009 (placas de diamante IIa en voladizo, 2790 ± 1050 MPa); Field & Freeman 1981 (3,4 MPa·√m); datos de claw_fracture.gd, unidad 4d" }
+    },
+    "expect": {
+      "chipN": { "value": 0.00233351852, "tol": 0.0001 },
+      "chipMinN": { "value": 0.00145531262, "tol": 0.0001 },
+      "chipMaxN": { "value": 0.00321172440, "tol": 0.0001 },
+      "chipNaturalN": { "value": 44.5684307, "tol": 0.0001 },
+      "pressureGain": { "value": 26.7303941, "tol": 0.0001 },
+      "criticalUm": { "value": 0.47271519, "tol": 0.0001 },
+      "peakRUm": { "value": 1.15099048, "tol": 0.0001 },
+      "sizeEffect": { "value": false },
+      "mode": { "value": "intacta" }
+    },
+    "source": "Viga en voladizo de la punta (Fracture.tip_chip_load, unidad 1f; claw_fracture.gd, unidad 4d); Pattrick et al. 2018, J. Exp. Biol. 221:jeb188391 (carga ∝ D²); Taylor 2007 (distancia crítica); Johnson 1985 (Hertz)"
+  },
+  {
+    "id": "vidrio-afilado-a-1-micra",
+    "note": "Fase A. Garra de strass (vidrio): con la punta natural aguanta 0,72 N de lado; afilada a 1 µm, 38 µN según la resistencia de una hoja de ventana (45 MPa). Pero esa resistencia la fijan arañazos de ~90 µm (su distancia crítica) y la punta mide 1 µm: aguantaría más de lo que dice el modelo (efecto de escala, del lado seguro).",
+    "input": {
+      "kind": "afilado", "material": "vidrio", "r0Um": 138.2, "rUm": 1.0, "alphaDeg": 15.0, "lateralN": 0.001,
+      "strength": { "value": 45.0, "min": 45.0, "max": 45.0, "kind": "flexion", "kic": 0.75, "source": "EN 572-1 (45 MPa, vidrio recocido) y K_c 0,75 MPa·√m (fracture.gd); datos de claw_fracture.gd, unidad 4d" }
+    },
+    "expect": {
+      "chipN": { "value": 0.0000376373959, "tol": 0.0001 },
+      "chipNaturalN": { "value": 0.718845657, "tol": 0.0001 },
+      "criticalUm": { "value": 88.4194128, "tol": 0.0001 },
+      "sizeEffect": { "value": true },
+      "mode": { "value": "mella" }
+    },
+    "source": "EN 572-1; Taylor 2007 (L = (K_c/σ)²/π); viga en voladizo de la punta (unidades 1f y 4d)"
+  },
+  {
+    "id": "zafiro-la-punta-mas-fina-que-aguanta",
+    "note": "Fase A. ¿Hasta dónde se puede afilar una garra de zafiro (760 MPa) que tiene que aguantar 10 N de lado? Hasta ~125 µm de radio: la punta natural del velocirraptor (138 µm) apenas pasa; afilada más, se mella.",
+    "input": { "kind": "afilado_limite", "material": "zafiro", "alphaDeg": 15.0, "sigmaMPa": 760.0, "lateralN": 10.0 },
+    "expect": {
+      "sharpestUm": { "value": 125.426608, "tol": 0.0001 }
+    },
+    "source": "Saint-Gobain Crystals (zafiro: 760 MPa perpendicular al eje c; claw_fracture.gd, unidad 4d); viga en voladizo de la punta"
+  },
+  {
+    "id": "acero-afilado-se-dobla",
+    "note": "Fase A. Una garra de acero (200 HV) afilada a 20 µm fluye a 700 MPa (H/2,8): con 1 N de lado no estalla, se dobla (aguanta 0,23 N). Los dúctiles no tienen distancia crítica.",
+    "input": {
+      "kind": "afilado", "material": "acero", "r0Um": 138.2, "rUm": 20.0, "alphaDeg": 15.0, "lateralN": 1.0,
+      "strength": { "value": 700.5, "min": 700.5, "max": 700.5, "kind": "fluencia", "kic": null, "source": "Tabor 1951: H/2,8 con 200 HV (claw_fracture.gd, unidad 4d)" }
+    },
+    "expect": {
+      "chipN": { "value": 0.234355518, "tol": 0.0001 },
+      "mode": { "value": "dobla" },
+      "bends": { "value": true },
+      "breaks": { "value": false },
+      "criticalUm": { "value": null }
+    },
+    "source": "Tabor 1951 (H ≈ 2,8·σ); viga en voladizo de la punta"
+  },
+  {
+    "id": "presion-con-la-misma-fuerza",
+    "note": "Fase A. Punta de diamante contra acero inoxidable (200 HV) con 1 N. Natural (138 µm): pico elástico de 6,9 GPa, el acero empieza a ceder con 4,3 mN y la huella plástica mide 0,59 µm de hondo. Afilada a 1 µm: 184 GPa elásticos (sobre el papel: cede mucho antes), cede con 0,23 µN y la huella baja a 45 µm. Con poca fuerza, afilar lo cambia todo.",
+    "input": { "kind": "presion", "r0Um": 138.2, "rUm": 1.0, "alphaDeg": 15.0, "forceN": 1.0, "eToolGPa": 1050.0, "eTargetGPa": 193.0, "hMPa": 1961.4 },
+    "expect": {
+      "p0NaturalMPa": { "value": 6876.77118, "tol": 0.0001 },
+      "p0MPa": { "value": 183818.804, "tol": 0.0001 },
+      "yieldOnsetNaturalN": { "value": 0.00432942920, "tol": 0.0001 },
+      "yieldOnsetN": { "value": 0.000000226680708, "tol": 0.0001 },
+      "depthNaturalUm": { "value": 0.588398323, "tol": 0.0001 },
+      "depthUm": { "value": 44.6796189, "tol": 0.0001 }
+    },
+    "source": "Hertz y la cesión bajo una esfera, p0 = 1,6·Y (Johnson 1985); Tabor 1951 (H ≈ 2,8·Y); huella plástica con la presión media igual a la dureza"
+  },
+  {
+    "id": "compromiso-velocirraptor-diamante",
+    "note": "Fase A. Garra de diamante del velocirraptor apretando acero con el agarre de un pie (381,5 N) y μ = 0,1 (38 N de lado). Sin afilar aguanta 45 N de lado: resiste. Afilada a media escala (2,35 µm) entra más (922 µm frente a 533) pero se mella con 13 mN. Con ese agarre no se puede afilar por debajo de ~128 µm.",
+    "input": {
+      "kind": "compromiso", "material": "diamante", "r0Um": 138.2, "alphaDeg": 15.0, "sharpness": 0.5, "eToolGPa": 1050.0, "forceN": 381.5, "mu": 0.1, "eTargetGPa": 193.0, "hMPa": 1961.4,
+      "strength": { "value": 2790.0, "min": 1740.0, "max": 3840.0, "kind": "flexion", "kic": 3.4, "source": "Balmer et al. 2009; Field & Freeman 1981; datos de claw_fracture.gd, unidad 4d" }
+    },
+    "expect": {
+      "tipRadiusUm": { "value": 2.35116992, "tol": 0.0001 },
+      "lateralN": { "value": 38.15, "tol": 0.000001 },
+      "chipN": { "value": 0.0128996905, "tol": 0.0001 },
+      "chipNaturalN": { "value": 44.5684307, "tol": 0.0001 },
+      "pressureGain": { "value": 15.1175942, "tol": 0.0001 },
+      "depthUm": { "value": 921.884304, "tol": 0.0001 },
+      "depthNaturalUm": { "value": 532.853560, "tol": 0.0001 },
+      "sharpestSurvivingUm": { "value": 127.862044, "tol": 0.0001 },
+      "survives": { "value": false },
+      "fracture.mode": { "value": "mella" }
+    },
+    "source": "Sustaita & Hertel 2010 (agarre escalado); Balmer et al. 2009 (resistencia del diamante, unidad 4d); viga en voladizo de la punta; huella plástica"
+  },
+  {
+    "id": "masa-garra-velocirraptor-tungsteno",
+    "note": "Fase A. Las dos garras falciformes de carburo de tungsteno (el largo de la queratina con la base medida del hueso, 3,2 cm³): 48 g cada una frente a 4 g de queratina. +88 g en un animal de 19,7 kg (0,45 %): con el mismo trabajo muscular golpea un 0,2 % más lento y con la misma energía. Apenas cambia.",
+    "input": { "kind": "masa_garra", "inlay": "tungsteno", "reachMm": 92.7, "heightMm": 18.7, "widthMm": 7.1, "nClaws": 2, "animalKg": 19.7, "strikeMKg": 9.85, "strikeVMs": 4.84 },
+    "expect": {
+      "volumeMm3": { "value": 3222.16901, "tol": 0.0001 },
+      "clawKg": { "value": 0.0481069833, "tol": 0.0001 },
+      "keratinKg": { "value": 0.00422104140, "tol": 0.0001 },
+      "addedKg": { "value": 0.0877718838, "tol": 0.0001 },
+      "bodyShare": { "value": 0.00445542560, "tol": 0.0001 },
+      "sameWorkSpeed": { "value": 0.997779704, "tol": 0.000001 },
+      "sameWorkEnergy": { "value": 1.0, "tol": 1e-12 },
+      "noticeable": { "value": false }
+    },
+    "source": "General Carbide GC-005 (14,82-15,04 g/cm³); Mason 1963 (queratina, 1,28-1,34 g/cm³); Norell & Makovicky 1999 (base de la garra)"
+  },
+  {
+    "id": "masa-garra-velocirraptor-oro-cono-del-motor",
+    "note": "Fase A. Aun con el cono generoso del motor (base de 0,15 × alcance: 18,8 cm³) y el material más denso (oro, 19,3 g/cm³), las dos garras suman 0,68 kg de más: el 3,4 % del animal. Apenas cambia.",
+    "input": { "kind": "masa_garra", "inlay": "oro", "reachMm": 92.7, "nClaws": 2, "animalKg": 19.7, "strikeMKg": 9.85, "strikeVMs": 4.84 },
+    "expect": {
+      "volumeMm3": { "value": 18769.3978, "tol": 0.0001 },
+      "clawKg": { "value": 0.362249377, "tol": 0.0001 },
+      "bodyShare": { "value": 0.0342803519, "tol": 0.0001 },
+      "sameSpeedEnergy": { "value": 1.03428035, "tol": 0.000001 },
+      "noticeable": { "value": false }
+    },
+    "source": "Royal Society of Chemistry (oro, 19,3 g/cm³, del CRC Handbook); Physics.MODEL.clawBase (0,15)"
+  },
+  {
+    "id": "masa-daga-de-oro-del-casuario",
+    "note": "Fase A. La daga del casuario (110 mm, cono del motor: 31 cm³) de oro pesa 0,61 kg: un 11 % más de masa eficaz en su patada (5 kg). Con el mismo trabajo muscular sale un 5 % más lenta y con la misma energía; si la velocidad la impone otra cosa, suma 18 J. Aquí sí se nota algo.",
+    "input": { "kind": "masa_garra", "inlay": "oro", "reachMm": 110.0, "nClaws": 1, "animalKg": 60.0, "strikeMKg": 5.0, "strikeVMs": 8.0 },
+    "expect": {
+      "volumeMm3": { "value": 31360.9487, "tol": 0.0001 },
+      "clawKg": { "value": 0.605266309, "tol": 0.0001 },
+      "strikeShare": { "value": 0.112836693, "tol": 0.0001 },
+      "sameWorkSpeed": { "value": 0.947947491, "tol": 0.000001 },
+      "extraJ": { "value": 18.0538709, "tol": 0.0001 },
+      "noticeable": { "value": true }
+    },
+    "source": "Royal Society of Chemistry (oro); catálogo 1.x del casuario (alcance y golpe); primer principio: con el mismo trabajo, la misma energía"
+  },
+  {
+    "id": "banco-velocirraptor-golpe-brazo",
+    "note": "Fase B, a través de Physics.compute con el catálogo 2.0. El golpe de la ficha: cae con los dos pies a la velocidad del salto, v = 4,84 m/s, y cada pie lleva la mitad de la masa, m = 9,85 kg: ½·m·v² = 0,5 × 9,85 × 4,84² = 115,4 J. La daga de queratina (32 HV) no marca el húmero (47,25 HV: r = 0,68 < 1,25), así que topa con él a 41,4 mm, como la del casuario, y le sobra energía.",
+    "input": { "kind": "banco", "claw": "velociraptor", "target": "piel", "force": 381.5, "method": "puncion", "strike": true },
+    "expect": {
+      "energyJ": { "value": 115.37108, "tol": 1e-9 },
+      "verdict": { "value": "PUNCIÓN HASTA EL HUESO" },
+      "depthUm": { "value": 41400.0 },
+      "pen.stoppedBy": { "value": "hueso" },
+      "pen.boneIndentUm": { "value": 0.0 },
+      "pen.energyLeftJ": { "min": 100.0 }
+    },
+    "source": "velociraptor.gd (golpe de la ficha: salto de Henry et al. 2005 y Hutchinson et al. 2015; la mitad de la masa, estimación); Li 2021 (húmero 47,25 HV); Richardson 1968 (r < 1,25 no marca)"
+  },
+  {
+    "id": "banco-velocirraptor-raya-el-coche",
+    "note": "Fase B, a través de Physics.compute. La garra de queratina (32 HV) raya la pintura (20 HV: r = 32/20 = 1,6 > 1,2) hasta el metal, a 110 µm, pero no el acero de horno de la chapa (101 HV: r = 32/101 = 0,32 < 0,8): con el agarre de un pie (381,5 N) se queda en la chapa.",
+    "input": { "kind": "banco", "claw": "velociraptor", "target": "coche", "force": 381.5, "method": "rayado", "strike": false },
+    "expect": {
+      "verdict": { "value": "HASTA EL METAL" },
+      "depthUm": { "value": 110.0, "tol": 1e-9 },
+      "ratio": { "value": 1.6, "tol": 1e-12 }
+    },
+    "source": "McKittrick et al. 2012 (queratina de garra, 32 HV); docs/FISICA.md §4 (criterio de Pintaude, r < 0,8) y §14 (acero de horno de 101 HV, pintura de 110 µm y 20 HV)"
+  },
+  {
+    "id": "banco-velocirraptor-diamante-afilado-acero",
+    "note": "Fase B, a través de Physics.compute. Garra de diamante afilada a media escala (s = 0,5) rayando acero inoxidable (200 HV, μ = 0,5 en el banco) con el agarre de un pie (381,5 N). Radio: √(138,2 µm × 0,04 µm) = 2,351 µm. Surco: la mitad de la huella soporta la carga al rayar, a = √(2·F/(π·H)) = √(2 × 381,5/(π × 1961,4)) = 0,352 mm, y en el cono h = a/tan 15° − R·(1 − sen 15°)/sen 15° = 1,3133 − 0,0067 = 1,3066 mm (con la punta natural, 1,3133 − 0,3958 = 0,9176 mm): entra un 42 % más. Mellado: F = σ·(27π/16)·R²·sen α·(1 − sen α)²/cos³α = 2790 × 0,83637 × (0,002351)² = 12,9 mN, y la fricción le da μ·F = 0,5 × 381,5 = 190,75 N: se mella (con ese empuje, la punta no podría bajar de √(190,75/(2790 × 0,83637)) = 0,286 mm). Presión: ×(138,2/2,351)^(2/3) = ×15,1.",
+    "input": { "kind": "banco", "claw": "velociraptor", "inlay": "diamante", "target": "acero", "force": 381.5, "method": "rayado", "strike": false, "sharpness": 0.5 },
+    "expect": {
+      "verdict": { "value": "RAYA" },
+      "depthUm": { "value": 1306.6, "tol": 0.0001 },
+      "sharpness.tipRadiusUm": { "value": 2.35115, "tol": 0.00001 },
+      "sharpness.chipN": { "value": 0.012898, "tol": 0.0002 },
+      "sharpness.chipNaturalN": { "value": 44.567, "tol": 0.0001 },
+      "sharpness.lateralN": { "value": 190.75, "tol": 1e-12 },
+      "sharpness.fracture.mode": { "value": "mella" },
+      "sharpness.survives": { "value": false },
+      "sharpness.sharpestSurvivingUm": { "value": 285.91, "tol": 0.0001 },
+      "sharpness.pressureGain": { "value": 15.1175, "tol": 0.0001 }
+    },
+    "source": "Balmer et al. 2009 (diamante, 2790 MPa a flexión; claw_fracture.gd, unidad 4d); Roscioli et al. 2020 (filo de 40 nm); Tabor 1951 y docs/FISICA.md §5 (H·π·a²/2 al rayar); docs/fisica/velociraptor.md §3.3 (viga en voladizo)"
+  },
+  {
+    "id": "banco-casuario-patada-brazo",
+    "note": "Fase B (la patada del casuario en el banco = la del coche en marcha, MovingCar.KICK, unidad 4d). v = √(4·w·f) = √(4 × 45 × 0,13014) = 4,840 m/s; m = f·M = 0,13014 × 58 kg = 7,548 kg (los músculos de la pata que patea de la hembra del coche en marcha; unidad 4i-B2: antes, los 60 kg sin fuente de la 1.x, 7,808 kg); ½·m·v² = 2·w·f²·M = 2 × 45 × 0,13014² × 58 = 88,41 J (con 60 kg, 91,45), no los 160 J de la 1.x. La daga de queratina sigue topando con el húmero a 41,4 mm y le sobran ~109 J (con 60 kg, 112; con 160 J, 180).",
+    "input": { "kind": "banco", "claw": "casuario", "target": "piel", "force": 500.0, "method": "puncion", "strike": true },
+    "expect": {
+      "energyJ": { "value": 88.405156, "tol": 0.00001 },
+      "verdict": { "value": "PUNCIÓN HASTA EL HUESO" },
+      "depthUm": { "value": 41400.0 },
+      "pen.energyLeftJ": { "value": 108.826653, "tol": 0.000001 }
+    },
+    "source": "Henry et al. 2005 (45 J por kg de músculo en el salto máximo de la gallina de Guinea); Hutchinson et al. 2015 (8,498 kg de músculo en una pata de avestruz de 65,3 kg); MovingCar.kick_leap_ms (unidad 4d)"
+  },
+  {
+    "id": "banco-casuario-patada-puerta-de-roble",
+    "note": "Fase B. Con la patada de la 2.0 (88,41 J con la hembra de 58 kg; unidad 4i-B2: con los 60 kg de la 1.x eran 91,45 J y 30,8 mm) y su fuerza de ficha (500 N), la daga del casuario se queda clavada a ~30,5 mm en la puerta de roble de 35 mm: ya no es la única que la atraviesa, como en la 1.x (160 J). La madera absorbe ~104 J (el golpe más el trabajo del empuje).",
+    "input": { "kind": "banco", "claw": "casuario", "target": "puertamadera", "force": 500.0, "method": "puncion", "strike": true },
+    "expect": {
+      "verdict": { "value": "CLAVADA EN LA MADERA" },
+      "through": { "value": false },
+      "depthUm": { "value": 30518.52, "tol": 0.00001, "max": 35000.0 }
+    },
+    "source": "MovingCar.KICK (unidad 4d; Henry et al. 2005, Hutchinson et al. 2015); The Wood Database (roble, dureza Janka); docs/FISICA.md §6 (laca sobre roble)"
+  },
+  {
+    "id": "banco-casuario-patada-banda-alta-puerta",
+    "note": "Fase B, la banda alta de la patada: todo el trabajo de los músculos de la pata que patea, w·f·M = 45 × 0,13014 × 58 = 339,7 J (= ½·(M/2)·v², el pie con la mitad del impulso del salto, como el velocirraptor; con los 60 kg de la 1.x, 351,4 J). Con ella la daga sí atraviesa la puerta de roble: la incertidumbre de la masa eficaz decide el resultado.",
+    "input": { "kind": "banco", "claw": "casuario", "target": "puertamadera", "force": 500.0, "method": "puncion", "strike": true, "strikeBand": "max" },
+    "expect": {
+      "energyJ": { "value": 339.659724, "tol": 0.00001 },
+      "verdict": { "value": "ATRAVIESA LA PUERTA" },
+      "through": { "value": true }
+    },
+    "source": "Henry et al. 2005; Hutchinson et al. 2015; ClawsV2.kick_strike (banda alta)"
+  },
+  {
+    "id": "masa-daga-de-oro-del-casuario-patada-2-0",
+    "note": "Fase B. La daga de oro del casuario (0,61 kg con el cono del motor) con el golpe de la 2.0, la patada del coche en marcha (m = f·58 kg = 7,55 kg, v = 4,84 m/s; unidad 4i-B2: antes, con 60 kg, 7,81 kg y un 7,2 %): la queratina pesaría 0,041 kg, así que suma 0,564 kg, un 7,5 % de la masa eficaz (con los 5 kg de la 1.x era un 11 %). Con el mismo trabajo sale un 3,5 % más lenta; si la velocidad la impone otra cosa, suma ½ × 0,564 × 4,84² = 6,6 J. Sigue notándose (≥ 5 %).",
+    "input": { "kind": "masa_garra", "inlay": "oro", "reachMm": 110.0, "nClaws": 1, "animalKg": 58.0, "strikeMKg": 7.547993874425727, "strikeVMs": 4.839918240611507 },
+    "expect": {
+      "clawKg": { "value": 0.605266309, "tol": 0.0001 },
+      "strikeShare": { "value": 0.0747461, "tol": 0.0001 },
+      "sameWorkSpeed": { "value": 0.9645995, "tol": 0.000001 },
+      "extraJ": { "value": 6.6079449, "tol": 0.0001 },
+      "noticeable": { "value": true }
+    },
+    "source": "Royal Society of Chemistry (oro); Mason 1963 (queratina); MovingCar.KICK (unidad 4d: la patada del casuario); primer principio"
+  }
+]

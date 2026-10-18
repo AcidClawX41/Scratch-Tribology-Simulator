@@ -11,6 +11,19 @@ against materials from human skin to diamond, using published physical models an
 equation and its source is in the [README](https://github.com/{{REPO}}#the-physics-models-and-equations)
 and in [`docs/FISICA.md`](https://github.com/{{REPO}}/blob/{{VERSION}}/docs/FISICA.md).
 
+### What's new in 1.0.1
+
+- **Sound on Linux.** The 1.0.0 AppImage was silent on every distribution: its launcher pointed GStreamer at a
+  plugin folder that wasn't there (tauri-apps/tauri#15665). The AppImage now carries only the GStreamer plugins that
+  Web Audio needs (8.6 MB instead of ~35 MB with all of them). The `.deb` requires the system plugins and the `.rpm`
+  recommends them, so it still installs on openSUSE.
+- **Licences:** the libraries inside the AppImage, with their exact versions, are listed in
+  `…_linux-appimage-licenses.txt`, attached to this release.
+- **Recent Mesa (Ubuntu 26.04, Fedora 44):** the AppImage is built with the linuxdeploy that Tauri 2.12 will ship,
+  which leaves out the bundled `libwayland-client` that made it abort with `EGL_BAD_PARAMETER`
+  (tauri-apps/tauri#15976). Tested in containers without a GPU; if it still fails on your machine, use the `.deb` or
+  the `.rpm`.
+
 ### Highlights
 
 - **Cars, perforated for real:** classic mild steel (~0.9 mm), modern bake-hardening steel (0.7 mm),
@@ -47,7 +60,7 @@ analytics or any other external call.
 
 ### Verified before release
 
-- 115 automated tests, including 40 golden reference scenarios and physical invariants.
+- 121 automated tests, including 40 golden reference scenarios, physical invariants and packaging checks.
 - A sweep of the whole catalogue: 603,228 runs with no broken result.
 - CI on every change: the desktop frontend, the native shell (`rustfmt`, `clippy`), and the mobile app's
   smoke test and Metro bundle for Android and iOS.

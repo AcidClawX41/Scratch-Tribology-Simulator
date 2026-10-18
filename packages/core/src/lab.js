@@ -90,7 +90,7 @@ export const FUNDAMENTOS_NOTE = "Mohs es ordinal y no lineal; el motor calcula e
 
 /** Versión que enseñan las dos apps en el pie. Un test comprueba que es la de package.json, app.json,
  *  tauri.conf.json y Cargo.toml (la de los instaladores y las tiendas). */
-export const APP_VERSION = "1.0.0";
+export const APP_VERSION = "1.0.1";
 
 /** Aviso de licencia del pie de las dos apps (textos completos en LICENSE y THIRD-PARTY-NOTICES.md). */
 export const LICENSE_NOTE = `Scratch Tribology Simulator ${APP_VERSION} © 2026 Eric Valls Gramunt · Licencia MIT. Tipografías Syne y Space Mono: SIL Open Font License 1.1.`;

@@ -1,0 +1,573 @@
+[
+  {
+    "id": "kennedy-diamante",
+    "note": "Línea de Kennedy: P (kbar) = 19,4 + T/40. A 1345 °C, 19,4 + 33,625 = 53,025 kbar = 5302,5 MPa: con los 5,5 GPa de Sumiya el diamante es estable. A 5500 MPa la temperatura más alta es (55 − 19,4)·40 = 1424 °C; por encima sale grafito.",
+    "input": {
+      "kind": "kennedy",
+      "tC": 1345.0,
+      "pMPa": 5500.0
+    },
+    "expect": {
+      "pMinMPa": {
+        "value": 5302.5,
+        "tol": 1e-12
+      },
+      "tMaxC": {
+        "value": 1424.0,
+        "tol": 1e-12
+      }
+    },
+    "source": "Kennedy CS, Kennedy GC (1976), J. Geophys. Res. 81:2467; Sumiya H et al. (2002), J. Cryst. Growth 237-239:1281"
+  },
+  {
+    "id": "kingery-vidrio",
+    "note": "Salto que aguanta el vidrio sodocálcico con un enfriamiento brusco: ΔT = σ·(1 − ν)/(E·α) = 45 × 0,7/(70 000 × 9·10⁻⁶) = 31,5/0,63 = 50 K (el orden de los ~40-60 K que se citan para el vidrio recocido).",
+    "input": {
+      "kind": "kingery",
+      "sigmaMPa": 45.0,
+      "eGPa": 70.0,
+      "alpha": 9e-06
+    },
+    "expect": {
+      "dtK": {
+        "value": 50.0,
+        "tol": 1e-12
+      }
+    },
+    "source": "Kingery WD (1955), J. Am. Ceram. Soc. 38:3; EN 572-1 (45 MPa, 70 GPa, 9·10⁻⁶ 1/K)"
+  },
+  {
+    "id": "manson-psi",
+    "note": "Factor de Manson: 1/ψ = 1,5 + 3,25/β − 0,5·e^(−16/β). β = 1: 1/(4,75 − 0,5·e^(−16)) = 0,2105263; β = 4: 1/(1,5 + 0,8125 − 0,5·e^(−4)) = 0,4341517; β = 13: 1/(1,5 + 0,25 − 0,5·e^(−1,2308)) = 0,6234546.",
+    "input": {
+      "kind": "manson",
+      "betas": [
+        1.0,
+        4.0,
+        13.0
+      ]
+    },
+    "expect": {
+      "psi0": {
+        "value": 0.210526318283328,
+        "tol": 1e-12
+      },
+      "psi1": {
+        "value": 0.4341517332690756,
+        "tol": 1e-12
+      },
+      "psi2": {
+        "value": 0.6234545776156118,
+        "tol": 1e-12
+      }
+    },
+    "source": "Manson SS (1966), Thermal Stress and Low-Cycle Fatigue; Lu TJ, Fleck NA (1998), Acta Mater. 46:4755"
+  },
+  {
+    "id": "temple-alumina-calibrado",
+    "note": "Probeta de alúmina de 3 mm (a = 1,5 mm) templada en agua: brusco, ΔT = 379 × 0,7/(370 000 × 8,2·10⁻⁶) = 87,44 K; con h = 8·10⁴ W/(m²·K) y k = 30 W/(m·K), β = 80 000 × 0,0015/30 = 4 y ψ = 0,43415: aguanta 87,44/0,43415 = 201,4 °C, dentro de los 170-300 °C medidos. Así se calibra el agua.",
+    "input": {
+      "kind": "temple",
+      "material": "alumina",
+      "medium": "agua",
+      "aMm": 1.5
+    },
+    "expect": {
+      "limitC": {
+        "value": 201.40958487192137,
+        "tol": 1e-09,
+        "min": 170.0,
+        "max": 300.0
+      }
+    },
+    "source": "CoorsTek AD-995 (ficha técnica); Morgan Technical Ceramics (170-300 °C); Manson (1966)"
+  },
+  {
+    "id": "temple-bola-de-zafiro",
+    "note": "Bola de Verneuil de 13 mm (a = 6,5 mm) a 2100 °C: brusco, ΔT = 760 × 0,7/(400 000 × 8,8·10⁻⁶) = 151,14 K. En agua, β = 80 000 × 0,0065/40 = 13, ψ = 0,62345: aguanta 242,4 °C y el salto es de 2080 °C, se agrieta. En aceite (h = 23 000), β = 3,7375: aguanta 357,1 °C, también. Al aire (h = 15), β = 0,0024 y aguanta ~2·10⁵ °C: se enfría entera.",
+    "input": {
+      "kind": "temple_zafiro"
+    },
+    "expect": {
+      "agua": {
+        "value": 242.4176019596829,
+        "tol": 1e-09
+      },
+      "aceite": {
+        "value": 357.0823846842635,
+        "tol": 1e-09
+      },
+      "aire": {
+        "min": 100000.0
+      },
+      "aguaDefect": {
+        "value": "choque"
+      },
+      "aireOk": {
+        "value": true
+      }
+    },
+    "source": "Saint-Gobain Sapphire Products (760 MPa, 400 GPa, 8,8·10⁻⁶ 1/K, 40 W/(m·K)); Kingery (1955); Manson (1966)"
+  },
+  {
+    "id": "desconchado-del-borde",
+    "note": "Chai y Lawn: F = β·K_c·d^(3/2) con β = 9. Borde de 1 mm (d^(3/2) = 3,162·10⁻⁵ m^(3/2)): vidrio (0,75 MPa·√m), 9 × 0,75·10⁶ × 3,162·10⁻⁵ = 213,45 N; zafiro (2,4), 683,05 N.",
+    "input": {
+      "kind": "desconchado",
+      "kics": [
+        0.75,
+        2.4
+      ],
+      "dMm": 1.0
+    },
+    "expect": {
+      "f0": {
+        "value": 213.45374206136563,
+        "tol": 1e-12
+      },
+      "f1": {
+        "value": 683.05197459637,
+        "tol": 1e-12
+      }
+    },
+    "source": "Chai H, Lawn BR (2007), Acta Mater. 55:2555"
+  },
+  {
+    "id": "regimen-ductil",
+    "note": "Bifano: d_c = 0,15·(E/H)·(K_c/H)². Zafiro: H = 2000 × 9,807 = 19 614 MPa, E/H = 20,39, (K_c/H)² = (2,4/19 614)² m = 1,497·10⁻⁸ m: d_c = 0,0458 µm. Metal duro (620 GPa, 2000 HV, 8,36 MPa·√m): 0,861 µm. El grano de la muela de diamante de 45 µm con 10 N hunde ~0,07 µm: talla el metal duro sin grietas y el zafiro, con microgrietas.",
+    "input": {
+      "kind": "bifano",
+      "rows": [
+        [
+          400.0,
+          2000.0,
+          2.4
+        ],
+        [
+          620.0,
+          2000.0,
+          8.36
+        ]
+      ]
+    },
+    "expect": {
+      "dc0": {
+        "value": 0.04580102748329846,
+        "tol": 1e-12
+      },
+      "dc1": {
+        "value": 0.8613843767560658,
+        "tol": 1e-12
+      }
+    },
+    "source": "Bifano TG, Dow TA, Scattergood RO (1991), J. Eng. Ind. 113:184"
+  },
+  {
+    "id": "union-epoxi-natural",
+    "note": "La queratina bajo la unión aguanta σ/2 × 0,25 = 69 × 0,125 = 8,625 MPa (natural), menos que el epoxi (14,9 MPa): manda la queratina, como en las herraduras pegadas. Con 178,69 mm² pegados: 8,625 × 178,69 = 1541,2 N.",
+    "input": {
+      "kind": "union",
+      "adhesive": "epoxi",
+      "gapMm": 0.15,
+      "areaMm2": 178.69,
+      "humidity": "natural"
+    },
+    "expect": {
+      "capacityN": {
+        "value": 1541.20125,
+        "tol": 1e-12
+      },
+      "tauMPa": {
+        "value": 8.625,
+        "tol": 1e-12
+      },
+      "limitedBy": {
+        "value": "queratina"
+      },
+      "cures": {
+        "value": true
+      }
+    },
+    "source": "Henkel, LOCTITE Design Guide for Bonding Metals (E-20HP); Taylor et al. (2004), 69 MPa; Farren et al. (2004), ×0,25; Ferreira et al. (2024)"
+  },
+  {
+    "id": "union-empapada-y-holgura",
+    "note": "Empapada, la queratina aguanta 14 × 0,125 = 1,75 MPa: 1,75 × 178,69 = 312,71 N. El cianoacrilato con 0,2 mm de holgura no cura (llena 0,15 mm): 0 N.",
+    "input": {
+      "kind": "union2"
+    },
+    "expect": {
+      "wetN": {
+        "value": 312.7075,
+        "tol": 1e-12
+      },
+      "cyanoCures": {
+        "value": false
+      },
+      "cyanoN": {
+        "value": 0.0
+      }
+    },
+    "source": "Taylor et al. (2004), 14 MPa a 100 % HR; Henkel, LOCTITE 401 (0,05-0,15 mm)"
+  },
+  {
+    "id": "funda-del-aguila",
+    "note": "Garra del águila: área de punta 0,04 mm² (R = 0,11284 mm), semiángulo 15°. A 14 mm del vértice el radio es a_t + (14 − h_t)·tan 15° = 0,10899 + 13,9164 × 0,26795 = 3,83787 mm; con 1 mm de pared, 4,83787 mm. Superficie pegada ≈ la del cono desde el vértice, π·r·r/sen 15° = 178,79 mm² (el motor integra la punta esférica: 178,69). Pared: 2π·w·∫r + π·w²·14 + π·w³ = 2π × 27,471 + 43,98 + 3,14 = 219,73 mm³. Bloque del que se talla: π × 4,83787² × 15 = 1102,94 mm³.",
+    "input": {
+      "kind": "funda",
+      "animal": "rapaz",
+      "claw": "aguila",
+      "coverMm": 14.0,
+      "wallMm": 1.0
+    },
+    "expect": {
+      "outerRadiusMm": {
+        "value": 4.837872272794279,
+        "tol": 1e-09
+      },
+      "innerAreaMm2": {
+        "value": 178.78648089656235,
+        "tol": 0.005
+      },
+      "volumeMm3": {
+        "value": 219.73047321990916,
+        "tol": 0.005
+      },
+      "rawVolumeMm3": {
+        "value": 1102.935023875966,
+        "tol": 1e-09
+      }
+    },
+    "source": "garra del águila del banco (Data.CLAWS: área 0,04 mm², 15°, alcance 35 mm; base 0,15 × alcance)"
+  },
+  {
+    "id": "crecer-la-funda",
+    "note": "Verneuil a ~10 mm/h: la funda del águila mide 14 + 1 = 15 mm, 1,5 h = 5400 s. HPHT a 7 mg/h: el bloque de diamante pesa 3515 kg/m³ × 1102,94 mm³ = 3,8768 g = 3876,8 mg, 553,8 h (unos 23 días). CVD a 100 µm/h: 1 mm de pared, 10 h = 36 000 s.",
+    "input": {
+      "kind": "crecimiento",
+      "animal": "rapaz",
+      "claw": "aguila"
+    },
+    "expect": {
+      "verneuilS": {
+        "value": 5400.0,
+        "tol": 1e-12
+      },
+      "hphtMg": {
+        "value": 3876.816608924021,
+        "tol": 1e-09
+      },
+      "hphtS": {
+        "value": 1993791.3988752107,
+        "tol": 1e-09
+      },
+      "cvdS": {
+        "value": 36000.0,
+        "tol": 1e-12
+      }
+    },
+    "source": "Scheel (2000) y The Gemology Project (Verneuil, ~10 mm/h); Sumiya et al. (2002), 6-8 mg/h; Yan et al. (2002), 50-150 µm/h; Handbook of Mineralogy (diamante 3,515)"
+  },
+  {
+    "id": "sinterizado-de-coble",
+    "note": "Coble: 24 h a 1700 °C y 6-8 h a 1900 °C (se toma 7). Con el logaritmo del tiempo en recta, a 1800 °C: √(86 400 × 25 200) = 46 661 s (13 h).",
+    "input": {
+      "kind": "sinterizado",
+      "temps": [
+        1700.0,
+        1800.0,
+        1900.0
+      ]
+    },
+    "expect": {
+      "t0": {
+        "value": 86400.0,
+        "tol": 1e-09
+      },
+      "t1": {
+        "value": 46661.333028536596,
+        "tol": 1e-09
+      },
+      "t2": {
+        "value": 25200.0,
+        "tol": 1e-09
+      }
+    },
+    "source": "Coble RL (1962), patente US 3.026.210"
+  },
+  {
+    "id": "ald-de-alumina",
+    "note": "Groner et al.: 332 Å en 300 ciclos a 33 °C, 1,107 Å por ciclo. 300 ciclos = 0,03321 µm; la capa manda en el banco solo hasta el 10 % de su espesor, 0,0033 µm (Bückle).",
+    "input": {
+      "kind": "ald",
+      "cycles": 300.0
+    },
+    "expect": {
+      "thicknessUm": {
+        "value": 0.033209999999999996,
+        "tol": 1e-12
+      },
+      "benchDepthLimitUm": {
+        "value": 0.0033209999999999997,
+        "tol": 1e-12
+      }
+    },
+    "source": "Groner MD et al. (2004), Chem. Mater. 16:639; ISO 14577-4"
+  },
+  {
+    "id": "muerde-o-no",
+    "note": "Una lima de acero (700 HV) no muerde el zafiro (2000 HV): es más blanda. El diamante (10 000 HV) sí, del todo (r = 5 > 2). Corindón contra corindón (r = 1): η = 3t² − 2t³ con t = (1 − 0,8)/1,2 = 1/6, 0,0741: araña poco.",
+    "input": {
+      "kind": "muerde",
+      "pairs": [
+        [
+          700.0,
+          2000.0
+        ],
+        [
+          10000.0,
+          2000.0
+        ],
+        [
+          2000.0,
+          2000.0
+        ]
+      ]
+    },
+    "expect": {
+      "eta0": {
+        "value": 0.0
+      },
+      "eta1": {
+        "value": 1.0
+      },
+      "eta2": {
+        "value": 0.07407407407407407,
+        "tol": 1e-12
+      }
+    },
+    "source": "HolzWerken (2024), la prueba de la lima; Contact.hardness_efficiency del motor (Pintaude)"
+  },
+  {
+    "id": "barrera-en-regimen-permanente",
+    "note": "Silicona de 1 mm (0,2 W/(m·K)) sobre 2 mm de queratina (k = α·ρ·c = 10⁻⁷ × 1310 × 1530 = 0,2004) y 2 mm de tejido vivo, con la superficie a 150 °C mucho tiempo: la temperatura cae en línea recta con la resistencia en serie, T = 150 − 118·R(superficie→punto)/R(total). R total = 0,0252 m²·K/W (con la sangre a medio nodo más allá del tejido); en el último nodo de queratina, junto a la carne viva, 80,46 °C (el continuo da 79,9 °C en la frontera); bajo la barrera, 126,0 °C.",
+    "input": {
+      "kind": "permanente",
+      "tC": 150.0,
+      "timeS": 1000000.0,
+      "barrier": "silicona",
+      "barrierMm": 1.0,
+      "wallMm": 2.0
+    },
+    "expect": {
+      "quickPeakC": {
+        "value": 80.46451510742953,
+        "tol": 1e-06
+      },
+      "keratinPeakC": {
+        "value": 126.00948111200185,
+        "tol": 1e-06
+      },
+      "injured": {
+        "value": true
+      }
+    },
+    "source": "Shin-Etsu y AZoM (silicona, 0,2 W/(m·K)); Dias et al. (2007) y Picard et al. (1999) (queratina); conducción en serie (Incropera et al. 2007)"
+  },
+  {
+    "id": "gel-de-agua",
+    "note": "El gel de agua se lleva el calor evaporándose (2257 kJ/kg): mientras le queda agua, la queratina de debajo no pasa de 100 °C aunque la superficie esté a 400 °C.",
+    "input": {
+      "kind": "barrera",
+      "tC": 400.0,
+      "timeS": 5.0,
+      "barrier": "gel",
+      "barrierMm": 3.0,
+      "wallMm": 2.8
+    },
+    "expect": {
+      "keratinPeakC": {
+        "max": 100.0
+      },
+      "waterLeft": {
+        "min": 0.01
+      }
+    },
+    "source": "Incropera et al. (2007), tablas A.6 (agua); geles de joyero (Kool Jool, Thermo-Gel)"
+  },
+  {
+    "id": "sin-barrera-se-quema",
+    "note": "Sin barrera, la superficie caliente es la propia queratina: a 300 °C pasa de los ~230 °C a los que se quema, al instante.",
+    "input": {
+      "kind": "barrera",
+      "tC": 300.0,
+      "timeS": 1.0,
+      "barrier": "",
+      "barrierMm": 0.0,
+      "wallMm": 2.8
+    },
+    "expect": {
+      "keratinPeakC": {
+        "value": 300.0
+      },
+      "charred": {
+        "value": true
+      }
+    },
+    "source": "Kakkar et al. (2014), 215 °C; Wortmann et al. (2012), 230-255 °C"
+  },
+  {
+    "id": "masa-de-la-funda-de-zafiro",
+    "note": "La funda de zafiro del águila: 3980 kg/m³ × 219,7 mm³ = 0,8745 g. La garra de queratina entera (cono de 35 mm con base de 5,25 mm) pesa 1310 × π × 5,25² × 35/3 × 10⁻⁹ = 1,323 g: con la funda, 2,198 g.",
+    "input": {
+      "kind": "masa",
+      "recipe": "zafiro"
+    },
+    "expect": {
+      "sheathMassKg": {
+        "value": 0.0008745272834152386,
+        "tol": 0.005
+      },
+      "clawMassKg": {
+        "value": 0.0021979133712628964,
+        "tol": 0.005
+      }
+    },
+    "source": "Handbook of Mineralogy (corindón, 3,98); Mason (1963) (queratina, 1,31)"
+  },
+  {
+    "id": "proceso-zafiro-del-aguila",
+    "note": "Siguiendo la receta del zafiro al pie de la letra (alúmina pura, Verneuil a 2100 °C al aire, 2 h, al aire; muela de diamante con agua; barrera; epoxi; pasta de diamante; la fuerza del águila de la 2.0, 100,9 N, contra 1541 N de la unión): garra de zafiro pulida.",
+    "input": {
+      "kind": "proceso",
+      "recipe": "zafiro",
+      "animal": "rapaz",
+      "claw": "aguila"
+    },
+    "expect": {
+      "verdict": {
+        "value": "bien"
+      },
+      "inlay": {
+        "value": "zafiro"
+      },
+      "finish": {
+        "value": "pulido"
+      },
+      "quality": {
+        "value": "secondary"
+      }
+    },
+    "source": "recetas de la reforja (Verneuil; Henkel; DMT)"
+  },
+  {
+    "id": "proceso-rubi-sin-cromo",
+    "note": "Rubí con un 0,01 % de Cr₂O₃: por debajo del 0,03 % de los rubíes de láser no hay rojo; la receta lo da por mezcla equivocada.",
+    "input": {
+      "kind": "mezcla",
+      "recipe": "rubi",
+      "grams": {
+        "al2o3": 99.99,
+        "cr2o3": 0.01
+      }
+    },
+    "expect": {
+      "defect": {
+        "value": "mezcla"
+      },
+      "ok": {
+        "value": false
+      }
+    },
+    "source": "Roditi, Ruby laser rods (0,03 y 0,05 % de Cr₂O₃)"
+  },
+  {
+    "id": "hpht-por-encima-de-kennedy",
+    "note": "A 5,5 GPa la línea de Kennedy acaba en 1424 °C: a 1424,5 °C sale grafito (defecto «caliente»); a 1423,5 °C, diamante.",
+    "input": {
+      "kind": "hpht",
+      "temps": [
+        1424.5,
+        1423.5
+      ]
+    },
+    "expect": {
+      "d0": {
+        "value": "caliente"
+      },
+      "d1": {
+        "value": ""
+      }
+    },
+    "source": "Kennedy y Kennedy (1976); Sumiya et al. (2002)"
+  },
+  {
+    "id": "calentar-al-aire",
+    "note": "Al aire, el metal duro se oxida desde ~538 °C (1000 °F) y el diamante desde ~600 °C; en vacío, el diamante aguanta hasta que se grafitiza (~1500 °C).",
+    "input": {
+      "kind": "calentar",
+      "rows": [
+        [
+          "tungsteno",
+          500.0,
+          "aire"
+        ],
+        [
+          "tungsteno",
+          600.0,
+          "aire"
+        ],
+        [
+          "diamante",
+          650.0,
+          "aire"
+        ],
+        [
+          "diamante",
+          1400.0,
+          "vacio"
+        ],
+        [
+          "diamante",
+          1600.0,
+          "vacio"
+        ]
+      ]
+    },
+    "expect": {
+      "d0": {
+        "value": ""
+      },
+      "d1": {
+        "value": "quemado"
+      },
+      "d2": {
+        "value": "quemado"
+      },
+      "d3": {
+        "value": ""
+      },
+      "d4": {
+        "value": "grafitiza"
+      }
+    },
+    "source": "General Carbide, Designer's Guide; KAPP (2006); Davies y Evans (1972)"
+  },
+  {
+    "id": "cuarzo-por-573",
+    "note": "El cuarzo calentado a 600 °C cruza la inversión α-β (573 °C, 0,45 % de dilatación): enfriado al aire se agrieta; dentro del horno, despacio, no.",
+    "input": {
+      "kind": "cuarzo",
+      "tC": 600.0
+    },
+    "expect": {
+      "aire": {
+        "value": "inversion"
+      },
+      "horno": {
+        "value": ""
+      }
+    },
+    "source": "Johnson SE et al. (2021), Earth Planet. Sci. Lett. 553:116622"
+  }
+]

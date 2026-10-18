@@ -1,0 +1,9 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://app/taller/demo_torno3d.gd" id="1_demo"]
+[ext_resource type="PackedScene" path="res://app/taller/lathe_3d.tscn" id="2_lathe"]
+
+[node name="DemoTorno3D" type="Node3D"]
+script = ExtResource("1_demo")
+
+[node name="Lathe3D" parent="." instance=ExtResource("2_lathe")]
