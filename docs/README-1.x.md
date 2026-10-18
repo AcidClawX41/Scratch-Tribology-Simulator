@@ -12,7 +12,7 @@ An educational contact-mechanics and tribology laboratory. Human nails, animal c
 are tested against materials from human skin to diamond, using published physical models and
 measured data. Every number the app shows comes from an equation you can look up.
 
-[![CI](https://github.com/AcidClawX41/Scratch-Tribology-Simulator/actions/workflows/ci.yml/badge.svg)](https://github.com/AcidClawX41/Scratch-Tribology-Simulator/actions/workflows/ci.yml)
+[![CI](https://github.com/AcidClawX41/Scratch-Tribology-Simulator-Industrial-Workshop/actions/workflows/ci.yml/badge.svg)](https://github.com/AcidClawX41/Scratch-Tribology-Simulator-Industrial-Workshop/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](../LICENSE)
 
 macOS (Apple Silicon & Intel) · Windows · Linux · iPhone & iPad · Android · Web
@@ -362,7 +362,7 @@ with the depth in mm and cm, the hole, and which car holds up better.</sub></td>
 
 Each tagged version (`v*`) is built by GitHub Actions
 ([`release.yml`](../.github/workflows/release.yml)) and published on the
-[Releases page](https://github.com/AcidClawX41/Scratch-Tribology-Simulator/releases):
+[Releases page](https://github.com/AcidClawX41/Scratch-Tribology-Simulator-Industrial-Workshop/releases):
 
 | Platform | File | First launch |
 |---|---|---|

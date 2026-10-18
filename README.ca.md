@@ -10,18 +10,18 @@
 
 Desenvolupat per [Eric Valls Gramunt](https://github.com/AcidClawX41).
 
-[![Descarregar per a Windows, macOS, Linux, Android i iPhone](https://img.shields.io/badge/%E2%AC%87%EF%B8%8F%20DESCARREGAR-WINDOWS%20%C2%B7%20MACOS%20%C2%B7%20LINUX%20%C2%B7%20ANDROID%20%C2%B7%20IOS-7C3AED?style=for-the-badge)](https://github.com/AcidClawX41/Scratch-Tribology-Simulator/releases)
+[![Descarregar per a Windows, macOS, Linux, Android i iPhone](https://img.shields.io/badge/%E2%AC%87%EF%B8%8F%20DESCARREGAR-WINDOWS%20%C2%B7%20MACOS%20%C2%B7%20LINUX%20%C2%B7%20ANDROID%20%C2%B7%20IOS-7C3AED?style=for-the-badge)](https://github.com/AcidClawX41/Scratch-Tribology-Simulator-Industrial-Workshop/releases)
 
-[![Windows 10/11 x64](https://img.shields.io/badge/Windows-10%2F11%20x64-0078D4?logo=data:image/svg%2Bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0id2hpdGUiIGQ9Ik0yIDMuNWw4LjUtMS4ydjguMkgyek0xMS41IDIuMkwyMiAuN3Y5LjhIMTEuNXpNMiAxMmg4LjV2OC4yTDIgMTl6TTExLjUgMTJIMjJ2OS44bC0xMC41LTEuNXoiLz48L3N2Zz4=)](https://github.com/AcidClawX41/Scratch-Tribology-Simulator/releases)
-[![macOS Apple Silicon and Intel](https://img.shields.io/badge/macOS-Apple%20Silicon%20%26%20Intel-000000?logo=apple&logoColor=white)](https://github.com/AcidClawX41/Scratch-Tribology-Simulator/releases)
-[![Linux x86_64](https://img.shields.io/badge/Linux-x86__64-FCC624?logo=linux&logoColor=black)](https://github.com/AcidClawX41/Scratch-Tribology-Simulator/releases)
-[![Android 7.0+](https://img.shields.io/badge/Android-7.0%2B-3DDC84?logo=android&logoColor=white)](https://github.com/AcidClawX41/Scratch-Tribology-Simulator/releases)
-[![iPhone and iPad, iOS 15+](https://img.shields.io/badge/iPhone%20%26%20iPad-iOS%2015%2B-000000?logo=ios&logoColor=white)](https://github.com/AcidClawX41/Scratch-Tribology-Simulator/releases)
+[![Windows 10/11 x64](https://img.shields.io/badge/Windows-10%2F11%20x64-0078D4?logo=data:image/svg%2Bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0id2hpdGUiIGQ9Ik0yIDMuNWw4LjUtMS4ydjguMkgyek0xMS41IDIuMkwyMiAuN3Y5LjhIMTEuNXpNMiAxMmg4LjV2OC4yTDIgMTl6TTExLjUgMTJIMjJ2OS44bC0xMC41LTEuNXoiLz48L3N2Zz4=)](https://github.com/AcidClawX41/Scratch-Tribology-Simulator-Industrial-Workshop/releases)
+[![macOS Apple Silicon and Intel](https://img.shields.io/badge/macOS-Apple%20Silicon%20%26%20Intel-000000?logo=apple&logoColor=white)](https://github.com/AcidClawX41/Scratch-Tribology-Simulator-Industrial-Workshop/releases)
+[![Linux x86_64](https://img.shields.io/badge/Linux-x86__64-FCC624?logo=linux&logoColor=black)](https://github.com/AcidClawX41/Scratch-Tribology-Simulator-Industrial-Workshop/releases)
+[![Android 7.0+](https://img.shields.io/badge/Android-7.0%2B-3DDC84?logo=android&logoColor=white)](https://github.com/AcidClawX41/Scratch-Tribology-Simulator-Industrial-Workshop/releases)
+[![iPhone and iPad, iOS 15+](https://img.shields.io/badge/iPhone%20%26%20iPad-iOS%2015%2B-000000?logo=ios&logoColor=white)](https://github.com/AcidClawX41/Scratch-Tribology-Simulator-Industrial-Workshop/releases)
 
 [![Godot 4.7.2](https://img.shields.io/badge/Godot-4.7.2-478CBF?logo=godotengine&logoColor=white)](https://godotengine.org)
 [![Llicència: MIT](https://img.shields.io/badge/llic%C3%A8ncia-MIT-blue)](LICENSE)
 [![Funciona sense connexió](https://img.shields.io/badge/funciona-sense%20connexi%C3%B3-2EA44F)](#descàrrega)
-[![Godot CI](https://github.com/AcidClawX41/Scratch-Tribology-Simulator/actions/workflows/godot-ci.yml/badge.svg)](https://github.com/AcidClawX41/Scratch-Tribology-Simulator/actions/workflows/godot-ci.yml)
+[![Godot CI](https://github.com/AcidClawX41/Scratch-Tribology-Simulator-Industrial-Workshop/actions/workflows/godot-ci.yml/badge.svg)](https://github.com/AcidClawX41/Scratch-Tribology-Simulator-Industrial-Workshop/actions/workflows/godot-ci.yml)
 
 </div>
 
@@ -155,7 +155,7 @@ Disseny en Fabricació Mecànica* van inspirar el taller. Està pensat per fer-s
 
 És un model educatiu: no substitueix la formació en seguretat ni la pràctica amb una màquina real, i el taller continua
 marcat com en desenvolupament. El codi és obert (MIT), així que el professorat el pot adaptar. Els suggeriments i els
-errors són benvinguts a [GitHub Issues](https://github.com/AcidClawX41/Scratch-Tribology-Simulator/issues).
+errors són benvinguts a [GitHub Issues](https://github.com/AcidClawX41/Scratch-Tribology-Simulator-Industrial-Workshop/issues).
 
 ---
 
@@ -469,7 +469,7 @@ La llista completa i al dia és a [`docs/FISICA.md`](docs/FISICA.md#limitaciones
 ## Descàrrega
 
 Les versions per a cada plataforma es publiquen a la
-[pàgina de Releases](https://github.com/AcidClawX41/Scratch-Tribology-Simulator/releases) amb GitHub Actions
+[pàgina de Releases](https://github.com/AcidClawX41/Scratch-Tribology-Simulator-Industrial-Workshop/releases) amb GitHub Actions
 ([`godot-release.yml`](.github/workflows/godot-release.yml)) a cada etiqueta `v2*`:
 
 | Plataforma | Fitxer | Primer cop |

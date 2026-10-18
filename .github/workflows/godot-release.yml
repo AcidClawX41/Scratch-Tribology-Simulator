@@ -11,7 +11,7 @@
 # una Release en BORRADOR. El borrador no se publica solo: revísalo y publícalo a mano desde GitHub.
 #
 # Uso: sube la versión en godot/project.godot y en godot/export_presets.cfg (ver docs/GODOT-EXPORT.md) y después
-#        git tag v2.0.0-prototipo && git push origin v2.0.0-prototipo
+#        git tag v2.0.0 && git push origin v2.0.0
 #      "Run workflow" a mano (workflow_dispatch), o una subida a la rama ci/release, compila lo mismo sin tocar
 #      Releases: los archivos quedan como artefactos de la ejecución.
 #
@@ -109,7 +109,7 @@ jobs:
             cat > "$RUNNER_TEMP/notes.md" <<'EOF'
           ## Tribology Simulator & Industrial Workshop {{TAG}}
 
-          A prototype of version 2 (formerly *Scratch Tribology Simulator*), rebuilt with Godot {{GODOT}}: one program with two sections, *Biological tribology* (nails, claws and fangs) and *Industrial workshop* (machining, lathe, angle grinder and knife sharpener).
+          Version 2 (formerly *Scratch Tribology Simulator*), rebuilt with Godot {{GODOT}}: one program with two sections, *Biological tribology* (nails, claws, fangs, a moving car, a 3D falconry clinic and a forge) and *Industrial workshop* (lathe with a Fagor-compatible CNC, milling machine, drill, sharpener and angle grinder; work in progress).
 
           | Platform | File | First launch |
           |---|---|---|
@@ -119,7 +119,7 @@ jobs:
           | Android 7.0+ | `…_android.apk` | Allow *Install unknown apps* for your browser or file manager |
           | iPhone / iPad (iOS 15+) | `…_ios-unsigned.ipa` | Unsigned: install it with **AltStore** or **Sideloadly**, which sign it with your Apple ID (free accounts must reinstall every 7 days) |
 
-          The interface is in Spanish. The apps need no network connection. This is a prototype: parts are missing and it may change a lot before the final 2.0.
+          The interface is in Spanish. The apps need no network connection. The industrial workshop is still marked as work in progress.
 
           Built automatically by GitHub Actions (`.github/workflows/godot-release.yml`) from tag `{{TAG}}`.
           EOF
