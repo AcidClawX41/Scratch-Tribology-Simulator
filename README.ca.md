@@ -117,6 +117,42 @@ castellà. El programa és gratuït, no té anuncis, no recull dades i no necess
   netedat del tall de 0 (net) a 10 (brut), amplada de tall, rebava, coloració per calor, pintura cremada i colors de
   les espurnes (US Army TC 9-237). És educatiu, no un procediment de rescat.
 
+<p align="center">
+  <img src="docs/media/readme/workshop-lathe-cnc.gif" width="760" alt="El torn 3D executant un programa de Fagor 8055 T sobre un eix de C45E, amb les lectures en directe, la mitja secció contra el plànol i l'informe d'inspecció al final">
+</p>
+<p align="center"><sub><b>Torn CNC, de principi a fi.</b> La peça A (eix de C45E, barra de Ø50) executa el seu programa
+de Fagor 8055 T: velocitat de tall constant G96 a 180 m/min, passades de desbast i d'acabat, encenalls i taladrina, i
+la mitja secció dibuixada sobre el plànol. La inspecció dona un <b>9,6 / 10</b>: tots els diàmetres queden dins de la
+seva tolerància ISO 286 i només el xamfrà d'1×45° es queda curt (0,76 mm, amb 0,80–1,20 admès).</sub></p>
+
+<table>
+<tr>
+<td width="50%"><img src="docs/media/readme/workshop-angle-grinder.gif" alt="Una radial tallant cinc panells de carrosseria seguits, amb el solc vist des de dalt i en secció"></td>
+<td width="50%"><img src="docs/media/readme/workshop-milling.gif" alt="Una fresadora 3D tallant un bloc amb una fresa de mànec i llançant encenalls, al costat dels seus resultats de tall"></td>
+</tr>
+<tr>
+<td><sub><b>Radial, cinc talls.</b> Un disc de 125 mm a 11 000 rpm (72 m/s) en acer dolç, alumini, una aleta de plàstic
+i un pilar B d'acer al bor: la netedat del tall, el solc, la rebava, la pintura cremada i les espurnes canvien a cada
+parella. L'alumini embota el disc d'Al₂O₃ i el plàstic es fon en lloc de tallar-se.</sub></td>
+<td><sub><b>Fresadora.</b> Fresa de mànec de metall dur amb recobriment TiAlN a 2387 rpm: 567 N de força de tall mitjana,
+1,42 kW en un motor de 3,7 kW, un to de pas de dents de 159 Hz (el que se sent) i una vida de Taylor de 75,9 min,
+marcada com a estimació.</sub></td>
+</tr>
+<tr>
+<td><img src="docs/media/readme/workshop-lathe-inspection.png" alt="L'informe d'inspecció de la peça del torn, amb nota 9,6 sobre 10 i la capa de desviació sobre la peça 3D"></td>
+<td><img src="docs/media/readme/workshop-sharpener.png" alt="La pàgina de l'esmoladora amb una esmoladora a l'aigua Einhell, la secció del tall i el catàleg de màquines"></td>
+</tr>
+<tr>
+<td><sub><b>Peça contra plànol.</b> Cada cota mesurada amb un palpador d'1 mm sobre les crestes, Ra per la regla del 16 %
+(ISO 4288) i la capa de desviació pintada sobre la peça 3D.</sub></td>
+<td><sub><b>Esmoladora.</b> Una esmoladora a l'aigua a 110 rpm dona 1,15 m/s a la pedra: ideal per a un ganivet de cuina,
+que no s'arriba a escalfar. A sota, la secció del tall, l'angle del bisell i l'escala de temperatura fins a 723 °C.</sub></td>
+</tr>
+</table>
+
+<p align="center">▶ <a href="docs/media/readme/workshop-demo-2.0.mp4"><b>Mira el taller amb so</b></a> (MP4, 30 s): el
+torn, la radial i la fresadora, amb el so de màquina generat a partir de les seves velocitats reals.</p>
+
 ---
 
 ## Per a alumnat i professorat d'FP

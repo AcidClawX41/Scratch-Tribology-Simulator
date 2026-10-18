@@ -118,6 +118,42 @@ español. El programa es gratuito, no tiene anuncios, no recoge datos y no neces
   con una limpieza del corte de 0 (limpio) a 10 (sucio), ancho de corte, rebaba, coloración por calor, pintura quemada y
   colores de las chispas (US Army TC 9-237). Es educativo, no un procedimiento de rescate.
 
+<p align="center">
+  <img src="docs/media/readme/workshop-lathe-cnc.gif" width="760" alt="El torno 3D ejecutando un programa de Fagor 8055 T sobre un eje de C45E, con las lecturas en directo, la media sección contra el plano y el informe de inspección al final">
+</p>
+<p align="center"><sub><b>Torno CNC, de principio a fin.</b> La pieza A (eje de C45E, barra de Ø50) ejecuta su programa
+de Fagor 8055 T: velocidad de corte constante G96 a 180 m/min, pasadas de desbaste y de acabado, virutas y taladrina, y
+la media sección dibujada sobre el plano. La inspección da un <b>9,6 / 10</b>: todos los diámetros quedan dentro de su
+tolerancia ISO 286 y solo el chaflán de 1×45° se queda corto (0,76 mm, con 0,80–1,20 admitido).</sub></p>
+
+<table>
+<tr>
+<td width="50%"><img src="docs/media/readme/workshop-angle-grinder.gif" alt="Una amoladora cortando cinco paneles de carrocería seguidos, con el surco visto desde arriba y en sección"></td>
+<td width="50%"><img src="docs/media/readme/workshop-milling.gif" alt="Una fresadora 3D cortando un bloque con una fresa de mango y lanzando virutas, junto a sus resultados de corte"></td>
+</tr>
+<tr>
+<td><sub><b>Amoladora, cinco cortes.</b> Un disco de 125 mm a 11 000 rpm (72 m/s) en acero dulce, aluminio, una aleta
+de plástico y un pilar B de acero al boro: la limpieza del corte, el surco, la rebaba, la pintura quemada y las chispas
+cambian en cada pareja. El aluminio embota el disco de Al₂O₃ y el plástico se funde en vez de cortarse.</sub></td>
+<td><sub><b>Fresadora.</b> Fresa de mango de metal duro con recubrimiento TiAlN a 2387 rpm: 567 N de fuerza de corte
+media, 1,42 kW en un motor de 3,7 kW, un tono de paso de dientes de 159 Hz (lo que se oye) y una vida de Taylor de
+75,9 min, marcada como estimación.</sub></td>
+</tr>
+<tr>
+<td><img src="docs/media/readme/workshop-lathe-inspection.png" alt="El informe de inspección de la pieza del torno, con nota 9,6 sobre 10 y la capa de desviación sobre la pieza 3D"></td>
+<td><img src="docs/media/readme/workshop-sharpener.png" alt="La página de la afiladora con una afiladora al agua Einhell, la sección del filo y el catálogo de máquinas"></td>
+</tr>
+<tr>
+<td><sub><b>Pieza contra plano.</b> Cada cota medida con un palpador de 1 mm sobre las crestas, Ra por la regla del 16 %
+(ISO 4288) y la capa de desviación pintada sobre la pieza 3D.</sub></td>
+<td><sub><b>Afiladora.</b> Una afiladora al agua a 110 rpm da 1,15 m/s en la piedra: ideal para un cuchillo de cocina,
+que no llega a calentarse. Debajo, la sección del filo, el ángulo del bisel y la escala de temperatura hasta 723 °C.</sub></td>
+</tr>
+</table>
+
+<p align="center">▶ <a href="docs/media/readme/workshop-demo-2.0.mp4"><b>Mira el taller con sonido</b></a> (MP4, 30 s):
+el torno, la amoladora y la fresadora, con el sonido de máquina generado a partir de sus velocidades reales.</p>
+
 ---
 
 ## Para alumnado y profesorado de FP

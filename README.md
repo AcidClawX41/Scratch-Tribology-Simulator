@@ -120,6 +120,42 @@ in Spanish. The program is free, has no ads, collects no data and needs no netwo
   cleanliness from 0 (clean) to 10 (dirty), kerf, burr, heat tint, burnt paint and spark colours (US Army TC 9-237).
   It is educational, not a rescue procedure.
 
+<p align="center">
+  <img src="docs/media/readme/workshop-lathe-cnc.gif" width="760" alt="The 3D lathe running a Fagor 8055 T program on a C45E shaft, with live readouts, the half section against the drawing and the inspection report at the end">
+</p>
+<p align="center"><sub><b>CNC lathe, start to finish.</b> Part A (C45E shaft, Ø50 bar) runs its Fagor 8055 T program:
+constant cutting speed G96 at 180 m/min, roughing and finishing passes, chips and coolant, and the half section drawn
+over the drawing. The inspection gives <b>9.6 / 10</b>: every diameter is within its ISO 286 tolerance and only the
+1×45° chamfer comes out short (0.76 mm, 0.80–1.20 allowed).</sub></p>
+
+<table>
+<tr>
+<td width="50%"><img src="docs/media/readme/workshop-angle-grinder.gif" alt="An angle grinder cutting five car body panels in turn, with the kerf seen from above and in section"></td>
+<td width="50%"><img src="docs/media/readme/workshop-milling.gif" alt="A 3D milling machine cutting a block with an end mill, throwing chips, next to its cutting results"></td>
+</tr>
+<tr>
+<td><sub><b>Angle grinder, five cuts.</b> A 125 mm disc at 11,000 rpm (72 m/s) on mild steel, aluminium, a plastic
+wing and a boron-steel B-pillar: cut cleanliness, kerf, burr, burnt paint and sparks change with each pair. The
+aluminium clogs the Al₂O₃ disc and the plastic melts instead of cutting.</sub></td>
+<td><sub><b>Milling machine.</b> TiAlN-coated carbide end mill at 2,387 rpm: 567 N of mean cutting force, 1.42 kW at a
+3.7 kW motor, a tooth-passing tone of 159 Hz (what you hear) and a Taylor tool life of 75.9 min, marked as an
+estimate.</sub></td>
+</tr>
+<tr>
+<td><img src="docs/media/readme/workshop-lathe-inspection.png" alt="The inspection report of the lathe part, mark 9.6 out of 10, with the deviation layer on the 3D part"></td>
+<td><img src="docs/media/readme/workshop-sharpener.png" alt="The sharpener page with an Einhell wet grinder, the edge section and the machine catalogue"></td>
+</tr>
+<tr>
+<td><sub><b>Part against drawing.</b> Each dimension measured with a 1 mm probe over the crests, Ra by the 16 % rule
+(ISO 4288), and the deviation layer painted on the 3D part.</sub></td>
+<td><sub><b>Sharpener.</b> A wet grinder at 110 rpm gives 1.15 m/s at the stone: ideal for a kitchen knife, which never
+heats up. The edge section, the bevel angle and the temperature scale up to 723 °C are drawn below.</sub></td>
+</tr>
+</table>
+
+<p align="center">▶ <a href="docs/media/readme/workshop-demo-2.0.mp4"><b>Watch the workshop with sound</b></a> (MP4,
+30 s): the lathe, the angle grinder and the milling machine, with the machine sound generated from their real speeds.</p>
+
 ---
 
 ## For vocational training students and teachers
