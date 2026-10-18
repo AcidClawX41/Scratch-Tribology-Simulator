@@ -139,26 +139,38 @@ func test_trabajar_otra_garra_no_borra_el_estres_del_animal() -> void:
 
 
 func test_el_reloj_de_la_sujecion_cuenta_una_sola_vez() -> void:
-	var st := State.new({ "animal": "rapaz", "seed": "reloj" })
-	st.set_sedation("sujecion")
-	# las ocho garras, una tras otra, cada una con su propio reloj de ClawCare
-	for p: String in State.paws_of("rapaz"):
-		for d: String in State.digit_ids("rapaz"):
-			st.select_claw(p, d)
-			for i in 30:
-				st.tick(FRAME)
-	for i in 600:
-		st.tick(FRAME)
-	var t := st.care.time_s()
+	# el animal que se está manejando (cogida la garra: gripped) suma su estrés con el tiempo; con ocho garras, cada una con
+	# su propio reloj de ClawCare, el tiempo cuenta una sola vez
+	var patient := Patient.new("rapaz", "sujecion", "aguila")
+	patient.handled = true
+	patient.gripped = true
+	var cares: Array[ClawCare] = []
+	for i in 8:
+		cares.append(ClawCare.new({ "animal": "rapaz", "sedation": "sujecion" }, patient))
+	for c: ClawCare in cares:
+		c.advance(5.0)
+	var t := cares[0].time_s()
 	var rate := float(CareData.SEDATION.sujecion.stress_rate)
-	assert_near(float(st.patient.stress), rate * t, 1e-9, 1e-12,
-		"%s s sujeto: estrés %s, una sola vez (%s/s); contado en cada garra serían %s" % [_fx(t, 1), _fx(float(st.patient.stress), 4), _fx(rate, 3), _fx(8.0 * rate * t, 4)])
-	for e: Dictionary in st.slots_view():
-		assert_false(bool(e.worked), "%s: solo ha pasado el tiempo" % e.key)
+	assert_near(float(patient.stress), rate * t, 1e-9, 1e-12,
+		"%s s manejado: estrés %s, una sola vez (%s/s); contado en cada garra serían %s" % [_fx(t, 1), _fx(float(patient.stress), 4), _fx(rate, 3), _fx(8.0 * rate * t, 4)])
 	# una garra que se pone al día no suma el estrés de un tiempo que el animal ya ha contado
-	var before := float(st.patient.stress)
-	st.select_claw("izquierda", "I")
-	assert_eq(float(st.patient.stress), before, "ponerse al día no suma estrés")
+	var before := float(patient.stress)
+	cares[3].advance(0.0)
+	assert_eq(float(patient.stress), before, "ponerse al día no suma estrés")
+	# y si nadie lo toca, el tiempo no le estresa, con cualquier sujeción (Eric, 18-10-2026: «no tan hardcore»)
+	for sed: String in ["libre", "sujecion", "sedacion"]:
+		var st := State.new({ "animal": "rapaz", "seed": "reloj", "sedation": sed })
+		st.pick("lima_fina")
+		var s0 := st.care.apex_mm() - 1.0
+		st.press_on(s0)
+		for i in 4:
+			st.drag(3.0, 3.0, s0, FRAME)
+			st.tick(FRAME)
+		st.release()
+		var s1 := float(st.patient.stress)
+		for i in 600:
+			st.tick(FRAME)
+		assert_near(float(st.patient.stress), s1, 0.0, 1e-12, "%s: diez segundos sin tocarlo no le suben el estrés" % sed)
 
 
 ## history repite el ensayo entero: unas ClawCare nuevas, con un animal nuevo compartido, llegan al mismo animal y a las
@@ -215,6 +227,8 @@ static func _apply_call(c: ClawCare, method: String, args: Variant) -> void:
 			c.apply(args)
 		"advance":
 			c.advance(float(args))
+		"advance_held":
+			c.advance_held(float(args))
 		"set_sedation":
 			c.set_sedation(String(args))
 		"set_humidity":

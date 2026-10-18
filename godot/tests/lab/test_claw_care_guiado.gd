@@ -78,13 +78,42 @@ func test_el_estres_sube_con_el_tiempo_y_la_capucha_lo_frena() -> void:
 		_wait(free, 5.0)
 		assert_true(free.patient.stress >= prev - 1e-12, "más tiempo sin sujetar, nunca menos estrés")
 		prev = free.patient.stress
-	# encapuchada y envuelta, el mismo tiempo, menos estrés
-	var hooded := State.new({ "animal": "rapaz", "seed": "e2" })
+	# tocada una vez y dejada (sin sujetar, la herramienta parada): el tiempo que pasa no la estresa más (fallo de Eric,
+	# 18-10-2026: subía un 2 % por segundo sin tocarla)
+	var left := State.new({ "animal": "rapaz", "seed": "e3" })
+	left.pick("lima_fina")
+	_stroke(left)
+	var s_left := left.patient.stress
+	_wait(left, 60.0)
+	assert_near(left.patient.stress, s_left, 0.0, 1e-12, "sin sujetar y sin tocarla, un minuto no le sube el estrés")
+	# cortada la punta con el cortaúñas y dejada: tampoco (fallo de Eric, 18-10-2026: subía sin parar)
+	var cut := State.new({ "animal": "rapaz", "seed": "e5" })
+	cut.pick("guillotina")
+	var L := cut.care.apex_mm()
+	cut.press_on(L - 2.0)
+	_wait(cut, State.CLIP_CLOSE_S + 0.2)
+	cut.release()
+	assert_true(cut.care.apex_mm() < L, "el cortaúñas corta")
+	var s_cut := cut.patient.stress
+	_wait(cut, 60.0)
+	assert_near(cut.patient.stress, s_cut, 0.0, 1e-12, "tras el corte, un minuto sin tocarla no le sube el estrés")
+	# encapuchada, tampoco: lo que estresa es manejarla, no el tiempo que pasa (Eric, 18-10-2026: «no tan hardcore»)
+	var held := State.new({ "animal": "rapaz", "seed": "e3" })
+	held.set_sedation("sujecion")
+	held.pick("lima_fina")
+	_stroke(held)
+	var s_held := held.patient.stress
+	_wait(held, 60.0)
+	assert_near(held.patient.stress, s_held, 0.0, 1e-12, "encapuchada y sin tocarla, un minuto no le sube el estrés")
+	# encapuchada y envuelta, el mismo trabajo, menos estrés
+	var bare := State.new({ "animal": "rapaz", "seed": "e4" })
+	var hooded := State.new({ "animal": "rapaz", "seed": "e4" })
 	hooded.set_sedation("sujecion")
-	hooded.pick("lima_fina")
-	_stroke(hooded)
-	_wait(hooded, 20.0)
-	assert_true(hooded.patient.stress < free.patient.stress, "encapuchada: menos estrés que sin capucha (%s < %s)" % [hooded.patient.stress, free.patient.stress])
+	for st: State in [bare, hooded]:
+		st.pick("lima_fina")
+		for i in 6:
+			_stroke(st)
+	assert_true(hooded.patient.stress < bare.patient.stress, "encapuchada: menos estrés que sin capucha con el mismo trabajo (%s < %s)" % [hooded.patient.stress, bare.patient.stress])
 	# anestesiada, ni el dolor la estresa (no lo siente)
 	var an := State.new({ "animal": "rapaz", "seed": "e9", "sedation": "anestesia" })
 	var s_before := an.patient.stress
@@ -141,22 +170,49 @@ func test_la_sesion_se_para_con_un_aviso_antes() -> void:
 	# la rapaz sin sujetar: se estresa, avisa y, al máximo, se suelta
 	var r := State.new({ "animal": "rapaz", "seed": "r1" })
 	r.pick("lima_fina")
-	_stroke(r)
 	var warned := false
 	var guard := 0
+	# cogiéndole la garra sin capucha (dejarla quieta ya no la estresa: test_el_estres_sube_con_el_tiempo_y_la_capucha_lo_frena)
+	_stroke(r)
+	r.press_on(r.care.apex_mm() - 1.0)
 	while r.halted.is_empty() and guard < 400:
 		r.tick(0.25)
 		warned = warned or String(r.view().notice).contains("muy estresada")
 		guard += 1
 	assert_true(warned, "avisa antes de soltarse")
 	assert_eq(String(r.halted.get("code", "")), "se_suelta", "sin capucha, al estrés máximo se suelta")
+	# se recoge con la toalla y se encapucha: sigue con la misma garra y lo hecho, y el informe lo cuenta
+	var removed_r := float(r.care.snapshot().claw.removedMm3)
+	assert_true(bool(r.halted.get("recoverable", false)), "la rapaz que se suelta se puede recoger")
+	r.recapture()
+	assert_true(r.halted.is_empty() and not r.finished, "recogida: la sesión sigue")
+	assert_eq(r.patient.sedation, "sujecion", "encapuchada y envuelta")
+	assert_true(r.patient.resting, "y en la pausa, calmándose")
+	assert_eq(float(r.care.snapshot().claw.removedMm3), removed_r, "con lo que ya se había hecho")
+	assert_eq(r.escapes, 1, "se ha soltado una vez")
+	var s_r := r.patient.stress
+	_wait(r, 30.0)
+	assert_true(r.patient.stress < s_r, "a oscuras y quieta, el estrés baja (%s < %s)" % [r.patient.stress, s_r])
+	r.finish()
+	assert_true((r.result_sheet().get("advice", []) as Array).any(func(ad: Dictionary) -> bool: return String(ad.id) == "se_solto"), "el informe dice que se soltó")
+	# un tigre que ataca no se recoge así
+	var tg := State.new({ "animal": "tigre", "seed": "t3" })
+	tg.pick("lima_fina")
+	for i in 2:
+		tg.press_on(tg.care.apex_mm() - 1.0)
+		tg.release()
+	assert_eq(String(tg.halted.get("code", "")), "ataca", "el tigre ataca")
+	tg.recapture()
+	assert_false(tg.halted.is_empty(), "y eso no se arregla con una toalla")
 	# encapuchada, el estrés del tiempo solo avisa: no para la sesión
 	var h := State.new({ "animal": "rapaz", "seed": "r2" })
 	h.set_sedation("sujecion")
 	h.pick("lima_fina")
 	_stroke(h)
+	h.press_on(h.care.apex_mm() - 1.0)
 	_wait(h, 400.0, 10.0)
-	assert_true(h.patient.stress >= 1.0 - 1e-9 and h.halted.is_empty(), "encapuchada, sujeta mucho rato: estrés al máximo, pero sigue")
+	h.release()
+	assert_true(h.patient.stress >= 1.0 - 1e-9 and h.halted.is_empty(), "encapuchada, manejada mucho rato: estrés al máximo, pero sigue")
 
 
 # ════════ La sangre y la infección ════════

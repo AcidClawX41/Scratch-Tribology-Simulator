@@ -536,6 +536,8 @@ var _dims := {}
 ## La sesión parada por el estado del animal (unidad 5o, petición 51: se suelta, ataca o ha perdido demasiada sangre): {} o
 ## { code, title, text, todo, source }. Parada, no se sigue: se empieza de nuevo (R o «Empezar de nuevo»).
 var halted: Dictionary = {}
+## Las veces que la rapaz se ha soltado y se ha vuelto a recoger con la toalla (recapture): van al informe.
+var escapes := 0
 ## Los avisos del estado del animal ya dados (no se repiten).
 var _warned := {}
 ## Las veces que se han tocado las garras de un animal grande sin sedar ni anestesiar (el primer toque avisa; el segundo, ataca).
@@ -633,6 +635,7 @@ func configure(p: Dictionary = {}) -> void:
 	_gauze_s = 0.0
 	_beeps = 0
 	halted = {}
+	escapes = 0
 	_warned = {}
 	_unsafe_touches = 0
 	_blood_carry_s = 0.0
@@ -1043,7 +1046,7 @@ func _save_slot() -> void:
 ## ¿Se ha hecho algo en esta garra (más allá de dejar pasar el tiempo o de la sujeción)?
 static func _worked(cs: Array) -> bool:
 	for c: Array in cs:
-		if not (String(c[0]) in ["advance", "set_sedation"]):
+		if not (String(c[0]) in ["advance", "advance_held", "set_sedation"]):
 			return true
 	return false
 
@@ -1066,15 +1069,17 @@ func _record(method: String, args: Variant) -> void:
 ## Apunta un avance del reloj de la garra key (en sus llamadas cs y en las del ensayo). El tiempo seguido va en una sola
 ## entrada: ClawCare da lo mismo a trozos que de una vez, y el animal cuenta cada paso una sola vez.
 func _record_advance(key: String, cs: Array, secs: float) -> void:
-	if not cs.is_empty() and String(cs[cs.size() - 1][0]) == "advance":
+	# con la garra cogida (un gesto en marcha), ClawCare.advance_held: ese tiempo estresa al animal
+	var m := "advance_held" if patient.gripped else "advance"
+	if not cs.is_empty() and String(cs[cs.size() - 1][0]) == m:
 		cs[cs.size() - 1][1] = float(cs[cs.size() - 1][1]) + secs
 	else:
-		cs.append(["advance", secs])
+		cs.append([m, secs])
 	var n := history.size()
-	if n > 0 and String(history[n - 1][0]) == key and String(history[n - 1][1]) == "advance":
+	if n > 0 and String(history[n - 1][0]) == key and String(history[n - 1][1]) == m:
 		history[n - 1][2] = float(history[n - 1][2]) + secs
 	else:
-		history.append([key, "advance", secs])
+		history.append([key, m, secs])
 
 
 ## Las garras que no se ven pero siguen sangrando, al día con el reloj de la elegida.
@@ -1928,6 +1933,8 @@ func tick(dt: float) -> void:
 	_tick_reading(dt)
 	dt *= time_scale
 	_debt += dt
+	# con un gesto en marcha se le está cogiendo la garra: sin sujetar, ese tiempo sí le estresa (claw_care_patient.gd)
+	patient.gripped = not _gesture.is_empty()
 	var reserve := 0.0
 	if not _gesture.is_empty():
 		match String(_gesture.kind):
@@ -2389,7 +2396,31 @@ func finish() -> void:
 	_touch()
 
 
-## Vuelve al ensayo después de ver el informe (sin empezar otro). Con la sesión parada por el animal, no: se empieza de nuevo.
+## La rapaz que se ha soltado se recoge con una toalla, se encapucha y se deja calmar (Samour 2006, pp. 916-917): la
+## sesión sigue con la misma garra y lo hecho, sujeta con capucha y toalla y en la pausa; el informe cuenta las veces que
+## se soltó. Solo tras «se_suelta» (halted.recoverable): un tigre o un oso que ataca, o la sangre, no se arreglan así.
+func recapture() -> void:
+	if halted.is_empty() or not bool(halted.get("recoverable", false)):
+		return
+	escapes += 1
+	halted = {}
+	finished = false
+	_warned.erase("rapaz_suelta")
+	# al cogerla, aún suelta, puede clavar las garras: un zarpazo contra la lente puesta (ClawCareReaction.RECAPTURE)
+	var struck := patient.recapture_roll()
+	var hit_text := ""
+	if struck:
+		_sync_reaction()
+		hit_text = " Al cogerla te ha soltado un zarpazo: %s" % String(patient.reaction_lens.get("reason", ""))
+	care.set_sedation("sujecion")
+	_record("set_sedation", "sujecion")
+	patient.rest(true)
+	_notice = "La recoges con la toalla y la encapuchas: a oscuras se queda quieta y se va calmando. Sigue cuando la barra de estrés baje de «inquieto».%s" % hit_text
+	_after()
+
+
+## Vuelve al ensayo después de ver el informe (sin empezar otro). Con la sesión parada por el animal, no: se empieza de nuevo
+## (salvo la rapaz que se ha soltado, que se recoge: recapture).
 func resume() -> void:
 	if finished and halted.is_empty():
 		finished = false
@@ -2908,7 +2939,7 @@ func animal_view(sn: Dictionary = {}) -> Array:
 	var bl0 := blood_state()
 	var th0: Dictionary = s.thermal
 	var mk := [aid, patient.stress, patient.sedation, patient.moved, patient.restrained(), _unsafe_touches, float(bl0.lostMl),
-		bool(s.bleeding.active), float(th0.quickC), float(th0.peakQuickC), float(th0.painC), is_reforged(), s.claw.get("block") != null]
+		bool(s.bleeding.active), float(th0.quickC), float(th0.peakQuickC), float(th0.painC), float(th0.get("faceC", 0.0)), is_reforged(), s.claw.get("block") != null]
 	if mk == _animal_key:
 		return _animal_cache
 	var out: Array = []
@@ -2966,10 +2997,16 @@ func animal_view(sn: Dictionary = {}) -> Array:
 		var top := pain + 12.0
 		var q := float(th.quickC)
 		var ctone := "bien" if q < pain - 2.0 else ("aviso" if q < pain else "mal")
+		# la cara que se ha trabajado aún está más caliente que la carne viva: el calor sigue llegando por la queratina
+		# (va con retraso, la difusión del modelo térmico de ClawCare), aunque la herramienta ya esté parada
+		var face := float(th.get("faceC", q))
+		var arriving := face > q + 1.0
+		var lag := (" · sigue llegando el calor de la punta (%s °C): sube un rato aunque pares, porque tarda en atravesar la queratina." % Js.to_fixed(face, 0)) if arriving else ""
 		out.append({ "id": "calor", "label": "Calor", "value": clampf((q - bed) / (top - bed), 0.0, 1.0), "limit": (pain - bed) / (top - bed),
-			"text": "%s °C" % Js.to_fixed(q, 1), "short": "%s °C" % Js.to_fixed(q, 1), "tone": ctone, "source": src.calor[0], "quality_text": src.calor[1],
-			"tip": "La carne viva está a %s °C; duele desde ~%s °C (pico de este ensayo: %s °C). El roce del torno o de la amoladora calienta: toques de unos segundos, con pausas." % [
-				Js.to_fixed(q, 1), Js.to_fixed(pain, 0), Js.to_fixed(float(th.peakQuickC), 1)] })
+			"text": "%s °C%s" % [Js.to_fixed(q, 1), " ↑" if arriving else ""], "short": "%s °C%s" % [Js.to_fixed(q, 1), " ↑" if arriving else ""],
+			"tone": ctone, "source": src.calor[0], "quality_text": src.calor[1],
+			"tip": "La carne viva está a %s °C; duele desde ~%s °C (pico de este ensayo: %s °C)%s El roce del torno o de la amoladora calienta: toques de unos segundos, con pausas." % [
+				Js.to_fixed(q, 1), Js.to_fixed(pain, 0), Js.to_fixed(float(th.peakQuickC), 1), lag if arriving else "."] })
 	_animal_key = mk
 	_animal_cache = out
 	return out
@@ -3051,7 +3088,8 @@ func _check_animal() -> void:
 		if patient.stress >= 1.0 - 1e-9:
 			_halt("se_suelta", "Sesión parada: la rapaz se ha soltado.",
 				"Sin capucha ni toalla, se ha estresado al máximo mientras se le tocaban las garras y se ha soltado: una rapaz sin sujetar puede clavar las garras al que la maneja.",
-				"Empieza de nuevo (R) y elige «Capucha y toalla» en «Preparar al animal» antes de tocarla.", src)
+				"Recógela con la toalla y encapúchala («Recogerla y encapucharla») para seguir con esta garra, o empieza de nuevo (R) con «Capucha y toalla» elegida antes de tocarla.", src)
+			halted["recoverable"] = true
 			return
 		if patient.stress >= float(R.stressed):
 			_warn("rapaz_suelta", "¡La rapaz está muy estresada! Sin capucha ni toalla puede soltarse y clavarte las garras: encapúchala y envuélvela ya.")
@@ -3759,6 +3797,10 @@ func result_sheet() -> Dictionary:
 	# el consejo del calor ya habla de la herramienta giratoria que se ha usado (ClawCare, unidad 5g)
 	for ad: Dictionary in rep.advice:
 		adv.append({ "id": String(ad.get("id", "")), "title": String(ad.title), "text": String(ad.text), "source": short_source(String(ad.source)) })
+	if escapes > 0:
+		adv.append({ "id": "se_solto", "title": "Se ha soltado",
+			"text": "La rapaz se soltó %s y hubo que recogerla con la toalla. Encapúchala y envuélvela antes de tocarle las garras: así no se estresa hasta soltarse." % ("una vez" if escapes == 1 else "%d veces" % escapes),
+			"source": short_source(String(CareData.ANIMAL_RISK.source)) })
 	var rg: Variant = rep.regrow
 	# las demás garras que se han trabajado, con su veredicto y su nota (cada una tiene su propio informe)
 	var others: Array = []

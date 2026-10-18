@@ -50,6 +50,8 @@ static func _replay(st: State) -> ClawCare:
 				c.apply(call[1])
 			"advance":
 				c.advance(float(call[1]))
+			"advance_held":
+				c.advance_held(float(call[1]))
 			"set_sedation":
 				c.set_sedation(String(call[1]))
 			"set_humidity":
@@ -597,6 +599,8 @@ static func _replay_slot(st: State) -> ClawCare:
 				c.apply(call[1])
 			"advance":
 				c.advance(float(call[1]))
+			"advance_held":
+				c.advance_held(float(call[1]))
 			"set_sedation":
 				c.set_sedation(String(call[1]))
 			"set_humidity":

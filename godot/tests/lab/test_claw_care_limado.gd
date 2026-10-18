@@ -216,6 +216,8 @@ func test_el_kit_es_del_ensayo_y_history_lo_repite() -> void:
 				c.file(e[2])
 			"advance":
 				c.advance(float(e[2]))
+			"advance_held":
+				c.advance_held(float(e[2]))
 			"set_sedation":
 				c.set_sedation(String(e[2]))
 			"renew_tool":

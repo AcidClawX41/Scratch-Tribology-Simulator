@@ -53,6 +53,12 @@ const REACTION := {
 	"warn_s": 2.0, "gap_s": 20.0, "quality": "estimate",
 	"source": "índice pedagógico del simulador, sin medición: el animal puede revolverse cuando su estrés pasa de «inquieto» y la sujeción no basta para su especie, y es más probable cuanto más estresado está; una rapaz sin sujetar puede «clavar» al que la maneja (Samour 2006, pp. 916-917) y a un tigre o a un oso solo se le tocan las garras anestesiado (Cat Tales 2024; Animals Asia). La probabilidad (una tirada cada 2 s, con la curva de exponente 1,5), el aviso de 2 s (la postura de amenaza) y una reacción cada 20 s como mucho son reglas del juego",
 }
+## Recoger al animal que se ha soltado (ClawCareState.recapture): la probabilidad de llevarse un zarpazo al cogerlo, que
+## puede marcar la lente puesta (petición de Eric del 18-10-2026). Regla del juego.
+const RECAPTURE := {
+	"chance": 0.4, "quality": "juego",
+	"source": "regla del juego (Eric Valls Gramunt, 18-10-2026): al recoger una rapaz que se ha soltado puede clavar las garras al que la coge (Samour 2006, pp. 916-917); el 40 % es del juego, sin medición",
+}
 ## Lo que puede moverse el animal con cada sujeción que NO basta para su especie (0-1, índice de juego): suelto, del todo;
 ## sedado sin la anestesia que pide un animal grande, poco (un dolor fuerte lo despierta: CareData.SEDATION.sedacion); una
 ## toalla no sujeta a un tigre. Con la que basta (adequate_for), 0: no reacciona.

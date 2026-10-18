@@ -25,6 +25,11 @@ var stress := 0.0
 ## Dolor de la última acción y el más fuerte (0-1, índices pedagógicos).
 var pain := 0.0
 var max_pain := 0.0
+## Solo pasa el tiempo (ClawCare.advance): nadie le toca las garras. Sin sujetar, entonces el tiempo no le estresa...
+var idle := false
+## ...salvo si se le está cogiendo la garra con una herramienta (un gesto en marcha de ClawCareState: la pasada, el torno
+## apoyado, la presión o el cortaúñas cerrándose): entonces sí la manejan.
+var gripped := false
 ## Veces que se ha movido de dolor, con cualquiera de sus garras.
 var moved := 0
 ## Se le tocaron las garras a un tigre, un oso o un velocirraptor sin sedación ni anestesia (anestesiarlo después no lo borra).
@@ -168,9 +173,12 @@ func count_step(step: int, rate: float, dt: float) -> void:
 	_update_reaction()
 
 
-## ¿Suma estrés el tiempo que pasa? Sin sujetar y sin tocarlo, nadie lo maneja: no (unidad 5o); en la pausa, tampoco.
+## ¿Suma estrés el tiempo que pasa? Solo mientras se le manejan las garras (una acción o un gesto en marcha: gripped), a
+## la velocidad de su sujeción (stress_rate). Si solo pasa el tiempo (idle, ClawCare.advance), nadie lo toca: no suma, con
+## cualquier sujeción; y en la pausa baja (CALM). Eric, petición 51 y 18-10-2026: «no quiero algo hardcore»; antes, tocarlo
+## una vez lo hacía sumar para siempre (un 2 % por segundo sin sujetar con la herramienta ya parada).
 func accumulates() -> bool:
-	return not resting and (handled or sedation != "libre")
+	return not resting and handled and (gripped or not idle)
 
 
 ## La reacción al dolor p (0-1) de una acción en cualquiera de sus garras: el estrés sube y, si pasa de lo que aguanta con su
@@ -245,6 +253,24 @@ func _update_reaction() -> void:
 		_last_react_k = k
 		_arm_k = -1
 		serial += 1
+
+
+## Al recogerlo después de soltarse (ClawCareState.recapture): una tirada con su azar (determinista) y, si sale
+## (ClawCareReaction.RECAPTURE.chance), un zarpazo como el de la reacción, con su intensidad y su lente por calcular.
+## true si ha habido zarpazo.
+func recapture_roll() -> bool:
+	if _rng.next() >= float(Reaction.RECAPTURE.chance):
+		return false
+	reaction_seq += 1
+	reaction_warning = false
+	# aún suelta: se mueve del todo (la sujeción llega después)
+	reaction_intensity = Reaction.intensity_of(1.0, stress)
+	reaction_lens = {}
+	lens_pending = true
+	_last_react_k = k
+	_arm_k = -1
+	serial += 1
+	return true
 
 
 ## La reacción para la escena (copia): { seq, warning, kind, intensity, lens } (el contrato con la 5t-B).

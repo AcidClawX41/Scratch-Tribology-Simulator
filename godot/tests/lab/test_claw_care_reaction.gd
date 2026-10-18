@@ -304,6 +304,8 @@ func test_la_reaccion_en_el_estado_con_su_lente() -> void:
 	st.release()
 	var warned := false
 	var guard := 0
+	# sigue cogiéndole la garra (sin sujetar, el tiempo quieta ya no la estresa: test_claw_care_guiado)
+	st.press_on(s0)
 	while int(st.view().animal.reaction.seq) == 0 and guard < 4000 and st.halted.is_empty():
 		st.tick(0.1)
 		warned = warned or bool(st.view().animal.reaction.warning)
@@ -496,9 +498,11 @@ func test_el_primer_ataque_ensenya_a_calmarlo() -> void:
 		st.tick(FRAME)
 	st.release()
 	var guard := 0
+	st.press_on(s0)
 	while int(st.view().animal.reaction.seq) == 0 and guard < 4000:
 		st.tick(0.1)
 		guard += 1
+	st.release()
 	assert_eq(int(st.view().animal.reaction.seq), 1, "se ha revuelto")
 	assert_eq(st.process_id(), "calmar", "el tutorial salta a «Tras un ataque»")
 	assert_eq(String(st.current_step().id), "calma_pausa", "primero, parar")
@@ -647,3 +651,39 @@ func test_una_garra_mas_afilada_es_mas_peligrosa_para_la_lente() -> void:
 	var va := st.view()
 	assert_true(int((va.lens_danger as Dictionary).rank) >= int((v.lens_danger as Dictionary).rank), "con las puntas de aguja, nunca menos peligro")
 	assert_true(String((va.lens_danger as Dictionary).text).contains("más afiladas"), "y lo dice: %s" % (va.lens_danger as Dictionary).text)
+
+
+## Recoger la rapaz que se ha soltado: un 40 % de las veces (regla del juego, Eric 18-10-2026) suelta un zarpazo que
+## puede marcar la lente puesta.
+func test_recogerla_tras_soltarse_puede_costar_un_zarpazo() -> void:
+	var p := Patient.new("rapaz", "libre", "aguila")
+	var hits := 0
+	var n := 2000
+	for i in n:
+		if p.recapture_roll():
+			hits += 1
+	var f := float(hits) / float(n)
+	assert_near(f, float(Reaction.RECAPTURE.chance), 0.0, 0.04, "un %s de las veces (pide 0.4)" % f)
+	assert_eq(String(Reaction.RECAPTURE.quality), "juego", "regla del juego, marcada")
+	# en la sesión: con zarpazo, su lente calculada y dicho en el aviso; sin él, nada
+	var seen := { true: false, false: false }
+	for seed: String in ["z1", "z2", "z3", "z4", "z5", "z6", "z7", "z8"]:
+		var st := State.new({ "animal": "rapaz", "claw": "aguila", "seed": seed })
+		st.pick("lima_fina")
+		var s0 := st.care.apex_mm() - 1.0
+		st.press_on(s0)
+		for i in 4:
+			st.drag(3.0, 3.0, s0, FRAME)
+			st.tick(FRAME)
+		st.halted = { "code": "se_suelta", "recoverable": true }
+		st.finished = true
+		var seq0 := int(st.patient.reaction_seq)
+		st.recapture()
+		var struck := int(st.patient.reaction_seq) > seq0
+		seen[struck] = true
+		if struck:
+			assert_false(st.patient.reaction_lens.is_empty(), "%s: el zarpazo trae su lente" % seed)
+			assert_true(String(st.view().notice).contains("zarpazo"), "%s: y lo dice: %s" % [seed, st.view().notice])
+		else:
+			assert_false(String(st.view().notice).contains("zarpazo"), "%s: sin zarpazo, no lo dice" % seed)
+		assert_eq(st.patient.sedation, "sujecion", "%s: encapuchada después" % seed)

@@ -241,6 +241,7 @@ var report_list: VBoxContainer
 var report_advice: VBoxContainer
 var report_regrow: Label
 var resume_button: Button
+var recapture_button: Button
 var bench_button: Button
 var bench_note: Label
 var status_label: Label
@@ -953,6 +954,13 @@ func _build_report() -> void:
 			try_on_bench.emit(b))
 	_a11y(bench_button, "Probar en el banco", "Lleva esta garra (el animal, el material y lo afilada que ha quedado la punta) a la página «Banco de ensayo».")
 	row.add_child(bench_button)
+	recapture_button = Button.new()
+	recapture_button.text = "Recogerla y encapucharla"
+	recapture_button.theme_type_variation = &"PillGold"
+	recapture_button.pressed.connect(func() -> void: _post("recapture"))
+	_a11y(recapture_button, "Recogerla y encapucharla", "Se recoge la rapaz con la toalla, se encapucha y se deja calmar: sigues con esta garra y lo que llevas hecho.")
+	recapture_button.visible = false
+	row.add_child(recapture_button)
 	var again := Button.new()
 	again.text = "Otra garra"
 	again.pressed.connect(func() -> void: _post("restart"))
@@ -1516,6 +1524,7 @@ func _paint_report(v: Dictionary, force: bool) -> void:
 	if not hl.is_empty():
 		report_halt.text = "%s %s %s (Fuente: %s)" % [String(hl.title), String(hl.text), String(hl.todo), String(hl.source)]
 	resume_button.visible = hl.is_empty()
+	recapture_button.visible = bool(hl.get("recoverable", false))
 	report_grade.text = String(sh.grade_text)
 	report_verdict.text = "%s: %s" % [String(sh.get("claw_label", "")), String(sh.verdict_text)] if String(sh.get("claw_label", "")) != "" else String(sh.verdict_text)
 	report_quick.text = String(v.texts.quick)

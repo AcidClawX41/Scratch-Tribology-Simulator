@@ -351,6 +351,8 @@ static func _apply(c: ClawCare, method: String, args: Variant) -> void:
 			c.clip(args)
 		"advance":
 			c.advance(float(args))
+		"advance_held":
+			c.advance_held(float(args))
 		"set_sedation":
 			c.set_sedation(String(args))
 		"set_humidity":

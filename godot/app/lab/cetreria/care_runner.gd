@@ -21,7 +21,7 @@ const CarePaw = preload("res://app/lab/cetreria/care_paw.gd")
 
 ## Órdenes que se pueden mandar: los métodos de ClawCareState que cambian algo.
 const OPS := [
-	"configure", "restart", "set_animal", "set_claw", "set_inlay", "set_overgrowth_days", "set_tip_start", "set_sedation", "set_humidity",
+	"configure", "restart", "recapture", "set_animal", "set_claw", "set_inlay", "set_overgrowth_days", "set_tip_start", "set_sedation", "set_humidity",
 	"pick", "drop", "set_force", "nudge_force", "wheel_force", "set_angle", "nudge_angle", "set_rotary", "toggle_rotary",
 	"set_rpm_index", "cycle_rpm", "set_paused", "toggle_pause", "press_on", "drag", "release", "tick", "finish", "resume",
 	"set_tutorial", "tutorial_next", "tutorial_prev", "tutorial_goto", "set_time_scale", "dismiss_mistake",

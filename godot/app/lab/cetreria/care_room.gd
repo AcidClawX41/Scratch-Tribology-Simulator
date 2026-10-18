@@ -192,7 +192,9 @@ static func _clinic(root: Node3D, edge_x: float, x0: float, z0: float, z1: float
 	_box(root, Vector3(0.04, 2.8, z1 + 3.0 - side_z), Vector3(back_x, -TABLE_H + 1.4, 0.5 * (side_z + z1 + 3.0)), wall_m, "Pared")
 	_box(root, Vector3(edge_x + 3.0 - back_x, 2.8, 0.04), Vector3(0.5 * (back_x + edge_x + 3.0), -TABLE_H + 1.4, side_z), wall_m, "ParedLateral")
 	# la ventana de la pared del fondo: luz fría de día (el sol entra por ella)
-	_window(root, Vector3(back_x + 0.03, 0.55, cz + 0.2), Vector2(1.6, 1.1), Color(0.86, 0.93, 1.0), mobile)
+	var win_c := Vector3(back_x + 0.03, 0.55, cz + 0.2)
+	var win_size := Vector2(1.6, 1.1)
+	_window(root, win_c, win_size, Color(0.86, 0.93, 1.0), mobile)
 	out["window"] = Vector3(back_x, 0.55, cz + 0.2)
 	# la mesa de quirófano: el tablero de acero con su reborde, la columna hidráulica y el pie
 	_box(root, Vector3(w, 0.03, d), Vector3(cx, -0.015, cz), steel, "Mesa")
@@ -208,7 +210,8 @@ static func _clinic(root: Node3D, edge_x: float, x0: float, z0: float, z1: float
 	var cab := Node3D.new()
 	cab.name = "Vitrina"
 	root.add_child(cab)
-	var cab_z := z0 + 0.1
+	# al lado de la ventana, nunca delante: el armario (1 m) acaba 8 cm antes del marco
+	var cab_z := win_c.z - win_size.x * 0.5 - 0.08 - 0.5
 	_box(cab, Vector3(0.34, 0.9, 1.0), Vector3(back_x + 0.19, 0.75, cab_z), _mat(Color("#E8ECEE"), 0.4), "Armario")
 	var glass := StandardMaterial3D.new()
 	glass.albedo_color = Color(0.8, 0.9, 0.95, 0.25)
@@ -283,7 +286,9 @@ static func _falconry(root: Node3D, edge_x: float, x0: float, z0: float, z1: flo
 	# el zócalo de madera y la viga del techo
 	_box(root, Vector3(0.03, 0.5, z1 + 3.0 - side_z), Vector3(back_x + 0.03, -TABLE_H + 0.25, 0.5 * (side_z + z1 + 3.0)), leg_wood, "Zocalo")
 	# la ventana: luz cálida de la tarde
-	_window(root, Vector3(back_x + 0.03, 0.6, cz + 0.35), Vector2(1.1, 0.9), Color(1.0, 0.9, 0.72), mobile)
+	var win_c := Vector3(back_x + 0.03, 0.6, cz + 0.35)
+	var win_size := Vector2(1.1, 0.9)
+	_window(root, win_c, win_size, Color(1.0, 0.9, 0.72), mobile)
 	out["window"] = Vector3(back_x, 0.6, cz + 0.35)
 	# el banco de trabajo: tablero grueso de tablas, cuatro patas y la balda de abajo
 	var top_m := wood.duplicate() as StandardMaterial3D
@@ -299,7 +304,8 @@ static func _falconry(root: Node3D, edge_x: float, x0: float, z0: float, z1: flo
 	var shelf := Node3D.new()
 	shelf.name = "Estante"
 	root.add_child(shelf)
-	var sz := z0 + 0.3
+	# al lado de la ventana, nunca delante: la tabla (1 m) acaba 10 cm antes del marco
+	var sz := win_c.z - win_size.x * 0.5 - 0.1 - 0.5
 	_box(shelf, Vector3(0.22, 0.025, 1.0), Vector3(back_x + 0.12, 0.75, sz), leg_wood, "Tabla")
 	var leather := [Color("#5C3B22"), Color("#7A4E2C"), Color("#3E2A1A")]
 	for k in 3:

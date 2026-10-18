@@ -1506,8 +1506,20 @@ func probe_tip(p: Dictionary = {}) -> Dictionary:
 
 ## Deja pasar el tiempo sin tocar la garra (enfría, sangra si no se ha parado, el animal se cansa o descansa).
 func advance(seconds: float) -> void:
+	_patient.idle = true
 	_idle_run(maxf(seconds, 0.0))
+	_patient.idle = false
 	_serial += 1
+
+
+## Lo mismo mientras se le coge la garra con una herramienta (un gesto en marcha de ClawCareState): el animal se está
+## manejando y ese tiempo le suma estrés (claw_care_patient.gd, gripped). Es su propia llamada para que repetir las llamadas
+## de un ensayo dé el mismo animal.
+func advance_held(seconds: float) -> void:
+	var was := _patient.gripped
+	_patient.gripped = true
+	advance(seconds)
+	_patient.gripped = was
 
 
 ## El calor que desprende el acrílico al fraguar (unidad 5o; ClawCareBond.heat_between): p { w (W, la potencia media),
