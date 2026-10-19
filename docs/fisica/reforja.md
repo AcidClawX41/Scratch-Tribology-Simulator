@@ -783,6 +783,52 @@ con la rampa del cuerpo negro de core y el destello suave) es dibujo.
   1,94-2,01 ms de media (repinta más: cada pulso cambia la tarjeta), con algún repintado suelto de 42-46 ms (en main, el
   pico del caso 13 llega a 22-29 ms).
 
+## 19. Pesar los polvos para la pieza de esta garra (5w)
+
+Eric, con el metal duro en el paso 1: «no sé cuántos gramos de cada polvo echar». Hasta la 5w la balanza solo miraba la
+proporción, lo recomendado era un lote de 100 g y la tarjeta escribía el WC con cero decimales (95 % + 5,5 % = 100,5 %; la
+receta es WC-5,5Co, el 94,5 %).
+
+- **Lo que pide la pieza** (`ClawForge.mix_plan`): el volumen de lo que se hace por la densidad del material (la de
+  `ClawMass`, con su fuente) y, de cada polvo, ese total por su fracción en peso de la receta.
+  - Lo que se talla de un cristal (la bola de Verneuil, el cristal HPHT): el cilindro que contiene la funda (`rawVolumeMm3`).
+  - Lo que sale casi con su forma (el sinterizado y la capa de la CVD): la funda (`volumeMm3`; el sinterizado conserva la masa
+    aunque encoja).
+  - Lo colado: el modelo de cera con su bebedero (`wax_volume_mm3`, el mismo de `wax()`; antes de la cera, con la cera a la
+    medida y el molde de la receta). La colada sigue comprobando `metalG` («poco metal»).
+  - El diamante HPHT: el grafito es el carbono del cristal; la carga es ese carbono entre su fracción (30 %), y el grafito nunca
+    puede pesar menos que el cristal (`poco_carbono`).
+  - La CVD no pesa polvo: el gas entra de la botella. En la balanza se pesa, **por juego**, el carbono de la capa.
+- **La tolerancia**: se pesa un 10 % de más (lo que se queda en el plato, el crisol o la tolva) y se admite hasta un 20 % por
+  encima de lo que pide la pieza; por debajo no llega. Los dos números son de **juego**. Con la proporción fuera de la receta o
+  la masa fuera de ese margen, `mix()` no da la mezcla por buena y la balanza no carga el crisol (lo dice y dice cómo se arregla).
+- **Por dentro del margen** (`ClawForge.mix_aims`): cada polvo se pesa para la proporción de la receta, salvo que esté en el
+  borde de su margen. El 0,25 % de MgO de la alúmina es su mínimo: apuntando a él, lo que no distingue la balanza (0,1 mg) dejaba
+  la mezcla fuera aunque se siguieran los botones. Entonces se apunta un 10 % del margen por dentro (0,275 %; **juego**), las
+  proporciones siguen sumando el 100 % y la frase de la balanza y del tutorial lo dice.
+- **El arreglo** (`mix_status().fix`): echar lo que falta, en múltiplos de lo que distingue la balanza (nunca «echa 0.0000 g»); con un solo polvo en el plato, quitar lo que sobra (vuelve al tarro con
+  la espátula); con varios, ya mezclados, no se separan: compensar echando de los otros si cabe en lo que se admite, o vaciar el
+  plato. Un test comprueba que lo que propone deja la mezcla en tolerancia.
+- **La balanza**: una analítica de 220 g que distingue 0,1 mg (como la Mettler Toledo ME204): los miligramos de MgO de la alúmina
+  (0,25-0,5 %) o de Cr₂O₃ del rubí se pueden pesar. La pantalla, con 4 decimales y la tara (Z). Las dosis de cada polvo y el chorro
+  del tarro van con su objetivo (elección de la interfaz).
+
+| Valor | Fuente | Tipo |
+|---|---|---|
+| Densidades del zafiro, el rubí, el metal duro, la alúmina, el acero, el oro, el titanio, el vidrio y el diamante | `ClawMass.DENSITY` (las suyas) | las de cada dato |
+| Fracciones en peso y márgenes de cada receta | las recetas de este documento (§3) | las de cada receta |
+| Se pesa un 10 % de más; se admite hasta un 20 % por encima | elección del juego | juego |
+| Balanza de 220 g que distingue 0,1 mg | ficha de una balanza analítica (Mettler Toledo ME204) | ficha |
+| El carbono de la capa de la CVD en la balanza | elección del juego | juego |
+| Se apunta un 10 % del margen por dentro si la receta está en su borde | elección del juego | juego |
+
+**El tutorial, jugable con los mandos (5w).** Los valores que pide cada paso son los que marcan los mandos de la página: el dial del
+tiempo va por marcas (el paso dice la primera que llega a lo que tarda la funda: «1 h 30 min», no «1 h 6 min o más») y el de la
+temperatura, de 5 en 5 °C (el quemado del revestimiento de fosfato pide 871 °C: el paso dice «875 °C»). Un test juega cada receta
+solo con los botones de dosis y los pasos de los diales y llega al final. «Otra pieza» (y otra forma, otra pared u otra garra)
+vuelve al primer paso del tutorial; una pieza que ya no se arregla (agrietada al enfriar, agujereada al tallar) lo dice y manda a
+«Otra pieza». No cambia ninguna física.
+
 ## 16. Fuentes
 
 - Abrisa Technologies. Soda-Lime Float Glass, ficha técnica.

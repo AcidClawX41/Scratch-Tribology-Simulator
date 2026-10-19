@@ -43,8 +43,8 @@ const TITLE := "Laboratorio experimental (reforja)"
 const INTRO := "La rama experimental del trabajo veterinario: una funda o una prótesis de otro material para la garra, hecha aparte en el taller, como una corona dental. Pesa los polvos, mete la carga en su máquina, ajusta los mandos del horno a la receta (el tiempo es el de verdad, a la velocidad que elijas), enfría, talla por pasadas, protege la carne viva y pule; la funda terminada y sin pegar pasa a la cetrería, donde se coloca y se acaba a mano."
 const BANNER := "El horno que lo junta todo es FICCIÓN: cada modo es una máquina real (horno de mufla o de vacío, inducción, soplete de Verneuil, prensa de alta presión, reactor de plasma), con sus temperaturas y atmósferas de verdad, pero ninguna las reúne. La garra viva no entra en el horno: la queratina se quema a ~230 °C. Recubrir la garra en el animal es ficción y así se dice."
 const HELP_MOUSE := "Ratón · izquierdo sobre un tarro: cogerlo; arrastrado sobre el plato de la balanza y mantenido: verter (Mayús: gota a gota) · izquierdo sobre un dial y arrastrar arriba o abajo: girarlo (Mayús: paso fino); rueda sobre él: un paso · clic en un selector: la opción siguiente · clic en la puerta del horno (o arrastrar el crisol hasta ella): meter la carga · clic en el botón rojo: arrancar; en el amarillo: sacar y enfriar · clic en el crisol, la caja de las piedras, la cera, la sierra, la muela, la garra, la pistola o la pulidora: lo que hace cada uno · en la mesa de soldar: clic en el aparato (el láser, el micro-TIG o el soplete) lo elige y coloca las piezas; arrastrar la punta la alinea; apretado sobre la costura y recorriéndola: los puntos · derecho: girar la cámara · central: desplazarla · rueda: acercar."
-const HELP_KEYS := "Teclado · A/D: el mando anterior o el siguiente · W/S: girarlo (Mayús: paso fino) · L: cargar el crisol (o comprar la piedra) · M: meter la carga en su máquina · Intro: arrancar · X: la velocidad (Mayús: la anterior) · Espacio: acabar ya · E: sacar y enfriar · C: la cera perdida (el modelo, revestir, romper el molde) · G: la herramienta de tallar (Mayús: la anterior) · T: una pasada (Mayús: una suave) · B: proteger la carne viva · R: recubrir · O: pulir · U: probar el ajuste · Q: colocar las piezas en la mesa de soldar · F: el método de soldar · I: alinear las piezas · J: un punto en el primer tramo sin soldar (mantenla pulsada: sigue) · Retroceso: vaciar la balanza · P: poner lo recomendado · N: siguiente paso del tutorial · V: vista · H: esta ayuda · Esc: soltar el tarro."
-const HELP_TOUCH := "Teléfono · un dedo: tocar un tarro para cogerlo y mantenerlo sobre el plato para verter (o los botones +10 g, +1 g y +0,1 g de la balanza); tocar un mando para elegirlo y moverlo con el deslizador grande de la vista; los botones «Meter», «Arrancar» y «Enfriar», sobre la vista · dos dedos: girar la cámara y, al separarlos o juntarlos, acercar. Los botones de las tarjetas hacen lo mismo que las teclas."
+const HELP_KEYS := "Teclado · A/D: el mando anterior o el siguiente · W/S: girarlo (Mayús: paso fino) · Z: la tara de la balanza (la pantalla a cero) · L: cargar el crisol (o comprar la piedra) · M: meter la carga en su máquina · Intro: arrancar · X: la velocidad (Mayús: la anterior) · Espacio: acabar ya · E: sacar y enfriar · C: la cera perdida (el modelo, revestir, romper el molde) · G: la herramienta de tallar (Mayús: la anterior) · T: una pasada (Mayús: una suave) · B: proteger la carne viva · R: recubrir · O: pulir · U: probar el ajuste · Q: colocar las piezas en la mesa de soldar · F: el método de soldar · I: alinear las piezas · J: un punto en el primer tramo sin soldar (mantenla pulsada: sigue) · Retroceso: vaciar la balanza · P: poner lo recomendado · N: siguiente paso del tutorial · V: vista · H: esta ayuda · Esc: soltar el tarro."
+const HELP_TOUCH := "Teléfono · un dedo: tocar un tarro para cogerlo y mantenerlo sobre el plato para verter (o los botones de dosis de cada polvo en la balanza); tocar un mando para elegirlo y moverlo con el deslizador grande de la vista; los botones «Meter», «Arrancar» y «Enfriar», sobre la vista · dos dedos: girar la cámara y, al separarlos o juntarlos, acercar. Los botones de las tarjetas hacen lo mismo que las teclas."
 const INTRO_TEXT := "El tutorial del horno explica cada mando (qué hace y por qué importa), cómo se mete cada carga en su máquina y el reloj del tiempo de verdad; después, el de cada material te lleva paso a paso: qué polvos y en qué proporción, los parámetros con su margen bueno, la cera perdida de los metales y del vidrio, cómo enfriar, el tallado por pasadas y qué sale si te equivocas. El mando que toca se ilumina en la vista."
 const WIDE := 1000.0
 const SIDE_W := 440.0
@@ -97,6 +97,9 @@ var view_seg: PillChoice
 var hud_title: Label
 var hud_state: Label
 var hud_notice: Label
+## 5w · junto a la balanza, sobre la vista: lo que lleva y lo que falta de cada polvo, y el aviso («Listo: carga el crisol (L)»).
+var hud_scale: Label
+var hud_box: MarginContainer
 var help_panel: PanelContainer
 var help_pill: Pill
 var status_label: Label
@@ -118,6 +121,8 @@ var tut_source: Label
 var tut_control: Label
 var tut_status: Label
 var tut_mistake: Label
+## 5w · la receta no sale con esta garra y esta forma (State.feasibility): por qué y qué probar.
+var tut_warn: Label
 var tut_prev: Button
 var tut_next: Button
 var tut_do: Button
@@ -141,6 +146,7 @@ var other_box: VBoxContainer
 var others_toggle: Pill
 var bench_total: Label
 var bench_mix: Label
+var bench_plan: Label
 var load_button: Button
 var furnace_card: Card
 var control_rows := {}
@@ -363,6 +369,7 @@ func _build_view() -> void:
 	_a11y(view3d, "Vista 3D del taller de la reforja: la balanza, el horno y el taller", HELP_MOUSE + " " + HELP_TOUCH)
 	view_box.add_child(view3d)
 	var hud := Ui.margin(12, 10, 12, 10)
+	hud_box = hud
 	hud.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
 	hud.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var col := Ui.vbox(2)
@@ -371,7 +378,8 @@ func _build_view() -> void:
 	hud_title = Ui.para("", "Small", "gold")
 	hud_state = Ui.para("", "Small", "text")
 	hud_notice = Ui.para("", "Small", "rose")
-	for l: Label in [hud_title, hud_state, hud_notice]:
+	hud_scale = Ui.para("", "Small", "text")
+	for l: Label in [hud_title, hud_state, hud_notice, hud_scale]:
 		l.add_theme_color_override("font_outline_color", Color(0.05, 0.02, 0.07, 0.85))
 		l.add_theme_constant_override("outline_size", 6)
 		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -520,6 +528,8 @@ func _build_tutorial() -> void:
 	tut_card.body.add_child(tut_choice)
 	tut_title = Ui.para("", "CardTitle")
 	tut_card.body.add_child(tut_title)
+	tut_warn = Ui.para("", "Body", "coral")
+	tut_card.body.add_child(tut_warn)
 	tut_text = Ui.para("", "Body")
 	tut_card.body.add_child(tut_text)
 	tut_source = Ui.para("", "Note", "dim")
@@ -645,6 +655,9 @@ func _build_lost_wax() -> void:
 func _build_bench() -> void:
 	bench_card = Card.new("La balanza y el crisol")
 	var sv: Dictionary = runner.latest().bench
+	# 5w · lo que pide la pieza de esta garra (de dónde sale el total y lo que vale)
+	bench_plan = Ui.para("", "Note", "dim")
+	bench_card.body.add_child(bench_plan)
 	other_box = Ui.vbox(6)
 	for j: Dictionary in sv.jars:
 		var row := _jar_row(j)
@@ -660,11 +673,14 @@ func _build_bench() -> void:
 	bench_card.body.add_child(other_box)
 	bench_total = Ui.para("", "Body")
 	bench_card.body.add_child(bench_total)
-	bench_mix = Ui.para("", "Small", "dim")
+	bench_mix = Ui.para("", "Body", "dim")
 	bench_card.body.add_child(bench_mix)
 	var row2 := Ui.flow()
 	var clear := _button("Vaciar (Retroceso)", "Pill", "Vacía el plato de la balanza.")
 	clear.pressed.connect(func() -> void: _post("clear_pan"))
+	var tare := _button("Tara (Z)", "Pill", "Pone la pantalla de la balanza a cero con lo que hay en el plato, para pesar el polvo siguiente desde cero.")
+	tare.pressed.connect(func() -> void: _post("tare"))
+	row2.add_child(tare)
 	var rec := _button("Poner lo recomendado (P)", "Pill", "Pone en la balanza y en los mandos lo que recomienda la receta, sin arrancar nada.")
 	rec.pressed.connect(func() -> void: _post("apply_recommended"))
 	load_button = _button("Cargar el crisol (L)", "PillGold", "Carga lo pesado en el crisol o en el alimentador del soplete.")
@@ -685,17 +701,38 @@ func _jar_row(j: Dictionary) -> Dictionary:
 	var line := Ui.para("", "Small", "dim")
 	box.add_child(line)
 	var row := Ui.flow(5, 5)
-	for d: Array in [[10.0, "+10 g"], [1.0, "+1 g"], [0.1, "+0,1 g"], [-1.0, "−1 g"]]:
-		var g := float(d[0])
-		var b := _button(String(d[1]), "Pill", "%s %s de %s." % ["Añade" if g > 0.0 else "Quita", String(d[1]).trim_prefix("+").trim_prefix("−"), String(j.name).to_lower()])
-		b.pressed.connect(func() -> void: _post("add_powder", [id, g]))
+	# 5w · las dosis van con el objetivo de cada polvo (State.doses_for): las tres de añadir y la de quitar
+	var dose_g: Array = []
+	var dose_b: Array = []
+	var ds: Array = (j.doses as Array) + [j.minus]
+	for i in ds.size():
+		var d: Dictionary = ds[i]
+		dose_g.append(float(d.g))
+		var b := _button(String(d.label), "Pill", "")
 		row.add_child(b)
+		dose_b.append(b)
+	var entry := { "box": box, "line": line, "head": head, "dose_g": dose_g, "dose_b": dose_b }
+	for i in dose_b.size():
+		var k := i
+		(dose_b[i] as Button).pressed.connect(func() -> void: _post("add_powder", [id, float((entry.dose_g as Array)[k])]))
+	_dose_tips(entry, String(j.name))
 	var pick := Pill.new("Coger el tarro")
 	pick.pressed.connect(func() -> void: _post("pick_jar", [id]))
 	_a11y(pick, "Coger el tarro: %s" % String(j.name), "Con el tarro en la mano, mantenlo sobre el plato para verter.")
 	row.add_child(pick)
 	box.add_child(row)
-	return { "box": box, "line": line, "head": head, "pick": pick }
+	entry["pick"] = pick
+	return entry
+
+
+## El texto y la ayuda de los botones de dosis de un polvo (5w: cambian con su objetivo).
+func _dose_tips(entry: Dictionary, nm: String) -> void:
+	for i in (entry.dose_b as Array).size():
+		var g := float((entry.dose_g as Array)[i])
+		var b: Button = entry.dose_b[i]
+		var amount := State._dose_label(absf(g))
+		b.text = ("+" if g > 0.0 else "−") + amount
+		_a11y(b, "%s %s de %s" % ["Añade" if g > 0.0 else "Quita", amount, nm.to_lower()], "Quitar solo se puede con ese polvo solo en el plato: mezclado con otros ya no se separa." if g < 0.0 else "Echa esa dosis en el plato de la balanza.")
 
 
 ## El horno: un renglón por mando (deslizador o selector), con su margen bueno, y los botones.
@@ -1154,6 +1191,8 @@ func set_view(id: String) -> void:
 	_update_inset()
 	if scene != null:
 		scene.call("set_view", id)
+	if not _v.is_empty():
+		_paint_hud(_v)
 
 
 ## El deslizador grande de los mandos del horno sobre la vista: en el teléfono (o una ventana estrecha), salvo en la mesa de
@@ -1209,9 +1248,9 @@ func _apply_view(v: Dictionary, force: bool) -> void:
 	if scene != null:
 		scene.call("show_view", v)
 	_paint_hud(v)
-	if _changed("tut", [v.tutorial, v.mistake].hash(), force):
+	if _changed("tut", [v.tutorial, v.mistake, v.feasible].hash(), force):
 		_paint_tutorial(v)
-	if _changed("make", [v.process, v.shape, v.wall, v.stone, v.sheath.text].hash(), force):
+	if _changed("make", [v.process, v.shape, v.wall, v.stone, v.sheath.text, v.feasible].hash(), force):
 		_paint_make(v)
 	if _changed("bench", (v.bench as Dictionary).hash(), force):
 		_paint_bench(v)
@@ -1262,6 +1301,14 @@ func _paint_hud(v: Dictionary) -> void:
 	if bool(wv.get("at_bench", false)):
 		line += " · " + (String(wv.bar_text) if String(wv.bar_text) != "" else String(wv.what))
 	hud_state.text = line
+	# 5w · junto a la balanza (la vista «La balanza» o con un tarro en la mano): cada polvo y el aviso
+	var bv: Dictionary = v.bench
+	var hl: Array = bv.get("hud", [])
+	var at_scale := (view == "banco" or String(bv.held) != "") and not hl.is_empty() and not bool(v.running)
+	hud_scale.visible = at_scale
+	if at_scale:
+		hud_scale.text = "Balanza: %s\n%s\n%s" % [String(bv.scale_text), "\n".join(hl), String(bv.get("status_short", bv.status_text))]
+		Ui.set_color(hud_scale, String(TONE.get(String(bv.status_tone), "text")))
 	var note := String(v.get("notice", ""))
 	hud_notice.text = note if note != "" else ("FICCIÓN: recubrir la garra viva no se hace de verdad." if bool(v.fiction) else "")
 	status_label.text = ("El laboratorio corre en su propio hilo: %s ms en el último paso." % Js.to_fixed(runner.work_ms(), 2)) if runner.is_threaded() else ""
@@ -1271,6 +1318,8 @@ func _paint_hud(v: Dictionary) -> void:
 			touch_name.text = "%s\n%s" % [String(c.name), String(c.value_text)]
 			touch_slider.set_value_no_signal(float(c.t))
 	touch_box.visible = _touch_wanted()
+	# 5w · en el teléfono, los textos de arriba no se meten debajo del deslizador grande (lo de la balanza lo pisaba)
+	hud_box.offset_right = touch_box.offset_left - TOUCH_GAP if touch_box.visible else 0.0
 	touch_start.disabled = bool(v.running)
 	touch_insert.disabled = bool(v.running)
 
@@ -1286,10 +1335,13 @@ func _paint_tutorial(v: Dictionary) -> void:
 	var on := bool(tv.on)
 	for c: Control in [tut_choice, tut_title, tut_text, tut_source, tut_control, tut_status, tut_mistake, tut_prev, tut_next, tut_do]:
 		c.visible = on
+	var fz: Dictionary = v.get("feasible", {})
+	tut_warn.text = String(fz.get("text", ""))
+	tut_warn.visible = on and tut_warn.text != ""
 	if on:
 		if bool(tv.done) or st.is_empty():
 			tut_title.text = "%s · terminado" % String(tv.name)
-			tut_text.text = "Ya has recorrido todos los pasos. Mira la ficha de la garra, antes y después, y pásala a la cetrería o al banco."
+			tut_text.text = String(tv.get("done_text", ""))
 			tut_source.text = ""
 			tut_control.text = ""
 			tut_status.text = ""
@@ -1338,6 +1390,9 @@ func _paint_make(v: Dictionary) -> void:
 			if String(pair[1]) != "":
 				recipe_detail.add_child(Ui.para("%s: %s" % [String(pair[0]), String(pair[1])], "Small", "text"))
 		recipe_detail.add_child(Ui.para("Fuera de margen: " + String(c.defects), "Small", "coral"))
+		var fz: Dictionary = v.get("feasible", {})
+		if String(fz.get("text", "")) != "":
+			recipe_detail.add_child(Ui.para(String(fz.text), "Body", "coral"))
 		var src := Ui.para("%s · Fuente: %s" % [String(c.quality_text), String(c.source_short)], "Small", String(QUALITY_COLOR.get(String(c.quality), "dim")))
 		src.tooltip_text = String(c.source)
 		src.mouse_filter = Control.MOUSE_FILTER_STOP
@@ -1355,23 +1410,39 @@ func _paint_make(v: Dictionary) -> void:
 
 func _paint_bench(v: Dictionary) -> void:
 	var b: Dictionary = v.bench
+	# los polvos de la receta, en su orden, debajo de lo que pide la pieza (5w: salían al revés, el cobalto antes que el WC)
+	var at := bench_plan.get_index() + 1
 	for j: Dictionary in b.jars:
 		var row: Dictionary = jar_rows[String(j.id)]
 		var box: Control = row.box
 		var want_parent: Node = bench_card.body if bool(j.in_recipe) or float(j.grams) > 0.0 else other_box
 		if box.get_parent() != want_parent:
 			box.get_parent().remove_child(box)
-			if want_parent == bench_card.body:
-				want_parent.add_child(box)
-				want_parent.move_child(box, 0)
-			else:
-				want_parent.add_child(box)
-		(row.line as Label).text = "%s%s" % [String(j.grams_text), (" · " + String(j.frac_text)) if String(j.frac_text) != "" else ""]
-		Ui.set_color(row.line, "dim" if float(j.grams) <= 0.0 else ("mint" if bool(j.ok) else "coral"))
+			want_parent.add_child(box)
+		if want_parent == bench_card.body:
+			if box.get_index() != at:
+				bench_card.body.move_child(box, at)
+			at += 1
+		# 5w · lo que lleva, su objetivo, lo que falta y lo que vale (sin objetivo: los gramos y la proporción)
+		var lt := String(j.line) if String(j.line) != "" else "%s%s" % [String(j.grams_text), (" · " + String(j.frac_text)) if String(j.frac_text) != "" else ""]
+		(row.line as Label).text = lt
+		var stc := String(j.state)
+		Ui.set_color(row.line, "coral" if stc in ["sobra", "fuera"] or (stc == "" and float(j.grams) > 0.0 and not bool(j.ok)) else ("mint" if stc == "bien" or (stc == "" and float(j.grams) > 0.0) else ("gold" if stc == "falta" else "dim")))
+		var ds: Array = (j.doses as Array) + [j.minus]
+		var changed := false
+		for i in ds.size():
+			if absf(float((row.dose_g as Array)[i]) - float(ds[i].g)) > 1e-12:
+				row.dose_g[i] = float(ds[i].g)
+				changed = true
+		if changed:
+			_dose_tips(row, String(j.name))
 		(row.pick as Pill).set_on(String(b.held) == String(j.id))
-	bench_total.text = "En el plato: %s%s" % [String(b.total_text), (" · en el crisol: %s" % String(b.loaded_text)) if bool(b.loaded) else ""]
-	bench_mix.text = String(b.mix_text)
-	Ui.set_color(bench_mix, "mint" if bool(b.mix_ok) else "coral")
+	bench_plan.text = String(b.get("plan_text", ""))
+	bench_plan.visible = bench_plan.text != ""
+	var tt := String(b.get("target_text", ""))
+	bench_total.text = "En el plato: %s%s%s" % [String(b.total_text), (" de %s" % tt) if tt != "" else "", (" · en el crisol: %s" % String(b.loaded_text)) if bool(b.loaded) else ""]
+	bench_mix.text = String(b.get("status_text", b.mix_text))
+	Ui.set_color(bench_mix, String(TONE.get(String(b.get("status_tone", "")), "text")))
 	var stone := String(v.process) == State.STONE
 	var acrylic := String(v.process) == State.ACRYLIC
 	var lt := "Comprar la piedra (L)" if stone else ("Mezclar el acrílico (L)" if acrylic else "Cargar el crisol (L)")
@@ -1772,6 +1843,9 @@ func handle_key(k: InputEventKey) -> bool:
 		KEY_BACKSPACE:
 			if not k.echo:
 				_post("clear_pan")
+		KEY_Z:
+			if not k.echo:
+				_post("tare")
 		KEY_T:
 			if not k.echo:
 				_post("carve_pass", [k.shift_pressed])

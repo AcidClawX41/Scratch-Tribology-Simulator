@@ -16,7 +16,7 @@ const ClawMesh = preload("res://app/lab/cetreria/claw_mesh.gd")
 ## Órdenes que se pueden mandar: los métodos de ClawForgeState que cambian algo.
 const OPS := [
 	"open", "set_process", "choose_process", "set_shape", "set_wall", "set_stone", "restart", "pick_jar", "drop_jar", "set_pouring",
-	"add_powder", "clear_pan", "load_crucible", "choose_stone", "select_control", "cycle_control", "turn_control",
+	"add_powder", "clear_pan", "tare", "load_crucible", "choose_stone", "select_control", "cycle_control", "turn_control",
 	"set_control", "start", "skip", "cool_piece", "carve", "protect", "coat", "bond", "polish", "check", "set_carve",
 	"set_barrier", "set_coat", "set_bond", "set_polish", "set_load", "apply_recommended", "do_step", "set_tutorial",
 	"tutorial_goto", "tutorial_next", "tutorial_prev", "dismiss_mistake", "tick",

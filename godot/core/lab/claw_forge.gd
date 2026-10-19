@@ -49,6 +49,8 @@ const CareData = preload("res://core/lab/claw_care_data.gd")
 const ClawCare = preload("res://core/lab/claw_care.gd")
 const ClawSharpness = preload("res://core/lab/claw_sharpness.gd")
 const ClawMass = preload("res://core/lab/claw_mass.gd")
+## 5w · el material de una receta en una frase de pesar («de metal duro (WC-Co)»; el del banco es «carburo de tungsteno»).
+const PLAN_NAMES := { "tungsteno": "metal duro (WC-Co)", "acero": "acero inoxidable 304", "alumina": "alúmina" }
 const Contact = preload("res://core/shared/contact.gd")
 const Js = preload("res://core/shared/js.gd")
 const V8 = preload("res://core/shared/v8_math.gd")
@@ -579,16 +581,318 @@ static func barrier_heating(t_surface_c: float, time_s: float, barrier_id: Strin
 # ════════════════════════════════ Etapa 1 · material ════════════════════════════════
 
 ## Pesa los polvos de la receta: { id del polvo: gramos }. Devuelve { ok, total, fractions, problems [{ powder, code, text }],
-## defect, text }. Sin receta: { ok: false }.
+## defect, text }. Sin receta: { ok: false }. Desde la 5w, la mezcla también tiene que tener lo que pide la pieza de esta garra
+## (mix_plan): ni menos (no llega para la pieza) ni mucho más.
 func mix(grams: Dictionary) -> Dictionary:
 	_mix = grams.duplicate(true)
-	_mix_eval = evaluate_mix(_recipe, _mix)
+	_mix_eval = evaluate_mix(_recipe, _mix, mix_plan())
 	_serial += 1
 	return _mix_eval.duplicate(true)
 
 
-## Evalúa una mezcla contra una receta (estática, para la interfaz y los tests).
-static func evaluate_mix(rec: Dictionary, grams: Dictionary) -> Dictionary:
+## 5w · lo que hay que pesar para la pieza de esta garra con la receta rid (la del proceso, si «»): el volumen de lo que se
+## hace por la densidad del material (ClawMass, con su fuente) y, de cada polvo, ese total por su fracción en peso.
+##   - lo que se talla de un cristal (la bola de Verneuil, el cristal HPHT): el cilindro que contiene la funda;
+##   - lo que sale casi con su forma (sinterizado, la capa de la CVD): la funda;
+##   - lo colado: el modelo de cera con su bebedero (el de wax(), o el que saldría con la cera a la medida y el molde de la receta);
+##   - el diamante HPHT: el grafito es el carbono del cristal, y el disolvente va en su proporción;
+##   - la CVD: el carbono de la capa (por juego: el gas no se pesa; ForgeData.CVD_GAS_NOTE).
+## Se pesa un poco de más (ForgeData.MIX_PLAN.extra) y se admite hasta MIX_PLAN.over por encima de lo que pide la pieza.
+## { ok, recipe, kind («cristal», «pieza», «colada», «hpht», «gas»), what (de dónde sale, en palabras), volumeMm3, densityKgM3,
+##   productG (lo que pesa lo que se hace), needG (lo mínimo de la carga), targetG (lo que se pesa), minG, maxG, readabilityG,
+##   powders [{ id, name, formula, frac, fracMin, fracMax, targetG, minG, maxG (con los demás en su objetivo), needG (lo mínimo de
+##   ese polvo; solo el grafito del HPHT) }], note, quality, source }. { ok: false } sin receta.
+func mix_plan(rid: String = "") -> Dictionary:
+	var r := ForgeData.recipe(rid) if rid != "" else _recipe.duplicate(true)
+	if r.is_empty() or (r.powders as Array).is_empty():
+		return { "ok": false }
+	var prod := String(r.product)
+	var form := String(r.form)
+	var sh := _sheath
+	var kind := "pieza"
+	var vol := float(sh.volumeMm3)
+	var what := "la funda, que sale casi con su forma"
+	var note := ""
+	var src := String(r.source)
+	match form:
+		"bola", "cristal":
+			kind = "hpht" if String(r.method) == "hpht" else "cristal"
+			vol = float(sh.rawVolumeMm3)
+			what = "el cristal del que se talla la funda (el cilindro que la contiene)"
+		"colada":
+			kind = "colada"
+			var same := rid == "" or rid == String(_recipe.get("id", ""))
+			if same and bool(_wax.get("ok", false)):
+				vol = float(_wax.waxVolumeMm3)
+			else:
+				vol = wax_volume_mm3(sh, prod, String(r.mold.value), true)
+			what = "el molde de la cera, con su bebedero"
+			src += "; " + String(ForgeData.CAST[prod].shrink.source) + "; " + ForgeData.SRC_CAMPBELL
+		"capa":
+			kind = "gas"
+			what = "la capa de la funda"
+			note = ForgeData.CVD_GAS_NOTE
+	var rho: float = ForgeData.density_of(prod)
+	var product_g := rho * vol * 1.0e-6
+	var need := product_g
+	var carbon := ""
+	if kind == "hpht":
+		# el grafito es el carbono del cristal; la carga lleva además el disolvente, en su proporción
+		for p: Dictionary in r.powders:
+			if String(p.id) == "grafito":
+				carbon = "grafito"
+				need = product_g / float(p.value)
+	var extra := float(ForgeData.MIX_PLAN.extra.value)
+	var over := float(ForgeData.MIX_PLAN.over.value)
+	var target := need * (1.0 + extra)
+	var max_g := need * (1.0 + over)
+	var aims := mix_aims(r)
+	var pw: Array = []
+	var edge_rec: Array = []
+	var edge_aim: Array = []
+	for i in (r.powders as Array).size():
+		var p: Dictionary = r.powders[i]
+		var f := float(aims[i])
+		var tg := f * target
+		var lo := need
+		var hi := max_g
+		if absf(f - float(p.value)) > 1e-9:
+			var fm := String(ForgeData.POWDERS[String(p.id)].formula)
+			edge_rec.append("%s %s (del %s al %s)" % [fm, _pct3(float(p.value)), _pct3(float(p.min)), _pct3(float(p.max))])
+			edge_aim.append("%s %s" % [fm, _pct3(f)])
+		if f < 1.0:
+			# con los demás en su objetivo: la fracción en su margen y el total entre lo mínimo y lo máximo
+			var others := target - tg
+			var fmin := float(p.min)
+			var fmax := float(p.max)
+			lo = maxf(fmin * others / (1.0 - fmin), need - others)
+			hi = minf(fmax * others / (1.0 - fmax) if fmax < 1.0 else INF, max_g - others)
+		var d: Dictionary = ForgeData.POWDERS[String(p.id)]
+		var e := { "id": String(p.id), "name": String(d.name), "formula": String(d.formula), "frac": float(p.value), "aim": f, "fracMin": float(p.min), "fracMax": float(p.max),
+			"targetG": tg, "minG": maxf(lo, 0.0), "maxG": hi, "needG": 0.0 }
+		if String(p.id) == carbon:
+			e["needG"] = product_g
+			e["minG"] = maxf(float(e.minG), product_g)
+		pw.append(e)
+	var mat_name := String(PLAN_NAMES.get(prod, String(ForgeData.inlay_entry(prod).name).to_lower() if ForgeData.inlay_entry(prod) != null else prod))
+	# la frase de lo que pide la pieza, la misma en el tutorial y en la balanza (5w)
+	var ref := need * (1.0 + extra)
+	var txt := "%s: %s mm³ de %s a %s kg/m³ pesan %s." % [_cap(what), Js.to_fixed(vol, 0), mat_name, Js.to_fixed(rho, 0), fmt_mass(product_g, ref)]
+	if kind == "hpht":
+		txt += " Es el carbono del grafito, el %s %% de la carga: la carga pesa al menos %s." % [Js.to_fixed(product_g / need * 100.0, 0), fmt_mass(need, ref)]
+	if not edge_rec.is_empty():
+		var edge := "La receta está en el borde de su margen, %s: se pesa para %s, un poco por dentro, para que lo que no distingue la balanza no te deje fuera (juego)." % [", ".join(edge_rec), " y ".join(edge_aim)]
+		note = edge + ((" " + note) if note != "" else "")
+	return {
+		"ok": true, "recipe": String(r.id), "kind": kind, "what": what, "text": txt, "volumeMm3": vol, "densityKgM3": rho, "material": mat_name,
+		"productG": product_g, "needG": need, "targetG": target, "minG": need, "maxG": max_g,
+		"readabilityG": float(ForgeData.MIX_PLAN.readability_g.value), "powders": pw, "note": note,
+		"quality": "juego" if kind == "gas" else "secondary",
+		"source": "%s; la densidad: %s; %s; %s" % [src, _density_source(prod), String(ForgeData.MIX_PLAN.extra.source), String(ForgeData.MIX_PLAN.over.source)],
+	}
+
+
+## 5w · la proporción en peso para la que se pesa cada polvo de la receta r: la de la receta, salvo que esté en el borde de su
+## margen (el 0,25 % de MgO de la alúmina es su mínimo): entonces, MIX_PLAN.inner del margen por dentro, y todas juntas suman 1.
+## Con la de la receta en el borde, lo que no distingue la balanza (0,1 mg) dejaba la mezcla fuera con los botones de dosis.
+static func mix_aims(r: Dictionary) -> Array:
+	var inner := float(ForgeData.MIX_PLAN.inner.value)
+	var out: Array = []
+	var sum := 0.0
+	for p: Dictionary in r.get("powders", []):
+		var lo := float(p.min)
+		var hi := float(p.max)
+		var q := inner * (hi - lo)
+		var a := clampf(float(p.value), lo + q, hi - q) if hi > lo else float(p.value)
+		out.append(a)
+		sum += a
+	for i in out.size():
+		out[i] = float(out[i]) / sum if sum > 0.0 else 0.0
+	return out
+
+
+## La fuente de la densidad de un material (la de ClawMass; el rubí, la del zafiro, su gemelo).
+static func _density_source(mid: String) -> String:
+	var d: Variant = ClawMass.density_of(mid)
+	if d == null:
+		d = ClawMass.density_of(String(ForgeData.bench_twin(mid)))
+	return String(d.source) if d != null else "sin dato"
+
+
+## 5w · cómo va lo que hay en el plato frente a lo que pide la pieza (sin cambiar nada; lo pinta la balanza): { ok (en receta
+## y en lo que pide la pieza: se puede cargar el crisol), plan, total, rows [{ id, name, formula, have, targetG, minG, maxG,
+## leftG (lo que falta hasta el objetivo; 0 si ya llega), state («falta», «bien», «sobra», «fuera» si no va en la receta) }],
+## eval (evaluate_mix con el plan), fix { kind («nada», «echar», «compensar», «vaciar»), add { polvo: g }, text } }.
+## Los polvos del plato ya están mezclados: no se puede sacar solo uno. Si uno se pasa, se compensa echando de los otros
+## (si cabe) o se vacía el plato y se vuelve a pesar.
+func mix_status(grams: Dictionary, rid: String = "") -> Dictionary:
+	var plan := mix_plan(rid)
+	var r := ForgeData.recipe(rid) if rid != "" else _recipe
+	var ev := evaluate_mix(r, grams, plan)
+	var total := float(ev.total)
+	var out := { "ok": bool(ev.ok), "plan": plan, "total": total, "rows": [], "eval": ev, "fix": { "kind": "nada", "add": {}, "text": "" } }
+	if not bool(plan.get("ok", false)):
+		return out
+	var known := {}
+	# los demás polvos ya están en su mínimo: solo entonces una fracción alta es que sobra (sin ellos, es que faltan los otros)
+	var low := {}
+	for p: Dictionary in plan.powders:
+		if maxf(float(grams.get(String(p.id), 0.0)), 0.0) + 1e-12 < float(p.minG):
+			low[String(p.id)] = true
+	for p: Dictionary in plan.powders:
+		known[String(p.id)] = true
+		var have := maxf(float(grams.get(String(p.id), 0.0)), 0.0)
+		var st := "bien"
+		var f := have / total if total > 0.0 else 0.0
+		var others_ok := low.is_empty() or (low.size() == 1 and low.has(String(p.id)))
+		if have > float(p.maxG) + 1e-12 or (others_ok and total > 0.0 and f > float(p.fracMax) + 1e-9):
+			st = "sobra"
+		elif low.has(String(p.id)):
+			st = "falta"
+		(out.rows as Array).append({ "id": String(p.id), "name": String(p.name), "formula": String(p.formula), "have": have, "targetG": float(p.targetG),
+			"minG": float(p.minG), "maxG": float(p.maxG), "leftG": maxf(float(p.targetG) - have, 0.0), "state": st })
+	var foreign: Array = []
+	for k: String in grams:
+		if not known.has(k) and float(grams[k]) > 0.0:
+			foreign.append(String(ForgeData.POWDERS[k].name).to_lower() if ForgeData.POWDERS.has(k) else k)
+			(out.rows as Array).append({ "id": k, "name": String(ForgeData.POWDERS[k].name) if ForgeData.POWDERS.has(k) else k, "formula": "",
+				"have": float(grams[k]), "targetG": 0.0, "minG": 0.0, "maxG": 0.0, "leftG": 0.0, "state": "fuera" })
+	out["fix"] = _mix_fix(r, grams, plan, ev, foreign, out.rows)
+	return out
+
+
+## Lo que arregla una mezcla fuera de la receta o de lo que pide la pieza (5w): nada si ya vale; echar lo que falta hasta el
+## objetivo; con un solo polvo en el plato, quitar lo que sobra (vuelve al tarro con la espátula); con varios, ya mezclados y
+## sin separarse, compensar con los otros sin pasar de lo que se admite, o vaciar el plato. { kind, add { polvo: g }, take
+## { polvo: g }, text }.
+static func _mix_fix(r: Dictionary, grams: Dictionary, plan: Dictionary, ev: Dictionary, foreign: Array, rows: Array = []) -> Dictionary:
+	var out := { "kind": "nada", "add": {}, "take": {}, "text": "Listo: carga el crisol (L)." }
+	if bool(ev.ok):
+		return out
+	if not foreign.is_empty():
+		out.merge({ "kind": "vaciar", "text": "%s no va en esta receta: vacía el plato (Retroceso) y vuelve a pesar." % _cap(", ".join(foreign)), "short": "Hay un polvo que no va: vacía el plato (Retroceso)." }, true)
+		return out
+	var total := float(ev.total)
+	var ref := float(plan.targetG)
+	var present: Array = []
+	for k: String in grams:
+		if float(grams[k]) > 0.0:
+			present.append(k)
+	if total <= 0.0:
+		out.merge({ "kind": "echar", "text": "El plato está vacío: echa cada polvo hasta su objetivo." }, true)
+		return out
+	# un solo polvo en el plato: lo que sobra vuelve al tarro con la espátula (los botones «−»)
+	if present.size() == 1 and total > float(plan.maxG) + 1e-12:
+		var tg := ref
+		for q: Dictionary in plan.powders:
+			if String(q.id) == String(present[0]):
+				tg = float(q.targetG)
+		var take := total - tg
+		out.merge({ "kind": "quitar", "take": { String(present[0]): take }, "text": "Te has pasado: quita %s con «−» (con un solo polvo en el plato, lo que sobra vuelve al tarro con la espátula)." % fmt_mass(take) }, true)
+		return out
+	# lo que se ha pasado (las filas «sobra»): si nada, es que faltan los otros
+	var over_names: Array = []
+	var over_short: Array = []
+	for rw: Dictionary in rows:
+		if String(rw.state) == "sobra":
+			over_short.append(String(rw.formula))
+			over_names.append("%s (%s; vale hasta %s)" % [String(rw.name).to_lower(), fmt_mass(float(rw.have), float(rw.targetG)), fmt_mass(float(rw.maxG), float(rw.targetG))])
+	var over_txt := "Te has pasado de %s." % " y ".join(over_names) if not over_names.is_empty() else ""
+	if over_txt == "" and total > float(plan.maxG) + 1e-12:
+		over_txt = "Te has pasado: hay %s y se admiten como mucho %s." % [fmt_mass(total, ref), fmt_mass(float(plan.maxG), ref)]
+	# A: echar lo que falta de cada uno hasta su objetivo; B: lo mínimo para que lo que ya está quede en su margen
+	var cands: Array = []
+	var a_add := {}
+	for p: Dictionary in plan.powders:
+		var left := float(p.targetG) - maxf(float(grams.get(String(p.id), 0.0)), 0.0)
+		if left > 0.0:
+			a_add[String(p.id)] = left
+	cands.append(a_add)
+	cands.append(_min_compensation(grams, plan))
+	var rd := float(ForgeData.MIX_PLAN.readability_g.value)
+	for add: Dictionary in cands:
+		if add.is_empty():
+			continue
+		# 5w · lo que se puede echar es al menos lo que distingue la balanza (0,1 mg): nunca «echa 0.0000 g»
+		for k: String in add:
+			add[k] = maxf(float(add[k]), rd)
+		var g2 := grams.duplicate()
+		for k: String in add:
+			g2[k] = maxf(float(grams.get(k, 0.0)), 0.0) + float(add[k])
+		if not bool(evaluate_mix(r, g2, plan).ok):
+			continue
+		var parts: Array = []
+		for p: Dictionary in plan.powders:
+			if float(add.get(String(p.id), 0.0)) > 0.0:
+				parts.append("%s de %s" % [fmt_mass(float(add[String(p.id)])), String(p.formula)])
+		if over_txt == "":
+			out.merge({ "kind": "echar", "add": add, "text": "Falta: echa %s." % " y ".join(parts) }, true)
+		else:
+			out.merge({ "kind": "compensar", "add": add, "text": "%s Los polvos del plato ya están mezclados y no se separan: para volver a la receta, compensa echando %s; o vacía el plato (Retroceso) y vuelve a pesar." % [over_txt, " y ".join(parts)],
+				"short": "Te has pasado%s: compensa echando %s." % [(" de " + " y ".join(over_short)) if not over_short.is_empty() else "", " y ".join(parts)] }, true)
+		return out
+	var why := over_txt if over_txt != "" else String(ev.text)
+	out.merge({ "kind": "vaciar", "text": "%s Compensarlo con los otros pasaría de los %s que se admiten, y los polvos del plato ya están mezclados y no se separan: vacía el plato (Retroceso) y vuelve a pesar." % [why, fmt_mass(float(plan.maxG), ref)],
+		"short": "Te has pasado%s: vacía el plato (Retroceso) y vuelve a pesar." % ((" de " + " y ".join(over_short)) if not over_short.is_empty() else "") }, true)
+	return out
+
+
+## Lo mínimo que hay que echar de cada polvo para que lo que ya hay en el plato quede dentro del margen de la receta y llegue a
+## lo que pide la pieza (5w): el total al que el que más sobra queda en su máximo, y los demás hasta su mínimo.
+static func _min_compensation(grams: Dictionary, plan: Dictionary) -> Dictionary:
+	var t := float(plan.minG)
+	for p: Dictionary in plan.powders:
+		var have := maxf(float(grams.get(String(p.id), 0.0)), 0.0)
+		t = maxf(t, have)
+		if float(p.fracMax) > 0.0:
+			t = maxf(t, have / float(p.fracMax))
+	var add := {}
+	for i in 6:
+		add = {}
+		var sum := 0.0
+		for p: Dictionary in plan.powders:
+			var have := maxf(float(grams.get(String(p.id), 0.0)), 0.0)
+			var want := maxf(float(p.fracMin) * t, float(p.needG))
+			if want > have:
+				add[String(p.id)] = want - have
+			sum += maxf(have, want)
+		if sum <= t * (1.0 + 1e-9):
+			# lo que falta hasta t, en la proporción de la receta, al que tiene sitio
+			var rest := t - sum
+			for p: Dictionary in plan.powders:
+				var cur := maxf(float(grams.get(String(p.id), 0.0)), 0.0) + float(add.get(String(p.id), 0.0))
+				var put := minf(rest * float(p.frac), maxf(float(p.fracMax) * t - cur, 0.0))
+				if put > 0.0:
+					add[String(p.id)] = float(add.get(String(p.id), 0.0)) + put
+			return add
+		t = sum
+	return add
+
+
+## Un tanto por ciento con los decimales justos, hasta tres: «99.725 %» · «0.275 %» · «5.5 %» (5w).
+static func _pct3(f: float) -> String:
+	var p := f * 100.0
+	for d in 3:
+		if absf(Js.to_fixed(p, d).to_float() - p) < 1e-6:
+			return "%s %%" % Js.to_fixed(p, d)
+	return "%s %%" % Js.to_fixed(p, 3)
+
+
+static func _cap(s: String) -> String:
+	return s.substr(0, 1).to_upper() + s.substr(1)
+
+
+## Una masa en gramos con los decimales que pide su objetivo (5w): «3.41 g» · «0.199 g» · «0.0024 g» (la balanza distingue
+## 0,1 mg: nunca más de 4 decimales).
+static func fmt_mass(g: float, ref_g: float = -1.0) -> String:
+	var r := absf(ref_g) if ref_g > 0.0 else absf(g)
+	var d := 1 if r >= 10.0 else (2 if r >= 1.0 else (3 if r >= 0.1 else 4))
+	return "%s g" % Js.to_fixed(g, d)
+
+
+## Evalúa una mezcla contra una receta (estática, para la interfaz y los tests). plan (5w, el de mix_plan): además, lo que pide
+## la pieza (códigos «poco» y «mucho», y «poco_carbono» en el grafito del HPHT); sin plan, solo la proporción.
+static func evaluate_mix(rec: Dictionary, grams: Dictionary, plan: Dictionary = {}) -> Dictionary:
 	var out := { "ok": false, "total": 0.0, "fractions": {}, "problems": [], "defect": "", "text": "" }
 	if rec.is_empty():
 		out["defect"] = "receta"
@@ -601,7 +905,7 @@ static func evaluate_mix(rec: Dictionary, grams: Dictionary) -> Dictionary:
 	if total <= 0.0:
 		out["defect"] = "mezcla"
 		out["text"] = "El crisol está vacío."
-		out["problems"].append({ "powder": "", "code": "mezcla", "text": "El crisol está vacío.", "finish": "defectuoso" })
+		out["problems"].append({ "powder": "", "code": "mezcla", "text": "El crisol está vacío.", "finish": "defectuoso", "side": "low" })
 		return out
 	var known := {}
 	for p: Dictionary in rec.powders:
@@ -610,15 +914,27 @@ static func evaluate_mix(rec: Dictionary, grams: Dictionary) -> Dictionary:
 		out.fractions[p.id] = f
 		if f < float(p.min) - 1e-9:
 			var lo: Dictionary = p.get("low", { "code": "mezcla", "text": "Falta %s." % String(ForgeData.POWDERS[p.id].name).to_lower() })
-			out.problems.append({ "powder": p.id, "code": lo.code, "text": lo.text, "finish": String(lo.get("finish", "defectuoso")) })
+			out.problems.append({ "powder": p.id, "code": lo.code, "text": lo.text, "finish": String(lo.get("finish", "defectuoso")), "side": "low" })
 		elif f > float(p.max) + 1e-9:
 			var hi: Dictionary = p.get("high", { "code": "mezcla", "text": "Sobra %s: los demás quedan por debajo de la receta." % String(ForgeData.POWDERS[p.id].name).to_lower() })
-			out.problems.append({ "powder": p.id, "code": hi.code, "text": hi.text, "finish": String(hi.get("finish", "defectuoso")) })
+			out.problems.append({ "powder": p.id, "code": hi.code, "text": hi.text, "finish": String(hi.get("finish", "defectuoso")), "side": "high" })
 	for k: String in grams:
 		if not known.has(k) and float(grams[k]) > 0.0:
 			out.fractions[k] = float(grams[k]) / total
 			var nm := String(ForgeData.POWDERS[k].name) if ForgeData.POWDERS.has(k) else k
-			out.problems.append({ "powder": k, "code": "mezcla", "text": "%s no va en esta receta: contamina el material." % nm, "finish": "defectuoso" })
+			out.problems.append({ "powder": k, "code": "mezcla", "text": "%s no va en esta receta: contamina el material." % nm, "finish": "defectuoso", "side": "foreign" })
+	# 5w · lo que pide la pieza de esta garra: ni menos (no llega) ni mucho más
+	if bool(plan.get("ok", false)):
+		var ref := float(plan.targetG)
+		out["needG"] = float(plan.needG)
+		out["maxG"] = float(plan.maxG)
+		for p: Dictionary in plan.powders:
+			if float(p.needG) > 0.0 and maxf(float(grams.get(String(p.id), 0.0)), 0.0) + 1e-12 < float(p.needG):
+				out.problems.append({ "powder": String(p.id), "code": "poco_carbono", "text": "Hay %s de %s y el cristal pesará %s: el carbono no llega para la pieza." % [fmt_mass(float(grams.get(String(p.id), 0.0)), ref), String(p.name).to_lower(), fmt_mass(float(p.needG), ref)], "finish": "defectuoso", "side": "low" })
+		if total + 1e-12 < float(plan.minG):
+			out.problems.append({ "powder": "", "code": "poco", "text": "En el plato hay %s y la pieza pide al menos %s: no llega para %s." % [fmt_mass(total, ref), fmt_mass(float(plan.minG), ref), String(plan.what)], "finish": "defectuoso", "side": "low" })
+		elif total > float(plan.maxG) + 1e-12:
+			out.problems.append({ "powder": "", "code": "mucho", "text": "En el plato hay %s y se admiten como mucho %s (la pieza pide %s): sobra." % [fmt_mass(total, ref), fmt_mass(float(plan.maxG), ref), fmt_mass(float(plan.needG), ref)], "finish": "defectuoso", "side": "high" })
 	out["ok"] = (out.problems as Array).is_empty()
 	if not out.ok:
 		out["defect"] = String(out.problems[0].code)
@@ -977,6 +1293,24 @@ static func sprue_diameter_mm(sh: Dictionary) -> float:
 	return 4.0 * float(ForgeData.SPRUE.modulus_factor.value) * m
 
 
+## La escala del modelo de cera frente a la funda (5m): más grande lo que encoge el material al colarse y no compensa la
+## dilatación del revestimiento; 1 sin compensar.
+static func wax_scale(product: String, mold: String, compensate: bool) -> float:
+	if not compensate or not ForgeData.CAST.has(product):
+		return 1.0
+	var shrink := float(ForgeData.CAST[product].shrink.value)
+	var expn := float(investment_of(mold, product).expansion.value)
+	return 1.0 / ((1.0 + expn) * (1.0 - shrink))
+
+
+## El volumen del modelo de cera (mm³): la funda a su escala y el bebedero (5m). Es el del metal que llena el molde.
+static func wax_volume_mm3(sh: Dictionary, product: String, mold: String, compensate: bool) -> float:
+	var scale := wax_scale(product, mold, compensate)
+	var d := sprue_diameter_mm(sh)
+	var L := float(ForgeData.SPRUE.length_mm.value)
+	return float(sh.volumeMm3) * scale * scale * scale + 0.25 * PI * d * d * L
+
+
 ## Un porcentaje legible con dos decimales: «1.67».
 static func _pct2(f: float) -> String:
 	return Js.to_fixed(f * 100.0, 2)
@@ -986,11 +1320,12 @@ static func _pct2(f: float) -> String:
 ## su bebedero (5m). p { compensate (por defecto, sí: la cera se hace más grande lo que encoge el material y no compensa el
 ## revestimiento; ForgeData.CAST e INVESTMENTS), mold (el revestimiento para el que se hace; por defecto, el de la receta) }.
 ## { ok, defect, text, compensate, scale (la de la cera frente a la funda), shrink, expansion, mold, sprueDiameterMm,
-##   sprueLengthMm, waxVolumeMm3, metalG (lo que hace falta del material para llenarla con su bebedero), source }.
+##   sprueLengthMm, waxVolumeMm3, metalG (lo que hace falta del material para llenarla con su bebedero), warning (5w: el molde no
+##   aguanta este material; lo dice al hacer la cera), source }.
 func wax(p: Dictionary = {}) -> Dictionary:
 	var c := castable(_recipe)
 	var out := { "ok": false, "defect": "", "text": "", "compensate": bool(p.get("compensate", true)), "scale": 1.0, "shrink": 0.0,
-		"expansion": 0.0, "mold": "", "sprueDiameterMm": 0.0, "sprueLengthMm": 0.0, "waxVolumeMm3": 0.0, "metalG": 0.0, "source": String(c.source) }
+		"expansion": 0.0, "mold": "", "sprueDiameterMm": 0.0, "sprueLengthMm": 0.0, "waxVolumeMm3": 0.0, "metalG": 0.0, "warning": "", "source": String(c.source) }
 	if not bool(c.ok):
 		out["defect"] = "no_se_cuela"
 		out["text"] = String(c.text) if not _recipe.is_empty() else "Elige primero un metal o el vidrio: es lo que se cuela."
@@ -1000,10 +1335,10 @@ func wax(p: Dictionary = {}) -> Dictionary:
 		var inv := investment_of(mold, prod)
 		var shrink := float(ForgeData.CAST[prod].shrink.value)
 		var expn := float(inv.expansion.value)
-		var scale := 1.0 / ((1.0 + expn) * (1.0 - shrink)) if bool(out.compensate) else 1.0
+		var scale := wax_scale(prod, mold, bool(out.compensate))
 		var d := sprue_diameter_mm(_sheath)
 		var L := float(ForgeData.SPRUE.length_mm.value)
-		var v_wax := float(_sheath.volumeMm3) * scale * scale * scale + 0.25 * PI * d * d * L
+		var v_wax := wax_volume_mm3(_sheath, prod, mold, bool(out.compensate))
 		var rho: float = ForgeData.density_of(prod)
 		out.merge({ "ok": true, "scale": scale, "shrink": shrink, "expansion": expn, "mold": mold, "sprueDiameterMm": d, "sprueLengthMm": L,
 			"waxVolumeMm3": v_wax, "metalG": rho * v_wax * 1.0e-6,
@@ -1011,6 +1346,11 @@ func wax(p: Dictionary = {}) -> Dictionary:
 		var nm := String(ForgeData.inlay_entry(prod).name).to_lower()
 		var size := "Hecha un %s %% más grande: el %s encoge un %s %% al colarse y el revestimiento se dilata un %s %%." % [_pct2(scale - 1.0), nm, _pct2(shrink), _pct2(expn)] if bool(out.compensate) else "A la medida de la funda, sin compensar: el %s encogerá un %s %% y el revestimiento se dilatará un %s %%." % [nm, _pct2(shrink), _pct2(expn)]
 		out["text"] = "Modelo de cera de la funda de la garra (%s mm de largo y %s mm de pared) con su bebedero de Ø %s mm, más grueso que la pared para que solidifique el último y la alimente mientras encoge. %s" % [Js.to_fixed(float(_sheath.lengthMm), 1), Js.to_fixed(_wall_mm, 2), Js.to_fixed(d, 1), size]
+		# 5w · hecha para un molde que no aguanta este material: lo dice ya, no en la colada
+		var md: Dictionary = _recipe.get("mold", {})
+		if not md.is_empty() and not (md.ok as Array).has(mold):
+			out["warning"] = String(((md.bad as Dictionary).get(mold, {}) as Dictionary).get("text", "Ese molde no sirve para esta colada."))
+			out["text"] = String(out.text) + " Ojo, es para el %s: %s Pon el selector «Molde» en el de la receta y vuelve a hacer la cera." % [String(investment_of(mold, prod).name).to_lower(), String(out.warning)]
 	_wax = out
 	_invest = {}
 	_burnout = {}
@@ -2859,9 +3199,10 @@ func check(key: String) -> bool:
 			# la carga en la máquina del modo de la receta (o ya hecha la marcha)
 			return not _fire.is_empty() or (not _loaded.is_empty() and String(_loaded.machine) == machine_for(String(_recipe.get("mode", "")), _recipe))
 		"cera":
-			return bool(_wax.get("ok", false))
+			# 5w · y para un molde que aguanta este material (con el de serie, el yeso, el acero y el titanio no salían)
+			return bool(_wax.get("ok", false)) and _mold_fits(String(_wax.get("mold", "")))
 		"revestido":
-			return bool(_invest.get("ok", false))
+			return bool(_invest.get("ok", false)) and _mold_fits(String(_invest.get("mold", "")))
 		"quemada":
 			return bool(_burnout.get("ok", false))
 		"desmoldada":
@@ -2911,14 +3252,30 @@ func check(key: String) -> bool:
 	return true
 
 
+## ¿Aguanta ese molde la colada de la receta? (Sí, si la receta no lleva molde.)
+func _mold_fits(mold: String) -> bool:
+	var md: Dictionary = _recipe.get("mold", {})
+	return md.is_empty() or (md.ok as Array).has(mold)
+
+
 ## El tutorial de una receta para este proceso (o el general del horno, «horno»): pasos con done y, en los que tienen
-## acción, los argumentos recomendados (args).
+## acción, los argumentos recomendados (args). Desde la 5w, los pasos que dependen de la pieza de esta garra dicen además su
+## valor (detail, también al final de text): los gramos de cada polvo, el tiempo del dial y el abrasivo del acero.
 func tutorial(rid: String = "") -> Array:
 	var id := rid if rid != "" else String(_recipe.get("id", "horno"))
 	var rec := recommended(id)
 	var out: Array = []
 	for st: Dictionary in Tutorial.steps(id):
 		var s2 := st.duplicate(true)
+		var detail := _step_detail(id, String(st.id), rec)
+		s2["detail"] = detail
+		if detail != "":
+			# los gramos, justo después de la receta (lo primero que se busca al pesar); lo demás, al final
+			var at := String(st.text).find("en peso. ")
+			if String(st.id) == "pesar" and at >= 0:
+				s2["text"] = String(st.text).insert(at + 9, detail + " ")
+			else:
+				s2["text"] = String(st.text) + " " + detail
 		s2["done"] = check(String(st.check)) if String(st.check) != "" else null
 		var base: Variant = rec.get(String(st.action), null)
 		# un paso puede traer lo suyo encima de lo recomendado (la herramienta de cada pasada, 5m)
@@ -2933,8 +3290,48 @@ func tutorial(rid: String = "") -> Array:
 	return out
 
 
-## Lo que recomienda la receta para esta garra, por acción: { mix: { polvo: g }, fire: {...}, cool: medio, carve, protect,
-## bond, polish, check_load }. El tiempo del horno es el que pide la funda (el crecimiento o el sinterizado) con un 10 % de
+## Lo que pide la pieza y lo que se pesa, en palabras (5w; el tutorial y la balanza dicen lo mismo): «La funda (220 mm³) de metal
+## duro (WC-Co), a 14930 kg/m³, pesa 3.28 g. Pesa 3.61 g en total (vale de 3.28 g a 3.94 g): WC 3.41 g y Co 0.198 g.»
+static func plan_sentence(plan: Dictionary) -> String:
+	if not bool(plan.get("ok", false)):
+		return ""
+	var ref := float(plan.targetG)
+	var parts: Array = []
+	for p: Dictionary in plan.powders:
+		parts.append("%s %s" % [String(p.formula), fmt_mass(float(p.targetG), float(p.targetG))])
+	var last := String(parts.pop_back())
+	var list := (", ".join(parts) + " y " + last) if not parts.is_empty() else last
+	var txt := "%s Pesa %s en total (vale de %s a %s): %s." % [String(plan.text), fmt_mass(ref, ref), fmt_mass(float(plan.minG), ref), fmt_mass(float(plan.maxG), ref), list]
+	if String(plan.note) != "":
+		txt += " " + String(plan.note)
+	return txt
+
+
+## Lo que un paso del tutorial pide para la pieza de esta garra (5w), en una frase con números: «» si no depende de ella.
+func _step_detail(rid: String, sid: String, rec: Dictionary) -> String:
+	var r := ForgeData.recipe(rid)
+	if r.is_empty():
+		return ""
+	match sid:
+		"pesar":
+			var plan := mix_plan(rid)
+			if not bool(plan.get("ok", false)):
+				return ""
+			var ps := plan_sentence(plan)
+			return "Para esta pieza: " + ps.substr(0, 1).to_lower() + ps.substr(1)
+		"parametros":
+			var fp: Dictionary = rec.get("fire", {})
+			if fp.is_empty():
+				return ""
+			return "Para esta funda, el dial del tiempo en %s o más (lo que tarda de verdad)." % fmt_time(float(fp.time_s))
+		"cortar_bebedero", "limar", "repasar", "tocho", "desbastar", "vaciar", "forma":
+			if bool(ForgeData.material(String(r.product)).get("ferrous", false)):
+				return "En «Taller», el abrasivo «%s»." % String(ForgeData.ABRASIVES.cbn.name)
+	return ""
+
+
+## Lo que recomienda la receta para esta garra, por acción: { mix: { polvo: g } (5w: lo que pide la pieza, mix_plan), fire: {...},
+## cool: medio, carve, protect, bond, polish, check_load }. El tiempo del horno es el que pide la funda (el crecimiento o el sinterizado) con un 10 % de
 ## margen, y nunca menos que el de la receta. {} sin receta.
 func recommended(rid: String = "") -> Dictionary:
 	if rid == Tutorial.WELD:
@@ -2964,9 +3361,10 @@ func recommended(rid: String = "") -> Dictionary:
 	var r := ForgeData.recipe(rid if rid != "" else String(_recipe.get("id", "")))
 	if r.is_empty():
 		return {}
+	# 5w · lo que pide la pieza de esta garra, en la proporción de la receta (mix_plan), no un lote de 100 g
 	var grams := {}
-	for p: Dictionary in r.powders:
-		grams[p.id] = float(p.value) * 100.0
+	for p: Dictionary in mix_plan(String(r.id)).powders:
+		grams[String(p.id)] = float(p.targetG)
 	var fp := {
 		"mode": String(r.mode), "temp_c": float(r.temp_c.value), "atmosphere": String(r.atmosphere.value),
 		"pressure_mpa": float(r.pressure_mpa.value), "time_s": float(r.time_s.value),

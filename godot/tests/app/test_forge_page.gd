@@ -245,7 +245,11 @@ func test_las_teclas_mandan_ordenes() -> void:
 	st.pick_jar("al2o3")
 	p.handle_key(_key(KEY_ESCAPE))
 	assert_eq(st.held_jar, "", "Esc: suelta el tarro")
-	assert_false(p.handle_key(_key(KEY_Z)), "otras teclas, no")
+	st.add_powder("al2o3", 1.0)
+	p.handle_key(_key(KEY_Z))
+	p.step(0.0)
+	assert_true(st.scale_text().begins_with("T "), "Z: la tara de la balanza (%s)" % st.scale_text())
+	assert_false(p.handle_key(_key(KEY_Y)), "otras teclas, no")
 	p.dispose()
 	p.free()
 
@@ -266,7 +270,8 @@ func test_los_textos_salen_del_estado() -> void:
 			assert_eq((row.widget as ValueSlider).display.text, String(c.value_text), "%s: su valor, del estado" % c.id)
 	for j: Dictionary in v.bench.jars:
 		if float(j.grams) > 0.0:
-			assert_true((p.jar_rows[String(j.id)].line as Label).text.begins_with(String(j.grams_text)), "%s: los gramos, del estado" % j.id)
+			assert_true((p.jar_rows[String(j.id)].line as Label).text.contains(String(j.grams_text)), "%s: los gramos, del estado" % j.id)
+			assert_eq((p.jar_rows[String(j.id)].line as Label).text, String(j.line), "%s: lo que lleva, lo que falta y lo que vale, del estado" % j.id)
 	for r: Dictionary in v.readouts:
 		assert_eq((p.reading_tiles[String(r.id)][1] as Label).text, String(r.value), "lectura %s" % r.id)
 	# cada paso del tutorial: el texto, la fuente, el control y lo que pasa si te equivocas
@@ -274,6 +279,8 @@ func test_los_textos_salen_del_estado() -> void:
 	for i in int(v.tutorial.count):
 		var tv: Dictionary = p.runner.latest().tutorial
 		var stp: Dictionary = tv.step
+		if stp.is_empty():
+			break  # 5w: un paso que ya se cumple se salta solo al llegar a él (el modo, con lo recomendado)
 		assert_eq(p.tut_text.text, String(stp.text), "paso %d: su texto" % i)
 		assert_true(p.tut_source.text.contains(String(stp.source_short)), "paso %d: su fuente" % i)
 		assert_eq(p.tut_source.tooltip_text, String(stp.source), "paso %d: la fuente legible" % i)

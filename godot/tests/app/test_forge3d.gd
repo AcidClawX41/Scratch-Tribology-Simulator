@@ -266,7 +266,8 @@ func test_el_raton_pesa_gira_y_arranca() -> void:
 	_mouse(s, pan, MOUSE_BUTTON_LEFT, false)
 	_frame(s, r)
 	assert_false(st.pouring, "al soltar, deja de verter")
-	assert_true(float(st.pan.get("al2o3", 0.0)) > 3.0, "y en el plato hay alúmina (%s g)" % st.pan.get("al2o3", 0.0))
+	# 5w · el tarro vierte al ritmo de su objetivo (State.pour_rate): unos 30 fotogramas, al menos un segundo de chorro
+	assert_true(float(st.pan.get("al2o3", 0.0)) > st.pour_rate("al2o3") * 0.9, "y en el plato hay alúmina (%s g)" % st.pan.get("al2o3", 0.0))
 	# el dial de la temperatura, arrastrando hacia arriba
 	s.call("set_view", "horno", true)
 	for i in 3:

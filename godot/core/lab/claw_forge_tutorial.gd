@@ -41,6 +41,8 @@ const ACRYLIC := "acrilico"
 const WELD := "soldadura"
 ## La piedra del tutorial de las piedras compradas: la moissanita (SiC), la más dura de las que no hace el horno.
 const STONE_DEFAULT := "moissanita"
+## El material colado en una frase («el acero encoge…»; el del banco es «tachuela de acero»).
+const CAST_NAMES := { "acero": "acero", "oro": "oro", "titanio": "titanio", "vidrio": "vidrio" }
 const PROCESS_NAMES := {
 	"horno": "El horno y sus mandos", "garra_viva": "Recubrir la garra viva (ficción)", "piedra": "Piedra comprada",
 	"acrilico": "Acrílico dental (la prótesis de verdad)", "soldadura": "Soldar piezas de metal",
@@ -70,8 +72,8 @@ static func steps(id: String) -> Array:
 	for p: Dictionary in r.powders:
 		var d: Dictionary = ForgeData.POWDERS[p.id]
 		pw.append("%s (%s) %s" % [String(d.name), String(d.formula), _pct(float(p.value))])
-	var prod: Variant = ForgeData.inlay_entry(String(r.product))
-	var prod_name := String(r.variety) if String(r.variety) != "" else (String(prod.name).to_lower() if prod != null else String(r.product))
+	# 5w · el nombre de la receta («metal duro (WC-Co sinterizado)»), no el del material del banco («tachuela de acero» sin artículo)
+	var prod_name := String(r.variety) if String(r.variety) != "" else _lower_first(String(r.name))
 	var td: Dictionary = r.temp_c
 	var at: Dictionary = r.atmosphere
 	var mode_name: String = _option("modo", String(r.mode))
@@ -82,12 +84,12 @@ static func steps(id: String) -> Array:
 	if colada:
 		_lost_wax_steps(out, r)
 	# 1. elegir y pesar
-	var mix_text := "Para %s: %s. Pésalo en la balanza: la proporción es en peso." % [prod_name, ", ".join(pw)]
+	var mix_text := "Para %s: %s, en peso. Echa cada polvo en el plato de la balanza hasta su objetivo: la tarjeta «La balanza y el crisol» dice cuánto llevas y cuánto falta de cada uno. Cuando la mezcla está en la receta y en lo que pide la pieza, la balanza dice «Listo: carga el crisol (L)». Si te pasas con uno, los polvos ya están mezclados en el plato: compensa con los otros o vacía el plato y vuelve a pesar." % [prod_name, ", ".join(pw)]
 	if r.has("methane"):
 		mix_text += " En el gas, un %s de metano en hidrógeno (entre %s y %s)." % [_pct(float(r.methane.value)), _pct(float(r.methane.min)), _pct(float(r.methane.max))]
 	if colada:
 		mix_text += " Con la cera perdida, que haya bastante para llenar el molde con su bebedero."
-	out.append(_s("pesar", "Elegir, pesar y cargar el crisol", mix_text + " Después, «Cargar el crisol».", "mezcla_ok", "mix", String(r.source), _mix_mistake(r)))
+	out.append(_s("pesar", "Pesar los polvos y cargar el crisol", mix_text, "mezcla_ok", "mix", String(r.source), _mix_mistake(r)))
 	# 2. el modo (la máquina) y los parámetros
 	var par := "Modo: %s. Temperatura: %s °C (bien entre %s y %s °C). Atmósfera: %s." % [mode_name, Js.to_fixed(float(td.value), 0), Js.to_fixed(float(td.min), 0), Js.to_fixed(float(td.max), 0), atm_name.to_lower()]
 	var pd: Dictionary = r.pressure_mpa
@@ -101,12 +103,13 @@ static func steps(id: String) -> Array:
 		par += " A la presión del aire."
 	if r.has("mold"):
 		par += " Molde: %s." % _option("mold", String(r.mold.value)).to_lower()
-	par += " " + _time_text(r) + " El dial programa el tiempo de verdad; la marcha va a la velocidad que elijas (×60 a ×36 000)."
-	out.append(_s("modo", "Poner el modo", "Gira el dial del modo a «%s»: %s" % [mode_name, String(ForgeData.MATERIALS[String(r.product)].route_text)], "modo_ok", "", String(r.source), "Con otro modo no sale: cada material se hace de una forma."))
+	par += " " + _time_text(r) + " El dial programa el tiempo de verdad; la marcha va a la velocidad que elijas (×60 a ×36 000). Con cada dial en su franja verde, pulsa el botón rojo «Arrancar» (Intro): si todo está en su margen, el tutorial pasa a vigilar la marcha; si no, el aviso dice qué mando falla: corrígelo y vuelve a pulsar «Arrancar»."
+	out.append(_s("modo", "Poner el modo", "Pon el selector «Modo» del horno en «%s». %s" % [mode_name, String(ForgeData.MATERIALS[String(r.product)].route_text)], "modo_ok", "", String(r.source), "Con otro modo no sale: cada material se hace de una forma."))
 	# 3. meter la carga en la máquina del modo (5m): el modo elige la máquina
 	var mid := _machine_of(r)
 	var m: Dictionary = ForgeData.MACHINES[mid]
-	out.append(_s("meter", "Meter la carga en su máquina", "%s, en %s: %s; %s. Sin la carga dentro, «Arrancar» no deja." % [String(m.charge_name), String(m.name).to_lower(), String(m.where), String(m.close)], "dentro", "load_machine", String(m.source), "Con la máquina vacía no se arranca; y si la metes en otra máquina, no es la del modo: sácala y métela en la suya."))
+	var art := "la" if String(m.name).begins_with("Prensa") else "el"
+	out.append(_s("meter", "Meter la carga en su máquina", "Mete la carga en %s %s: %s, %s; %s. Pulsa M, o haz clic en la puerta del horno (o arrastra la carga hasta ella): la tarjeta «El horno» dice entonces que está dentro. Sin la carga dentro, «Arrancar» no deja." % [art, _lower_first(String(m.name)), _lower_first(String(m.charge_name)), String(m.where), String(m.close)], "dentro", "load_machine", String(m.source), "Con la máquina vacía no se arranca; y si la metes en otra máquina, no es la del modo: sácala y métela en la suya."))
 	out.append(_s("parametros", "Ajustar los parámetros y arrancar", par, "parametros_ok", "fire", String(td.source), "%s %s %s" % [String(td.low.text), String(td.high.text), String(r.time_s.low.text)]))
 	out.append(_s("vigilar", "Vigilar con el reloj", _watch_text(r) + " El reloj dice cuánto lleva y cuánto falta de verdad: en la vida real tardaría lo que marca el dial; aquí, a la velocidad elegida, y se puede cambiar con la marcha en curso sin que cambie lo que sale.", "", "", String(r.source), "Si cambias un parámetro a medias, el cristal o la pieza salen con defectos."))
 	# 4. enfriar, romper el molde y comprobar
@@ -122,8 +125,9 @@ static func steps(id: String) -> Array:
 		cool_text += " Despacio: una pieza frágil se agrieta si el salto de temperatura pasa del que aguanta."
 	out.append(_s("enfriar", "Enfriar", cool_text, "enfriada", "cool", String(r.cool.source) + ("; " + ForgeData.SRC_BULLSEYE_TS8 if String(r.product) == "vidrio" else ""), "Un salto brusco agrieta lo frágil (choque térmico); el vidrio sin recocer se rompe solo."))
 	if colada:
-		out.append(_s("romper", "Romper el molde", "Rompe el molde y saca la pieza: sale con la forma de la garra y su bebedero. El vidrio, un día después, con herramientas de madera o de plástico.", "desmoldada", "divest", ForgeData.SRC_KERR + "; " + ForgeData.SRC_BULLSEYE_TS8, "Con el molde aún caliente no se puede: primero se enfría."))
-	out.append(_s("comprobar_pieza", "Comprobar la pieza", "Mira la pieza: %s sin poros ni grietas, del tamaño que pide la funda." % prod_name, "enfriada", "", String(r.source), "Si sale porosa, quemada o pequeña, vuelve a la receta: el motor dice qué parámetro falló."))
+		var glass := " Es vidrio: un día después, con herramientas de madera o de plástico." if String(r.product) == "vidrio" else ""
+		out.append(_s("romper", "Romper el molde", "Rompe el molde y saca la pieza: sale con la forma de la garra y su bebedero." + glass, "desmoldada", "divest", ForgeData.SRC_KERR + "; " + ForgeData.SRC_BULLSEYE_TS8, "Con el molde aún caliente no se puede: primero se enfría."))
+	out.append(_s("comprobar_pieza", "Comprobar la pieza", "Mira la pieza en la vista «La pieza»: %s sin poros ni grietas, del tamaño que pide la funda; las lecturas dicen qué ha salido. Cuando la hayas visto, pulsa «Siguiente (N)»." % prod_name, "", "", String(r.source), "Si sale porosa, quemada o pequeña, vuelve a la receta: el motor dice qué parámetro falló."))
 	# 5. tallar por pasadas (5m), con las herramientas que tocan
 	_carve_steps(out, String(r.product), String(r.form))
 	_append_finish(out, String(r.product))
@@ -152,8 +156,9 @@ static func _lost_wax_steps(out: Array, r: Dictionary) -> void:
 	var cast: Dictionary = ForgeData.CAST[prod]
 	var inv: Dictionary = ForgeData.GLASS_INVESTMENT if prod == "vidrio" and mold == "yeso" else ForgeData.INVESTMENTS[mold]
 	var b: Dictionary = ForgeData.BURNOUT["vidrio" if prod == "vidrio" and mold == "yeso" else mold]
-	out.append(_s("cera", "El modelo de cera de la garra", "La cera perdida: primero, el modelo de cera de la funda con la forma de la garra de su dedo, y su bebedero, más grueso que la pared para que solidifique el último y alimente la pieza mientras encoge. El %s encoge un %s al colarse: la cera se hace a la medida de esa contracción." % [String(ForgeData.inlay_entry(prod).name).to_lower(), _pct(float(cast.shrink.value))], "cera", "wax", String(cast.shrink.source) + "; " + ForgeData.SRC_CAMPBELL + "; " + ForgeData.SRC_SABAU, "Sin compensar la contracción, la funda sale más pequeña que la garra y puede no entrar."))
-	out.append(_s("revestir", "Revestir la cera", "%s alrededor de la cera (el selector «Molde»): fragua %s antes de quemarlo y se dilata un %s, que compensa lo que encoge el metal. El yeso vale para el oro y el vidrio; para el acero y el titanio, el de fosfato." % [String(inv.name), _dur(float(inv.set_s.value)), _pct(float(inv.expansion.value))], "revestido", "invest", String(inv.expansion.source) + "; " + String(inv.set_s.source) + "; " + ForgeData.SRC_GYPSUM, "El yeso no aguanta el acero ni el titanio fundidos: se descompone y la pieza sale porosa."))
+	var mold_name := _option("mold", mold)
+	out.append(_s("cera", "El modelo de cera de la garra", ("Pon el selector «Molde» del horno en «%s» y pulsa «Modelo de cera (C)»: la cera se hace a la medida de ese molde, y el yeso no aguanta el acero ni el titanio. " % mold_name) + "La cera perdida: primero, el modelo de cera de la funda con la forma de la garra de su dedo, y su bebedero, más grueso que la pared para que solidifique el último y alimente la pieza mientras encoge. El %s encoge un %s al colarse: la cera se hace a la medida de esa contracción." % [String(CAST_NAMES.get(prod, prod)), _pct(float(cast.shrink.value))], "cera", "wax", String(cast.shrink.source) + "; " + ForgeData.SRC_CAMPBELL + "; " + ForgeData.SRC_SABAU, "Sin compensar la contracción, la funda sale más pequeña que la garra y puede no entrar."))
+	out.append(_s("revestir", "Revestir la cera", ("Con el selector «Molde» en «%s», pulsa «Revestir» (C): " % mold_name) + "%s alrededor de la cera: fragua %s antes de quemarlo y se dilata un %s, que compensa lo que encoge el metal. El yeso vale para el oro y el vidrio; para el acero y el titanio, el de fosfato." % [String(inv.name), _dur(float(inv.set_s.value)), _pct(float(inv.expansion.value))], "revestido", "invest", String(inv.expansion.source) + "; " + String(inv.set_s.source) + "; " + ForgeData.SRC_GYPSUM, "El yeso no aguanta el acero ni el titanio fundidos: se descompone y la pieza sale porosa."))
 	out.append(_s("quemar", "Quemar la cera en el horno", "Mete el molde en el horno, el modo «Calentar», y programa arriba %s durante %s: es el %s. En la vida real son horas (con las subidas y las bajadas); el molde queda caliente para colar." % [_c(float(b.top_c)), _dur(float(b.top_hold_s)), String(b.name)], "quemada", "burnout", String(b.source), "Más frío o más corto, la cera no se quema del todo: la colada sale con poros y no llena; el yeso por encima de ~816 °C se descompone."))
 
 
@@ -174,7 +179,7 @@ static func _carve_steps(out: Array, product: String, form: String) -> void:
 			out.append(_step_args(_s("repasar", "Repasar la piel", "La pieza ya sale casi con su forma (sinterizada o crecida sobre su molde): solo se repasa la piel con la muela fina de %s, con agua, hasta la silueta." % abr, "tallada", "carve_to", ForgeData.SRC_GENIE + "; " + src, mistake), { "tool": "muela_fina" }))
 		_:
 			out.append(_step_args(_s("tocho", "Sacar el tocho", "Pega la pieza en el palo con cera de lapidario y saca el tocho con la sierra de disco de diamante, con agua: un corte por cada extremo de la bola o del cristal, o uno del bloque.", "tocho", "carve_to", ForgeData.SRC_HITECH_SAW + "; " + ForgeData.SRC_DOP, mistake), { "tool": "sierra" }))
-			out.append(_step_args(_s("desbastar", "Desbastar con la muela gruesa", "Desbasta con la muela de diamante gruesa (grano 80), con su goteo de agua, pasada a pasada hacia la silueta de la garra. Para cuando sobre menos de una pasada: la gruesa no sigue la línea y se pasaría. %s es de %s HV: la muela tiene que ser más dura." % [nm.substr(0, 1).to_upper() + nm.substr(1), Js.to_fixed(hv, 0)], "desbastada", "carve_to", ForgeData.SRC_GENIE + "; " + ForgeData.SRC_HAEFELI + "; " + src, mistake), { "tool": "muela_gruesa" }))
+			out.append(_step_args(_s("desbastar", "Desbastar con la muela gruesa", "Desbasta con la muela de diamante gruesa (grano 80), con su goteo de agua, pasada a pasada hacia la silueta de la garra. Para cuando sobre menos de una pasada (el tutorial pasa solo al paso siguiente): la gruesa no sigue la línea y se pasaría. %s es de %s HV: la muela tiene que ser más dura." % [nm.substr(0, 1).to_upper() + nm.substr(1), Js.to_fixed(hv, 0)], "desbastada", "carve_to", ForgeData.SRC_GENIE + "; " + ForgeData.SRC_HAEFELI + "; " + src, mistake), { "tool": "muela_gruesa" }))
 			out.append(_step_args(_s("vaciar", "Vaciar la funda por dentro", "Con la fresa de diamante del eje flexible, vacía la funda por dentro hasta que entre la garra.", "vaciada", "carve_to", ForgeData.SRC_FOREDOM + "; " + src, mistake), { "tool": "fresa" }))
 			out.append(_step_args(_s("forma", "Dar la forma con la muela fina", "Con la muela fina (grano 220), pasada a pasada hasta la silueta de la garra: sigue la línea. Si te pasas, la pared queda más fina; si llega a cero, la funda se agujerea.", "tallada", "carve_to", ForgeData.SRC_GENIE + "; " + src, mistake), { "tool": "muela_fina" }))
 
@@ -272,6 +277,8 @@ static func _general() -> Array:
 		var rng := ""
 		if c.has("min"):
 			rng = " Rango: de %s a %s %s." % [Js.to_fixed(float(c.min), 0), Js.to_fixed(float(c.max), 0), String(c.unit)]
+			if String(c.id) == "time_s":
+				rng = " Rango: de 0 s a %s (unos %s días)." % [_dur(float(c.max)), Js.to_fixed(float(c.max) / 86400.0, 0)]
 		elif c.has("options"):
 			var names: Array = []
 			for o: String in c.options:
@@ -302,9 +309,19 @@ static func _s(id: String, title: String, text: String, check: String, action: S
 	return { "id": id, "title": title, "text": text, "check": check, "action": action, "source": source, "mistake": mistake }
 
 
+## Un nombre en medio de una frase: la inicial en minúscula (sin estropear «Verneuil», «WC-Co» ni las siglas).
+static func _lower_first(s: String) -> String:
+	return s.substr(0, 1).to_lower() + s.substr(1)
+
+
+## Un tanto por ciento con los decimales justos para que sea el de la receta (5w: el WC del metal duro es el 94.5 %, no el 95 %:
+## con cero decimales por encima del 10 %, las proporciones de la receta sumaban el 100.5 %). Como mucho, dos decimales.
 static func _pct(f: float) -> String:
 	var p := f * 100.0
-	return "%s %%" % Js.to_fixed(p, 2 if p < 1.0 else (1 if p < 10.0 else 0))
+	for d in 2:
+		if absf(Js.to_fixed(p, d).to_float() - p) < 1e-6:
+			return "%s %%" % Js.to_fixed(p, d)
+	return "%s %%" % Js.to_fixed(p, 2)
 
 
 static func _mix_mistake(r: Dictionary) -> String:

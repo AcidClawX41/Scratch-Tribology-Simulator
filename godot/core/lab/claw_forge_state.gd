@@ -92,10 +92,18 @@ const CONTROL_IDS := ["modo", "temp_c", "time_s", "pressure_mpa", "atmosphere", 
 const DIALS := ["temp_c", "time_s", "pressure_mpa", "methane"]
 ## Los mandos al encender la página: el horno frío.
 const DIAL_DEFAULTS := { "modo": "calentar", "temp_c": 20.0, "time_s": 0.0, "pressure_mpa": 0.101, "atmosphere": "aire", "methane": 0.0, "mold": "yeso", "cool": "aire" }
-## Lo que se vierte en la balanza (g/s): normal y gota a gota (Mayús). Las dosis de los botones (g). Elección de la interfaz.
+## Lo que vierte en la balanza un tarro que no va en la receta (g/s) y las dosis de los botones sin objetivo (g). Elección de la
+## interfaz.
 const POUR_G_S := 4.0
-const POUR_FINE_G_S := 0.1
 const DOSES := [10.0, 1.0, 0.1]
+## Las potencias de diez de las dosis de un polvo con objetivo (g), de la mayor a la menor (5w).
+const DOSE_TENS := [100.0, 10.0, 1.0, 0.1, 0.01, 0.001, 0.0001]
+## 5w · un tarro de la receta vierte a un ritmo que llena su objetivo en POUR_FILL_S (lo que pide una funda va de miligramos a
+## decenas de gramos: a 4 g/s no se podían pesar los miligramos de MgO); gota a gota, POUR_FINE_DIV veces más despacio. Los
+## botones de dosis de cada polvo van con su objetivo: la potencia de diez que cabe en él, una décima y una centésima (nunca
+## menos de lo que distingue la balanza). Elecciones de la interfaz.
+const POUR_FILL_S := 2.0
+const POUR_FINE_DIV := 40.0
 ## Lo que cabe en el plato de la balanza (g): una balanza de laboratorio de 200 g (elección de la interfaz).
 const PAN_MAX_G := 200.0
 ## 5m · el tiempo de verdad a la velocidad elegida: la marcha dura el tiempo de verdad entre la velocidad (×60, ×600, ×3600,
@@ -174,13 +182,13 @@ const STEP_CONTROLS := {
 	"mando_mold": "Clic en el selector del molde (solo cuenta al fundir y colar).",
 	"mando_cool": "Clic en el selector de cómo se enfría; luego el botón «Sacar y enfriar» (tecla E). El reloj enseña lo que tarda de verdad en poder cogerse.",
 	"regla": "Vista «Taller» (tecla V): la garra en su soporte, con la carne viva marcada.",
-	"pesar": "Arrastra cada tarro al plato de la balanza y mantén pulsado para verter (Mayús: gota a gota); o los botones +10 g, +1 g y +0,1 g de la tarjeta. Luego «Cargar el crisol» (tecla L).",
+	"pesar": "Clic en un tarro para cogerlo y mantén pulsado sobre el plato para verter (Mayús: gota a gota), o los botones de dosis de cada polvo en «La balanza y el crisol»; Z pone la pantalla a cero (tara) para pesar el siguiente desde cero. Cuando la balanza diga «Listo», «Cargar el crisol» (tecla L) o un clic en el crisol.",
 	"cargar": "Clic en el crisol, junto a la balanza, o «Cargar el crisol» (tecla L).",
-	"modo": "Gira el selector del modo (arrastrar o clic); teclado: A/D hasta «Modo» y W/S.",
-	"parametros": "Ajusta los diales hasta que cada uno quede en su franja verde (el del tiempo, el tiempo de verdad), elige la velocidad junto al reloj (tecla X) y pulsa el botón rojo «Arrancar» (tecla Intro).",
+	"modo": "En la tarjeta «El horno», la opción de la receta en «Modo»; o, en la vista, clic en el selector del modo hasta ella (teclado: A/D hasta «Modo» y W/S). Está hecho en cuanto el selector la marca.",
+	"parametros": "Arrastra cada dial (o A/D para elegirlo y W/S para girarlo; Mayús, el paso fino) hasta que quede en su franja verde (el del tiempo, en la marca que dice el paso), elige la velocidad junto al reloj (tecla X) y pulsa el botón rojo «Arrancar» (tecla Intro).",
 	"vigilar": "Vista «Horno» o «Dentro» (tecla V); el reloj dice lo que lleva y lo que falta de verdad; X cambia la velocidad y Espacio pasa al final de la marcha.",
 	"enfriar": "El selector «Enfriar» y el botón «Sacar y enfriar» (tecla E).",
-	"comprobar_pieza": "Vista «La pieza» (tecla V): el acabado y el color; las lecturas dicen qué ha salido.",
+	"comprobar_pieza": "Vista «La pieza» (tecla V): el acabado y el color; las lecturas dicen qué ha salido. Luego «Siguiente» (tecla N).",
 	"tallar": "Elige la muela en «Taller» y clic en la muela de la mesa (tecla T). Siempre con agua.",
 	"proteger": "Elige la barrera y clic sobre la mitad de la garra con carne viva (tecla B).",
 	"recubrir": "Elige el recubrimiento en «Taller» y clic en la pistola (tecla R).",
@@ -200,11 +208,11 @@ const STEP_CONTROLS := {
 	"meter": "Arrastra el crisol (o el molde, o la pieza) hasta la puerta del horno, o un clic en la puerta; tecla M. La puerta se cierra sola.",
 	"maquinas": "Vista «Dentro» (tecla V): cada máquina con su sitio para la carga.",
 	"reloj": "El selector de la velocidad junto al reloj (tecla X): se puede cambiar con la marcha en curso.",
-	"cera": "En «Cera perdida», el botón «Modelo de cera» (tecla C); «Cera a la medida» compensa la contracción.",
-	"revestir": "El selector «Molde» del horno y el botón «Revestir» (tecla C, otra vez).",
+	"cera": "Primero el selector «Molde» del horno (clic en él, o en la tarjeta «El horno»); luego, en «La cera perdida», el botón «Modelo de cera» (tecla C), con «Cera a la medida» encendido: compensa la contracción.",
+	"revestir": "Con el selector «Molde» en el de la receta, el botón «Revestir» de «La cera perdida» (tecla C, otra vez).",
 	"quemar": "El modo «Calentar», el molde dentro (M), la temperatura y el tiempo de arriba, y «Arrancar» (Intro).",
 	"romper": "El botón «Romper el molde» (tecla C, otra vez, con el molde frío).",
-	"tocho": "La herramienta «Sierra» (tecla G) y una pasada (T), o un clic en la sierra.",
+	"tocho": "La herramienta «Sierra» (tecla G) y una pasada (T) por cada corte, o un clic en la sierra por corte.",
 	"cortar_bebedero": "La herramienta «Sierra» (tecla G) y una pasada (T), o un clic en la sierra.",
 	"desbastar": "La herramienta «Muela gruesa» (tecla G) y pasadas (T; Mayús + T, una suave), o un clic en la máquina de muelas.",
 	"vaciar": "La herramienta «Fresa» (tecla G) y pasadas (T), o un clic en el eje flexible.",
@@ -233,7 +241,7 @@ const PASS_STEP := { "sierra": "tocho", "muela_gruesa": "desbastar", "fresa": "v
 const CHECK_WORDS := {
 	"mezcla_ok": "la mezcla del crisol es la de la receta",
 	"modo_ok": "el selector del modo está en el de la receta",
-	"parametros_ok": "el horno ha sacado la pieza bien: cada mando en su margen",
+	"parametros_ok": "la marcha ha arrancado con cada mando en su margen",
 	"pieza_ok": "hay una pieza buena",
 	"enfriada": "la pieza se ha enfriado sin grietas",
 	"tallada": "la funda está tallada",
@@ -390,6 +398,8 @@ var shape := "funda"
 var wall := "normal"
 ## La balanza: gramos de cada polvo en el plato; lo cargado en el crisol (la última mezcla); el tarro en la mano.
 var pan: Dictionary = {}
+## 5w · la tara: lo que había en el plato al poner la balanza a cero (la pantalla enseña lo de encima).
+var tare_g := 0.0
 var loaded: Dictionary = {}
 var held_jar := ""
 var pouring := false
@@ -430,6 +440,8 @@ var notice := ""
 var tutorial_on := true
 var tut_id := GENERAL
 var tut_step := 0
+## 5w · los pasos que se han saltado solos al llegar a ellos porque ya se cumplían (en palabras; «» si ninguno).
+var tut_skipped := ""
 ## Llamadas a ClawForge desde el último reinicio de la pieza: [método, argumentos]. Con ellas, otra ClawForge llega a la
 ## misma pieza (los tests lo comprueban: el estado no hace física por su cuenta).
 var calls: Array = []
@@ -451,6 +463,10 @@ var _steps_key := ""
 var _card_cache: Dictionary = {}
 var _sn: Dictionary = {}
 var _sn_key := ""
+var _plan_cache: Dictionary = {}
+var _plan_key := ""
+var _feas: Dictionary = {}
+var _feas_key := ""
 var _live: Dictionary = {}
 var _profile: Dictionary = {}
 var _short_cache := {}
@@ -587,6 +603,11 @@ func _rebuild() -> void:
 	last_action = ""
 	run = {}
 	act = {}
+	# 5w · lo pesado ya se cargó en el crisol de la pieza de antes: la nueva empieza con el plato vacío (con otra forma, aquellos
+	# gramos ya no eran los de esta funda y la balanza pedía quitarlos)
+	if not loaded.is_empty():
+		pan = {}
+		tare_g = 0.0
 	loaded = {}
 	_mistake = {}
 	notice = ""
@@ -604,6 +625,15 @@ func _rebuild() -> void:
 	elif String(coat_p.target) == "garra_viva":
 		coat_p["target"] = "funda"
 	_steps_key = ""
+	# 5w · una pieza nueva («Otra pieza», otra forma, otra pared u otra garra) empieza su tutorial por el primer paso: antes se
+	# quedaba en el paso de la pieza de antes («Enfriar», «Desbastar»…), que con la pieza nueva, sin pesar, no se cumplía nunca.
+	# La soldadura pide una pieza hecha: vuelve al tutorial de la receta.
+	if tut_id == process or tut_id == WELD:
+		var was := tut_step
+		tut_id = process
+		_reset_tutorial()
+		if was > 0:
+			notice = "Pieza nueva: el tutorial vuelve a su primer paso."
 	_seed_checks()
 	_touch()
 
@@ -693,9 +723,14 @@ func set_pouring(on: bool, fine := false) -> void:
 		_touch()
 
 
-## Añade (o quita, con g < 0) gramos de un polvo al plato; nunca menos de 0 ni más de lo que cabe.
+## Añade (o quita, con g < 0) gramos de un polvo al plato; nunca menos de 0 ni más de lo que cabe. Quitar solo se puede con
+## ese polvo solo en el plato (vuelve al tarro con la espátula): con otros, ya están mezclados y no se separan (5w).
 func add_powder(id: String, grams: float) -> void:
 	if not ForgeData.POWDERS.has(id):
+		return
+	if grams < 0.0 and _mixed_with_others(id):
+		notice = "Ya está mezclado con otros polvos en el plato y no se separa: compensa con los otros o vacía el plato (Retroceso)."
+		_touch()
 		return
 	var now := float(pan.get(id, 0.0))
 	var room := PAN_MAX_G - pan_total() + now
@@ -704,14 +739,30 @@ func add_powder(id: String, grams: float) -> void:
 		pan.erase(id)
 	else:
 		pan[id] = g
+	if tare_g > pan_total():
+		tare_g = 0.0
 	_touch()
 
 
+func _mixed_with_others(id: String) -> bool:
+	for k: String in pan:
+		if k != id and float(pan[k]) > 0.0:
+			return true
+	return false
+
+
 func clear_pan() -> void:
-	if not pan.is_empty():
+	if not pan.is_empty() or tare_g > 0.0:
 		pan = {}
+		tare_g = 0.0
 		pouring = false
 		_touch()
+
+
+## Z · la tara: pone la pantalla de la balanza a cero con lo que hay en el plato, para pesar el polvo siguiente desde cero.
+func tare() -> void:
+	tare_g = pan_total()
+	_touch()
 
 
 func pan_total() -> float:
@@ -721,7 +772,77 @@ func pan_total() -> float:
 	return t
 
 
-## Carga lo pesado en el crisol (o en el alimentador del soplete): mix() con los gramos del plato.
+## Lo que vierte un tarro por segundo (5w): el de la receta llena su objetivo en POUR_FILL_S; los demás, POUR_G_S.
+func pour_rate(id: String, fine := false) -> float:
+	var tg := 0.0
+	for p: Dictionary in _plan().get("powders", []):
+		if String(p.id) == id:
+			tg = float(p.targetG)
+	var rate := clampf(tg / POUR_FILL_S, float(ForgeData.MIX_PLAN.readability_g.value), POUR_G_S) if tg > 0.0 else POUR_G_S
+	return rate / POUR_FINE_DIV if fine else rate
+
+
+## Las dosis de los botones de un polvo (g): la potencia de diez que cabe en su objetivo, una décima y una centésima, sin bajar
+## de lo que distingue la balanza; sin objetivo, las de siempre.
+func doses_for(id: String) -> Array:
+	var tg := 0.0
+	for p: Dictionary in _plan().get("powders", []):
+		if String(p.id) == id:
+			tg = float(p.targetG)
+	if tg <= 0.0:
+		return DOSES.duplicate()
+	var rd := float(ForgeData.MIX_PLAN.readability_g.value)
+	# 5w · las potencias de diez escritas (sin pow ni log de la libm, que no dan lo mismo en todas las plataformas)
+	var i := 0
+	while i < DOSE_TENS.size() - 1 and float(DOSE_TENS[i]) > tg * (1.0 + 1e-9):
+		i += 1
+	var out: Array = []
+	for k in 3:
+		out.append(maxf(float(DOSE_TENS[mini(i + k, DOSE_TENS.size() - 1)]), rd))
+	return out
+
+
+## Lo que pide la pieza de ahora (ClawForge.mix_plan), una vez por cambio de la pieza.
+func _plan() -> Dictionary:
+	var key := "%d|%d" % [forge.get_instance_id(), forge.serial()]
+	if key != _plan_key:
+		_plan_key = key
+		_plan_cache = forge.mix_plan() if ForgeData.RECIPES.has(process) else {}
+	return _plan_cache
+
+
+## 5w · ¿Sale esta receta con esta garra y esta forma? Con lo que recomienda la receta, el motor (evaluate_fire) dice si el
+## cristal no cabe en la máquina (la bola de Verneuil, el cristal HPHT); además, la carga tiene que caber en la balanza y el tiempo
+## que pide la funda, en el dial. { ok, text (por qué no y qué probar; «» si sale) }. Antes se descubría al final de la marcha,
+## sin salida: el tiempo al máximo del dial seguía dando «no ha dado tiempo».
+func feasibility() -> Dictionary:
+	if not ForgeData.RECIPES.has(process):
+		return { "ok": true, "text": "" }
+	var key := "%d|%d" % [forge.get_instance_id(), forge.serial()]
+	if key == _feas_key:
+		return _feas
+	_feas_key = key
+	var plan := _plan()
+	var rec := ForgeData.recipe(process)
+	var why := ""
+	if float(plan.get("minG", 0.0)) > PAN_MAX_G:
+		why = "La carga pesa al menos %s y en la balanza caben %s." % [fmt_g(float(plan.minG)), fmt_g(PAN_MAX_G)]
+	else:
+		var r := forge.recommended()
+		var fp: Dictionary = r.fire
+		var probe := ClawForge.evaluate_fire(rec, ClawForge.evaluate_mix(rec, r.mix, plan), fp, snap().sheath)
+		for q: Dictionary in probe.problems:
+			if String(q.code) == "tamano":
+				why = String(q.text)
+		var tmax := float(TIME_STEPS[TIME_STEPS.size() - 1])
+		if why == "" and float(fp.time_s) > tmax:
+			why = "El cristal tardaría %s de verdad en crecer y el dial del tiempo no pasa de %s." % [fmt_time(float(fp.time_s)), fmt_time(tmax)]
+	_feas = { "ok": why == "", "text": "" if why == "" else "Con esta garra y esta forma no sale: %s Prueba con una funda más pequeña («Capuchón de la punta»), otra garra u otra receta." % why }
+	return _feas
+
+
+## Carga lo pesado en el crisol (o en el alimentador del soplete): mix() con los gramos del plato. Desde la 5w, solo si la mezcla
+## está en la receta y en lo que pide la pieza (ClawForge.mix_status); si no, no carga y dice cómo se arregla.
 func load_crucible() -> void:
 	if process == STONE:
 		choose_stone(stone)
@@ -731,6 +852,20 @@ func load_crucible() -> void:
 		return
 	if process == LIVE:
 		return
+	var ms := forge.mix_status(pan)
+	if not bool(ms.ok):
+		var ev: Dictionary = ms.eval
+		var fix := String(ms.fix.text)
+		notice = "No se carga. %s" % fix
+		var pid := ""
+		if not (ev.problems as Array).is_empty():
+			pid = String(ev.problems[0].get("powder", ""))
+		_mistake = { "action": "mix", "code": String(ev.get("defect", "mezcla")), "what": String(ev.text) if String(ev.text) != "" else fix,
+			"source": String(ForgeData.POWDERS[pid].source) if ForgeData.POWDERS.has(pid) else String(ms.plan.get("source", "")), "tool": "" }
+		_push_fx({ "kind": "sfx", "id": "slide" })
+		_touch()
+		return
+	notice = ""
 	var r: Dictionary = _call("mix", pan.duplicate())
 	loaded = pan.duplicate()
 	_after("mix", r)
@@ -2048,6 +2183,7 @@ func tutorial_goto(id: String) -> void:
 
 func _reset_tutorial() -> void:
 	tut_step = 0
+	tut_skipped = ""
 	_prev_check = {}
 	_done = {}
 	_steps_key = ""
@@ -2064,7 +2200,60 @@ func steps() -> Array:
 			if String(st.get("check", "")) == "modo_ok":
 				# el paso del modo se cumple al girar el selector al de la receta (o si el horno ya trabajó en él)
 				st["done"] = bool(st.done) or (ForgeData.RECIPES.has(process) and String(dial.modo) == String(ForgeData.RECIPES[process].mode))
+			# 5w · el dial del tiempo va por marcas (TIME_STEPS): el paso dice la primera que llega a lo que tarda esta funda, y
+			# «Hazlo como dice el paso» la pone (antes pedía «1 h 6 min o más», que el dial no marca)
+			if String(st.id) == "parametros" and st.get("args") is Dictionary and (st.args as Dictionary).has("time_s"):
+				var t := float(st.args.time_s)
+				var mark := time_mark(t)
+				if mark > t + 1e-9:
+					var extra := " En el dial, la primera marca que llega: %s." % fmt_time(mark)
+					st["text"] = String(st.text) + extra
+					st["detail"] = String(st.get("detail", "")) + extra
+				st.args["time_s"] = mark
+			# el del quemado de la cera: el dial de la temperatura va de 5 en 5 °C (871 °C no se puede poner: 875 °C sí)
+			if String(st.id) == "quemar" and st.get("args") is Dictionary and (st.args as Dictionary).has("temp_c"):
+				var tc := float(st.args.temp_c)
+				var tm := temp_mark(tc)
+				if tm > tc + 1e-9:
+					var extra2 := " En el dial, la primera marca que llega: %s °C." % Js.to_fixed(tm, 0)
+					st["text"] = String(st.text) + extra2
+					st["detail"] = String(st.get("detail", "")) + extra2
+				st.args["temp_c"] = tm
+				st.args["time_s"] = time_mark(float(st.args.get("time_s", 0.0)))
 	return _steps_cache
+
+
+## La primera marca del dial de la temperatura (de TEMP_FINE en TEMP_FINE °C) que llega a t °C (5w).
+static func temp_mark(t: float) -> float:
+	return ceilf(t / TEMP_FINE - 1e-9) * TEMP_FINE
+
+
+## La primera marca del dial del tiempo (TIME_STEPS) que llega a t s; la última si ninguna llega (5w).
+static func time_mark(t: float) -> float:
+	for x: float in TIME_STEPS:
+		if x >= t - 1e-9:
+			return x
+	return float(TIME_STEPS[TIME_STEPS.size() - 1])
+
+
+## 5w · la pieza de ahora ya no se arregla en lo que queda del tutorial de su receta: pasado el paso de la marcha, una pieza que
+## no ha salido bien (agrietada al enfriar, agujereada al tallar…) solo se rehace con «Otra pieza». Antes el paso pendiente
+## («Enfriar», «Dar la forma») no se cumplía nunca y el arreglo decía «Enfría: al aire», que ya no servía. «» si no hace falta.
+func restart_hint() -> String:
+	if not ForgeData.RECIPES.has(process) or tut_id != process:
+		return ""
+	var p: Dictionary = snap().piece
+	if p.is_empty() or bool(p.get("ok", false)):
+		return ""
+	var at := -1
+	var ss := steps()
+	for i in ss.size():
+		if String(ss[i].id) == "parametros":
+			at = i
+	if at < 0 or tut_step <= at:
+		return ""
+	var fin := lower_first(String(ForgeData.FINISH_NAMES.get(String(p.get("finish", "")), "con defectos")))
+	return "Esta pieza ya no se arregla (acabado: %s): «Otra pieza», en la ficha de la garra, empieza otra igual, con los mandos como están, y el tutorial vuelve a su primer paso." % fin
 
 
 func current_step() -> Dictionary:
@@ -2083,14 +2272,31 @@ func tutorial_next() -> void:
 	if not st.is_empty():
 		_done[_key(String(st.id))] = true
 	tut_step = mini(tut_step + 1, steps().size())
+	_skip_done()
 	_seed_checks()
 	_touch()
 
 
 func tutorial_prev() -> void:
 	tut_step = maxi(tut_step - 1, 0)
+	tut_skipped = ""
 	_seed_checks()
 	_touch()
+
+
+## 5w · al avanzar, un paso con condición que ya se cumple se da por hecho y se pasa al siguiente (antes se quedaba esperando
+## un cambio que no iba a llegar: «Desbastar con la muela gruesa» con menos de una pasada de sobra pedía pasadas que agujereaban
+## la funda de una garra pequeña, y el modo ya puesto con «Poner lo recomendado» no seguía solo). Lo dice tut_skipped.
+func _skip_done() -> void:
+	var names: Array = []
+	for i in 64:
+		var st := current_step()
+		if st.is_empty() or String(st.check) == "" or st.done != true:
+			break
+		_done[_key(String(st.id))] = true
+		names.append(String(st.title))
+		tut_step = mini(tut_step + 1, steps().size())
+	tut_skipped = ("Ya estaba hecho: «%s»." % "», «".join(names)) if not names.is_empty() else ""
 
 
 func _key(sid: String) -> String:
@@ -2119,6 +2325,7 @@ func _update_tutorial() -> void:
 	if now and before == false:
 		_done[k] = true
 		tut_step = mini(tut_step + 1, steps().size())
+		_skip_done()
 		_seed_checks()
 
 
@@ -2136,6 +2343,10 @@ func _check_mistake(action: String, r: Dictionary) -> void:
 	var bad := not bool(r.get("ok", true)) or String(r.get("defect", "")) != ""
 	if action == "mix":
 		bad = not bool(r.get("ok", false))
+	# 5w · la cera o el revestimiento para un molde que no aguanta este material: se explica ya, no en la colada
+	var warn := String(r.get("warning", "")) if action in ["wax", "invest"] else ""
+	if warn != "":
+		bad = true
 	if action == "check_load":
 		bad = bool(r.get("detached", false))
 	if not bad:
@@ -2144,7 +2355,7 @@ func _check_mistake(action: String, r: Dictionary) -> void:
 			_mistake = {}
 		return
 	var src := _action_source(action, r)
-	_mistake = { "action": action, "code": String(r.get("defect", "")), "what": String(r.get("text", "")), "source": src, "tool": String(r.get("tool", "")) }
+	_mistake = { "action": action, "code": String(r.get("defect", "")) if warn == "" else "molde", "what": String(r.get("text", "")) if warn == "" else warn, "source": src, "tool": String(r.get("tool", "")) }
 
 
 ## La fuente de lo que ha salido mal: la del polvo que sobra o falta (la mezcla no deja suceso) o la del suceso que acaba
@@ -2183,7 +2394,8 @@ func mistake_view() -> Dictionary:
 		sid = "preparar"
 	var tid := WELD if String(_mistake.action).begins_with("weld") else process
 	var fix := {}
-	for st: Dictionary in ForgeTutorial.steps(tid):
+	# los del tutorial que se sigue llevan además lo de esta pieza (5w: los gramos, el tiempo del dial)
+	for st: Dictionary in (steps() if tid == tut_id else ForgeTutorial.steps(tid)):
 		if String(st.id) == sid:
 			fix = st
 	var out := { "what": String(_mistake.what), "what_source": short_source(String(_mistake.source)), "fix_title": "",
@@ -2193,6 +2405,13 @@ func mistake_view() -> Dictionary:
 		out["fix_text"] = String(fix.text)
 		out["fix_source"] = short_source(String(fix.source))
 		out["mistake"] = String(fix.mistake)
+	# 5w · la pieza ya no se arregla: primero «Otra pieza»; el paso, para hacerlo bien la próxima vez
+	var rh := restart_hint()
+	out["restart"] = rh
+	if rh != "":
+		out["fix_title"] = "Otra pieza"
+		out["fix_text"] = rh + ((" La próxima vez, «%s»: %s" % [String(fix.title), String(fix.text)]) if not fix.is_empty() else "")
+		out["control"] = "El botón «Otra pieza», en la ficha de la garra."
 	return out
 
 
@@ -2280,7 +2499,7 @@ func tick(dt: float) -> void:
 		return
 	var changed := false
 	if pouring and held_jar != "":
-		add_powder(held_jar, (POUR_FINE_G_S if pour_fine else POUR_G_S) * dt)
+		add_powder(held_jar, pour_rate(held_jar, pour_fine) * dt)
 		changed = true
 	if running():
 		var t0 := float(run.t)
@@ -2648,13 +2867,27 @@ func readable(src: String) -> String:
 
 # ════════════════════════════════ La balanza en la vista ════════════════════════════════
 
-## La balanza: { jars: [{ id, name, formula, what, grams, in_recipe, target_g (lo de la receta para el total del plato),
-## frac, frac_text, ok }], total, total_text, held, pouring, loaded, mix_ok, mix_text, doses }.
+## La balanza: { jars: [{ id, name, formula, what, grams, grams_text, in_recipe, frac, frac_text, ok, source_short, target_g,
+## target_text, left_g, line (lo que lleva, lo que falta y lo que vale, 5w), state («», «falta», «bien», «sobra», «fuera»),
+## doses [{ g, label }], minus { g, label } }], total, total_text, scale_text (la pantalla, con la tara), tare, held, pouring,
+## fine, loaded, loaded_text, mix_ok, mix_text, ready (lo del plato se puede cargar), status_text y status_tone (el aviso: «Listo:
+## carga el crisol (L)», lo que falta o cómo se arregla si se pasa), fix_kind, plan (ClawForge.mix_plan), plan_text, doses,
+## pan_max }.
 func bench_view() -> Dictionary:
 	var rec: Dictionary = ForgeData.RECIPES.get(process, {})
 	var want := {}
 	for p: Dictionary in rec.get("powders", []):
 		want[String(p.id)] = p
+	var plan := _plan()
+	# 5w · lo que distingue la balanza: por debajo, lo que falta ya no se puede echar
+	var read_g := float(ForgeData.MIX_PLAN.readability_g.value)
+	var tgt := {}
+	for p: Dictionary in plan.get("powders", []):
+		tgt[String(p.id)] = p
+	var ms := forge.mix_status(pan) if bool(plan.get("ok", false)) else {}
+	var row_state := {}
+	for rw: Dictionary in ms.get("rows", []):
+		row_state[String(rw.id)] = String(rw.state)
 	var total := pan_total()
 	var jars: Array = []
 	for id: String in ForgeData.POWDERS:
@@ -2662,6 +2895,7 @@ func bench_view() -> Dictionary:
 		var g := float(pan.get(id, 0.0))
 		var f := g / total if total > 0.0 else 0.0
 		var w: Dictionary = want.get(id, {})
+		var t: Dictionary = tgt.get(id, {})
 		var ok := true
 		var frac_txt := ""
 		if not w.is_empty():
@@ -2670,16 +2904,93 @@ func bench_view() -> Dictionary:
 		elif g > 0.0:
 			ok = false
 			frac_txt = "%s: no va en esta receta" % fmt_pct(f)
+		var st := String(row_state.get(id, ""))
+		var line := ""
+		var tg := float(t.get("targetG", 0.0))
+		if not t.is_empty():
+			# 5w · lo que falta, con sus decimales; menos de lo que distingue la balanza, o lo que no cambia lo que se lee del objetivo
+			# («0.198 g de 0.198 g»), ya es su objetivo
+			var short_of := tg - g >= read_g - 1e-12 and ClawForge.fmt_mass(g, tg) != ClawForge.fmt_mass(tg, tg)
+			var lt := "faltan %s" % ClawForge.fmt_mass(tg - g) if short_of else "en su objetivo"
+			if st == "bien":
+				lt = ("bien; %s hasta el objetivo" % ClawForge.fmt_mass(tg - g)) if short_of else "bien"
+			elif st == "sobra":
+				lt = "sobra"
+			line = "Llevas %s de %s%s · vale de %s a %s" % [ClawForge.fmt_mass(g, tg), ClawForge.fmt_mass(tg, tg), (" · " + lt) if lt != "" else "",
+				ClawForge.fmt_mass(float(t.minG), tg), ClawForge.fmt_mass(float(t.maxG), tg) if is_finite(float(t.maxG)) else "lo que quieras"]
+			if g > 0.0 and frac_txt != "":
+				line += " · " + frac_txt
+		elif g > 0.0:
+			line = "%s · %s" % [fmt_g(g), frac_txt]
+		var doses: Array = []
+		for dg: float in doses_for(id):
+			doses.append({ "g": dg, "label": "+" + _dose_label(dg) })
+		var dmin := float(doses_for(id)[1])
 		jars.append({ "id": id, "name": String(d.name), "formula": String(d.formula), "what": String(d.what), "grams": g,
-			"grams_text": fmt_g(g), "in_recipe": not w.is_empty(), "frac": f, "frac_text": frac_txt, "ok": ok,
-			"source_short": short_source(String(d.source)) })
+			"grams_text": ClawForge.fmt_mass(g, tg) if tg > 0.0 else fmt_g(g), "in_recipe": not w.is_empty(), "frac": f, "frac_text": frac_txt, "ok": ok,
+			"source_short": short_source(String(d.source)), "target_g": tg, "target_text": ClawForge.fmt_mass(tg, tg) if tg > 0.0 else "",
+			"left_g": maxf(tg - g, 0.0), "line": line, "state": st, "doses": doses, "minus": { "g": -dmin, "label": "−" + _dose_label(dmin) } })
 	var me: Dictionary = snap().mix
+	var ready := bool(ms.get("ok", false))
+	var status := ""
+	var tone := ""
+	var fix_kind := String((ms.get("fix", {}) as Dictionary).get("kind", ""))
+	var same_as_loaded := not loaded.is_empty() and var_to_str(loaded) == var_to_str(pan)
+	if bool(me.get("ok", false)) and same_as_loaded:
+		status = "Cargado en el crisol: %s. Ahora el modo y meter la carga en su máquina (M)." % ClawForge.fmt_mass(_sum(loaded), float(plan.get("targetG", -1.0)))
+		tone = "bien"
+	elif not bool(plan.get("ok", false)):
+		status = String(me.get("text", "")) if not me.is_empty() and not bool(me.get("ok", false)) else ""
+		tone = "mal" if status != "" else ""
+	elif total <= 0.0:
+		status = "Echa cada polvo en el plato hasta su objetivo."
+		tone = "aviso"
+	elif ready:
+		status = "Listo: carga el crisol (L)."
+		tone = "bien"
+	else:
+		status = String(ms.fix.text)
+		tone = "aviso" if fix_kind == "echar" else "mal"
+	# junto a la balanza, sobre la vista, el aviso corto (el largo va en la tarjeta)
+	var short := String(ms.fix.get("short", status)) if status == String((ms.get("fix", {}) as Dictionary).get("text", "")) and status != "" else status
+	# lo que pide la pieza, con la misma frase que el tutorial (ClawForge.plan_sentence)
+	var plan_text := ClawForge.plan_sentence(plan)
+	var ref_t := float(plan.get("targetG", -1.0))
+	# lo que se ve junto a la balanza, sobre la vista: una línea por polvo de la receta
+	var hud: Array = []
+	for j: Dictionary in jars:
+		if float(j.target_g) <= 0.0:
+			continue
+		var tgj := float(j.target_g)
+		var tail := "bien"
+		if String(j.state) == "sobra":
+			tail = "sobra"
+		elif String(j.state) != "bien" and tgj - float(j.grams) >= read_g - 1e-12 and ClawForge.fmt_mass(float(j.grams), tgj) != ClawForge.fmt_mass(tgj, tgj):
+			tail = "faltan %s" % ClawForge.fmt_mass(tgj - float(j.grams))
+		hud.append("%s: %s de %s · %s" % [String(j.formula), ClawForge.fmt_mass(float(j.grams), tgj), ClawForge.fmt_mass(tgj, tgj), tail])
 	return {
-		"jars": jars, "total": total, "total_text": fmt_g(total), "held": held_jar, "pouring": pouring, "fine": pour_fine,
+		"jars": jars, "total": total, "total_text": ClawForge.fmt_mass(total, ref_t) if ref_t > 0.0 else fmt_g(total), "scale_text": scale_text(),
+		"tare": tare_g, "held": held_jar, "pouring": pouring, "fine": pour_fine,
 		"loaded": not loaded.is_empty(), "loaded_text": fmt_g(_sum(loaded)), "mix_ok": bool(me.get("ok", false)),
 		"mix_text": String(me.get("text", "")) if not me.is_empty() and not bool(me.get("ok", false)) else ("La mezcla es la de la receta." if bool(me.get("ok", false)) else ""),
+		"ready": ready, "status_text": status, "status_short": short, "status_tone": tone, "fix_kind": fix_kind, "plan": plan, "plan_text": plan_text, "hud": hud,
+		"target_text": ClawForge.fmt_mass(ref_t, ref_t) if ref_t > 0.0 else "",
 		"doses": DOSES, "pan_max": PAN_MAX_G,
 	}
+
+
+## Una dosis para su botón: «1 g» · «0.1 g» · «0.001 g» (con los decimales justos).
+static func _dose_label(g: float) -> String:
+	for d in 5:
+		if absf(Js.to_fixed(g, d).to_float() - g) < 1e-9:
+			return "%s g" % Js.to_fixed(g, d)
+	return "%s g" % Js.to_fixed(g, 4)
+
+
+## La pantalla de la balanza: los gramos de encima de la tara con los 4 decimales de una balanza analítica (5w: distingue 0,1 mg);
+## con la tara puesta, delante una «T», como en las de verdad.
+func scale_text() -> String:
+	return "%s%s g" % ["T " if tare_g > 0.0 else "", Js.to_fixed(maxf(pan_total() - tare_g, 0.0), 4)]
 
 
 static func _sum(d: Dictionary) -> float:
@@ -2920,8 +3231,12 @@ func tutorial_view() -> Dictionary:
 	for id: String in TUTORIALS:
 		tuts.append({ "id": id, "name": String(ForgeTutorial.PROCESS_NAMES.get(id, id)), "state": "ahora" if id == tut_id else "luego" })
 	var ss := steps()
+	# 5w · al terminar, qué sigue: el del horno no hace pieza (antes decía «pásala a la cetrería» sin pieza)
+	var done_text := "Ya has recorrido todos los pasos. Mira la ficha de la garra, antes y después, y pásala a la cetrería o al banco."
+	if tut_id == GENERAL:
+		done_text = "Ya conoces los mandos del horno. Ahora elige arriba una receta (el zafiro, el metal duro, el oro…): su tutorial te lleva paso a paso, desde pesar los polvos hasta la funda terminada."
 	var out := { "on": tutorial_on, "done": tutorial_done(), "id": tut_id, "name": String(ForgeTutorial.PROCESS_NAMES.get(tut_id, tut_id)),
-		"tutorials": tuts, "index": tut_step, "count": ss.size(), "step": {}, "highlight": "", "control": "" }
+		"tutorials": tuts, "index": tut_step, "count": ss.size(), "step": {}, "highlight": "", "control": "", "done_text": done_text }
 	var st := current_step()
 	if st.is_empty():
 		return out
@@ -2930,13 +3245,16 @@ func tutorial_view() -> Dictionary:
 		status = "hecho" if bool(st.done) else "pendiente"
 	var line := "Paso informativo: pulsa «Siguiente» cuando lo tengas."
 	if status == "hecho":
-		line = "Se cumple: %s." % String(CHECK_WORDS.get(String(st.check), String(st.check)))
+		line = "Se cumple: %s. Pulsa «Siguiente (N)»." % String(CHECK_WORDS.get(String(st.check), String(st.check)))
 	elif status == "pendiente":
 		line = "Pendiente: %s." % String(CHECK_WORDS.get(String(st.check), String(st.check)))
+		var rh := restart_hint()
+		if rh != "":
+			line += " " + rh
 	out["step"] = {
 		"id": String(st.id), "title": String(st.title), "text": String(st.text), "source": readable(String(st.source)),
 		"source_short": short_source(String(st.source)), "check": String(st.check), "done": st.done, "status": status,
-		"status_text": line, "mistake": String(st.mistake), "action": String(st.action), "completed": _done.has(_key(String(st.id))),
+		"status_text": ((tut_skipped + " ") if tut_skipped != "" else "") + line, "skipped": tut_skipped, "mistake": String(st.mistake), "action": String(st.action), "completed": _done.has(_key(String(st.id))),
 	}
 	out["highlight"] = String(STEP_HIGHLIGHT.get(String(st.id), ""))
 	out["control"] = String(STEP_CONTROLS.get(String(st.id), ""))
@@ -3279,8 +3597,8 @@ func sound_view() -> Dictionary:
 	return { "loop": "", "volume": 0.0, "pitch": 1.0 }
 
 
-## Los rótulos con números que se ven en la escena 3D: la pantalla de la balanza (en gramos con dos decimales, como una
-## de laboratorio), el manómetro de la prensa, el termómetro de la carne viva (ficción) y la pesa de la prueba.
+## Los rótulos con números que se ven en la escena 3D: la pantalla de la balanza (en gramos con cuatro decimales, como una
+## analítica de laboratorio, 5w), el manómetro de la prensa, el termómetro de la carne viva (ficción) y la pesa de la prueba.
 func labels_view(sn: Dictionary) -> Dictionary:
 	var rv := run_view()
 	var gauge := fmt_mpa(float(dial.pressure_mpa))
@@ -3295,7 +3613,7 @@ func labels_view(sn: Dictionary) -> Dictionary:
 		tone = "mal" if bool(coat.thermal.get("injured", false)) else ("aviso" if bool(coat.thermal.get("pain", false)) else "bien")
 	var chk: Dictionary = sn.check
 	return {
-		"scale": "%s g" % Js.to_fixed(pan_total(), 2), "gauge": gauge, "thermo": "Carne viva\n%s °C" % Js.to_fixed(q, 1),
+		"scale": scale_text(), "gauge": gauge, "thermo": "Carne viva\n%s °C" % Js.to_fixed(q, 1),
 		"thermo_c": q, "thermo_tone": tone, "weight": ("%s N · %s" % [Js.to_fixed(float(chk.loadN), 0), "aguanta" if bool(chk.ok) else "se despega"]) if not chk.is_empty() else "",
 	}
 
@@ -3319,5 +3637,5 @@ func view() -> Dictionary:
 		"furnace_fiction": short_source(String(ForgeData.FURNACE.source)),
 		"speed": speed_i, "clock": clock_view(), "notice": notice, "inside": inside_view(), "lost_wax": lost_wax_view(),
 		"carving": carving_view(), "fit": (sn.fit as Dictionary).duplicate(true), "tool": carve_tool, "compensate": compensate,
-		"weld": weld_view(sn),
+		"weld": weld_view(sn), "feasible": feasibility(),
 	}

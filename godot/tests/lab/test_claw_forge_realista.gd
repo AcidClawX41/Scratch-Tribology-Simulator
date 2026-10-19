@@ -99,7 +99,7 @@ func test_sin_la_carga_dentro_no_arranca() -> void:
 	empty.apply_recommended()
 	empty.insert_charge()
 	assert_true(empty.notice.contains("vacío"), "sin cargar lo pesado, no hay nada que meter: %s" % empty.notice)
-	assert_true(String(empty.mistake_view().fix_title).contains("pesar"), "y se arregla pesando")
+	assert_true(String(empty.mistake_view().fix_title).to_lower().contains("pesar"), "y se arregla pesando")
 	# la piedra comprada se mete en el horno de calentar para ver qué le hace el calor
 	var stone := _state(State.STONE)
 	stone.choose_stone("cuarzo")

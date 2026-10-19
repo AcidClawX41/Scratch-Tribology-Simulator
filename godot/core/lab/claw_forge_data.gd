@@ -160,7 +160,7 @@ const MATERIALS := {
 		"alpha": { "value": 4.8e-6, "min": 4.6e-6, "max": 5.0e-6, "quality": "secondary", "source": SRC_GOODFELLOW_WC },
 		"k": { "value": 70.0, "min": 60.0, "max": 80.0, "quality": "secondary", "source": SRC_GOODFELLOW_WC },
 		"cp": { "value": 250.0, "min": 150.0, "max": 480.0, "quality": "secondary", "source": SRC_HYPERION_WC + ". Se toma 250, dentro de las dos bandas" },
-		"route": "sinterizar", "route_text": "No se funde: se prensa polvo de WC con un 6 % de cobalto y se sinteriza a 1350-1500 °C en vacío (encoge ~20 %).",
+		"route": "sinterizar", "route_text": "No se funde: se prensa polvo de WC con un 5,5 % de cobalto y se sinteriza a 1350-1500 °C en vacío (encoge ~20 %).",
 	},
 	"vidrio": {
 		"family": "vidrio",
@@ -410,6 +410,25 @@ const POWDERS := {
 	"titanio": { "id": "titanio", "name": "Lingote de titanio de grado 2", "formula": "Ti", "what": "Titanio comercialmente puro.", "source": SRC_CRC },
 	"vidrio": { "id": "vidrio", "name": "Granalla de vidrio de fundir", "formula": "vidrio", "what": "Trozos de vidrio limpio para colar en el molde.", "source": SRC_BULLSEYE },
 }
+
+# ════════ 5w · pesar para la pieza de esta garra ════════
+## Cuánto se pesa (ClawForge.mix_plan): lo que pide la pieza es su volumen por la densidad del material (ClawMass, con su
+## fuente) y cada polvo, ese total por su fracción en peso de la receta. Lo que se pesa de más y lo que se admite por encima
+## son elecciones del juego; la balanza, la de un laboratorio de análisis.
+##   - extra: lo que se pesa de más sobre lo que pide la pieza (lo que se queda en el plato, en el crisol o en la tolva);
+##   - over: hasta cuánto por encima de lo que pide la pieza se admite en el crisol (más es desperdiciar);
+##   - inner (5w): lo que se apunta por dentro del margen de cada polvo, en fracción del margen;
+##   - readability_g: lo que distingue la balanza (g), la de una balanza analítica de 220 g.
+const MIX_PLAN := {
+	"extra": { "value": 0.1, "quality": "juego", "source": "un 10 % de más sobre lo que pide la pieza, para lo que se queda pegado en el plato, el crisol o la tolva: elección del juego (la merma real depende de la máquina)" },
+	"over": { "value": 0.2, "quality": "juego", "source": "hasta un 20 % por encima de lo que pide la pieza: elección del juego (más se desperdicia: no cabe en el crisol de una pieza tan pequeña)" },
+	"inner": { "value": 0.1, "quality": "juego", "source": "se pesa para una proporción al menos a un 10 % del margen de la receta por dentro de cada borde (si la de la receta está en el borde, como el 0,25 % de MgO de la alúmina, que es su mínimo): elección del juego, para que lo que no distingue la balanza no deje la mezcla fuera" },
+	"readability_g": { "value": 0.0001, "quality": "secondary", "source": "balanza analítica de laboratorio de 220 g que distingue 0,1 mg (p. ej., Mettler Toledo ME204, ficha técnica): lo bastante para pesar los miligramos de MgO o de Cr₂O₃ de una funda" },
+}
+## La CVD no pesa polvo: el gas entra de la botella mientras crece la capa. En la balanza se pone, por juego, el carbono que
+## pide la capa (el del diamante de la funda).
+const CVD_GAS_NOTE := "La CVD no pesa polvo: el metano y el hidrógeno entran de la botella mientras crece la capa, y solo una parte del carbono acaba en ella. Aquí se pesa, por juego, el carbono que pide la capa: el del diamante de la funda."
+
 
 # ════════ Recetas por material objetivo ════════
 ## Cada receta: id, name, product (Data.INLAYS o «alumina»), variety, mode, method, form («bola», «cristal», «capa»,

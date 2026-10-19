@@ -159,7 +159,8 @@ func test_fuera_de_margen_sale_el_defecto_y_se_explica() -> void:
 	mx.add_powder("al2o3", 100.0)
 	mx.load_crucible()
 	assert_false(bool(mx.bench_view().mix_ok), "sin cromo no es la mezcla del rubí")
-	assert_eq(String(mx.mistake_view().what), String(mx.last.mix.text), "y se explica con el texto del motor")
+	assert_false(mx.calls.any(func(c: Array) -> bool: return String(c[0]) == "mix"), "fuera de la receta, el crisol no se carga (5w)")
+	assert_eq(String(mx.mistake_view().what), String(mx.forge.mix_status(mx.pan).eval.text), "y se explica con el texto del motor")
 	var jars := {}
 	for j: Dictionary in mx.bench_view().jars:
 		jars[String(j.id)] = j
@@ -216,27 +217,44 @@ func test_la_balanza_vierte_a_su_ritmo() -> void:
 	st.set_pouring(true)
 	for i in 30:
 		st.tick(FRAME)
-	assert_near(float(st.pan.al2o3), State.POUR_G_S * 30.0 * FRAME, 1e-6, 1e-6, "vierte a su ritmo")
+	# 5w · el tarro de la receta vierte a un ritmo que llena su objetivo en POUR_FILL_S; gota a gota, POUR_FINE_DIV veces menos
+	var plan := st.forge.mix_plan()
+	var tg := float(plan.powders[0].targetG)
+	assert_near(st.pour_rate("al2o3"), tg / State.POUR_FILL_S, 1e-12, 1e-12, "el ritmo, el de su objetivo")
+	assert_near(float(st.pan.al2o3), st.pour_rate("al2o3") * 30.0 * FRAME, 1e-6, 1e-6, "vierte a su ritmo")
 	st.set_pouring(true, true)
 	var g0 := float(st.pan.al2o3)
 	for i in 30:
 		st.tick(FRAME)
-	assert_near(float(st.pan.al2o3) - g0, State.POUR_FINE_G_S * 30.0 * FRAME, 1e-3, 1e-3, "con Mayús, gota a gota")
+	assert_near(float(st.pan.al2o3) - g0, st.pour_rate("al2o3") / State.POUR_FINE_DIV * 30.0 * FRAME, 1e-6, 1e-6, "con Mayús, gota a gota")
+	assert_near(st.pour_rate("mgo"), State.POUR_G_S, 1e-12, 1e-12, "un tarro que no va en la receta, al de siempre")
 	st.set_pouring(false)
 	st.drop_jar()
 	st.add_powder("al2o3", 1000.0)
 	assert_eq(st.pan_total(), State.PAN_MAX_G, "no cabe más que en el plato")
 	st.add_powder("al2o3", -5000.0)
 	assert_false(st.pan.has("al2o3"), "quitar no deja gramos negativos")
-	st.add_powder("al2o3", 99.0)
-	st.add_powder("cr2o3", 1.0)
+	# lo que pide la pieza de esta garra, en la proporción de la receta
+	for p: Dictionary in plan.powders:
+		st.add_powder(String(p.id), float(p.targetG))
 	st.load_crucible()
 	var bv := st.bench_view()
-	assert_true(bool(bv.mix_ok), "99 g de alúmina y 1 g de óxido de cromo: la mezcla del rubí")
+	assert_true(bool(bv.mix_ok), "lo que pide la pieza, en la proporción del rubí: %s" % String(bv.status_text))
 	assert_eq(String(st.calls[-1][0]), "mix", "cargar el crisol es mix()")
-	assert_eq(st.calls[-1][1], { "al2o3": 99.0, "cr2o3": 1.0 }, "con los gramos del plato")
+	assert_eq(st.calls[-1][1], st.pan, "con los gramos del plato")
+	# mezclados, no se separan: quitar uno no deja
+	var before := st.pan.duplicate()
+	st.add_powder("cr2o3", -0.001)
+	assert_eq(st.pan, before, "con dos polvos en el plato, quitar uno no deja: ya están mezclados")
+	assert_true(st.notice.contains("mezclado"), "y lo dice: %s" % st.notice)
+	# la tara pone la pantalla a cero
+	st.tare()
+	assert_eq(st.scale_text(), "T 0.0000 g", "con la tara, la pantalla a cero")
+	st.add_powder("al2o3", 0.5)
+	assert_eq(st.scale_text(), "T 0.5000 g", "y pesa lo de encima")
 	st.clear_pan()
 	assert_true(st.pan.is_empty(), "vaciar el plato")
+	assert_eq(st.scale_text(), "0.0000 g", "y quita la tara")
 
 
 func test_la_marcha_a_camara_rapida() -> void:
@@ -319,7 +337,7 @@ func test_el_tutorial_sigue_al_hacer_cada_paso() -> void:
 	assert_eq(String(tv.step.id), "pesar", "empieza por pesar")
 	assert_eq(String(tv.highlight), "balanza", "se ilumina la balanza")
 	assert_true(String(tv.control).contains("tarro"), "y dice cómo")
-	st.add_powder("al2o3", 50.0)
+	st.add_powder("al2o3", float(st.forge.mix_plan().targetG))
 	st.load_crucible()
 	assert_eq(String(st.tutorial_view().step.id), "modo", "con la mezcla buena, sigue solo")
 	st.set_control("modo", "sintetizar")

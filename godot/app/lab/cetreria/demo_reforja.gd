@@ -29,8 +29,10 @@
 ##  15 · la mesa de soldar (5r): la funda de acero y su punta, la soldadora láser, alinear, la costura punto a punto con el puntero
 ##       apretado (el destello, el punto incandescente y el cordón), limar la costura y pasarla a la cetrería;
 ##  16 · el titanio sin argón: la soldadura sale contaminada (azul o gris) y se explica;
-##  17 · una punta de metal duro en la funda de acero: con plata y el soplete (el metal duro no se funde).
-## Orden: 1, 2, 12, 13, 3, 4, 9, 14, 6, 5, 7, 8, 10, 11, 15, 16 y 17.
+##  17 · una punta de metal duro en la funda de acero: con plata y el soplete (el metal duro no se funde);
+##  18 · pesar los polvos del metal duro (5w): la tarjeta del paso con los gramos de cada polvo para la funda de la garra, lo
+##       que lleva y lo que falta junto a la balanza, el cobalto que se pasa y cómo se arregla, y «Listo: carga el crisol (L)».
+## Orden: 1, 2, 12, 13, 3, 4, 9, 14, 6, 5, 7, 8, 10, 11, 15, 16, 17 y 18.
 ## Captura:   node godot/tools/godot.mjs capture res://app/lab/cetreria/demo_reforja.tscn --frames=4500 --out=<carpeta>
 ## Teléfono:  … con --phone (390 × 844: una columna). Un caso: … -- --caso=2 (y menos fotogramas).
 ## El estado va en el hilo de la interfaz (cada captura sale igual). No guarda ajustes. Al final escribe lo que cuesta un
@@ -62,8 +64,9 @@ const SCENES := [
 	"La mesa de soldar: una punta de acero soldada con láser, de principio a fin",
 	"La mesa de soldar: el titanio sin argón sale contaminado",
 	"La mesa de soldar: una punta de metal duro, con plata y el soplete",
+	"Pesar los polvos del metal duro: cuántos gramos de cada uno pide la funda",
 ]
-const MAIN_ORDER := [0, 1, 11, 12, 2, 3, 8, 13, 5, 4, 6, 7, 9, 10, 14, 15, 16]
+const MAIN_ORDER := [0, 1, 11, 12, 2, 3, 8, 13, 5, 4, 6, 7, 9, 10, 14, 15, 16, 17]
 
 var lab: Control
 var care: Control
@@ -436,7 +439,7 @@ func _scene_2() -> void:
 	_reveal(page.tut_card)
 	await _wait(0.8)
 	_caption(1, "pesar: coger el tarro de la alúmina y verter en el plato")
-	await _pour("al2o3", 2.4)
+	await _pour("al2o3", 2.0)
 	_log("en el plato: %s g" % String.num(_st().pan_total(), 2))
 	_caption(1, "cargar el crisol (o el alimentador del soplete)")
 	await _click("crisol")
@@ -1102,3 +1105,57 @@ func _scene_17() -> void:
 	await _braze_seam(40.0)
 	await _wait(2.5)
 	_summary("punta de metal duro con plata")
+
+
+func _scene_18() -> void:
+	await _open_lab()
+	_caption(17, "el metal duro, con su tutorial: el primer paso es pesar")
+	_press(page.recipe_tiles["metal_duro"])
+	_post("restart")
+	_post("set_tutorial", [true])
+	_post("tutorial_goto", ["metal_duro"])
+	_reveal(page.tut_card)
+	_view("banco")
+	await _wait(2.0)
+	_caption(17, "el carburo de tungsteno: coger el tarro y verter en el plato")
+	await _pour("wc", 0.6)
+	_reveal(page.bench_card)
+	await _wait(1.6)
+	await _phone_card(page.bench_card)
+	_caption(17, "el cobalto, con los botones de la balanza: se pasa")
+	var jars: Dictionary = page.jar_rows
+	for b: Node in (jars["co"].box as Control).find_children("*", "Button", true, false):
+		if (b as Button).text.begins_with("+") and ((b as Button).text.contains("0.1 ") or (b as Button).text.contains("0,1 ")):
+			for i in 4:
+				_press(b as Button)
+				await _wait(0.25)
+			break
+	await _wait(1.6)
+	await _phone_card(page.bench_card)
+	_caption(17, "el cobalto ya está mezclado con el carburo y no se separa: vaciar el plato (Retroceso)")
+	_key(KEY_BACKSPACE)
+	await _wait(1.0)
+	_caption(17, "pesar con los botones de dosis de cada polvo, hasta lo que dice la balanza")
+	for id: String in ["wc", "co"]:
+		var row: Dictionary = jars[id]
+		var target := 0.0
+		for j: Dictionary in _st().bench_view().jars:
+			if String(j.id) == id:
+				target = float(j.target_g)
+		for i in 3:
+			var g := float((row.dose_g as Array)[i])
+			for n in 12:
+				if float(_st().pan.get(id, 0.0)) + g > target + 1e-12:
+					break
+				_press(row.dose_b[i] as Button)
+				await _wait(0.06)
+		await _wait(0.6)
+	_reveal(page.bench_card)
+	await _wait(1.6)
+	await _phone_card(page.bench_card)
+	_caption(17, "«Listo: carga el crisol (L)»: el tutorial sigue solo")
+	_key(KEY_L)
+	await _wait(2.0)
+	_reveal(page.tut_card)
+	await _wait(1.5)
+	_log("en el plato: %s g · mezcla: %s" % [String.num(_st().pan_total(), 4), str(_st().snap().mix.get("ok", false))])
