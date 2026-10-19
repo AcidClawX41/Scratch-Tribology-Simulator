@@ -36,6 +36,7 @@ const CARD = preload("res://app/lab/animals/animal_card.gdshader")
 const EYE = preload("res://app/lab/animals/animal_eye.gdshader")
 const ClawMaterial = preload("res://app/common/claw_material.gd")
 const ClawOptics = preload("res://core/lab/claw_optics.gd")
+const ClawGeo = preload("res://app/common/claw_geo.gd")
 
 ## Especies modeladas (todas las de AnimalArt.KINDS).
 const MODELS := ["casuario", "tigre", "oso", "aguila", "arpia", "halcon", "buho", "lechuza", "buitre", "velociraptor", "velociraptor_pelicula"]
@@ -245,7 +246,7 @@ func _nodes() -> void:
 			n.add_child(mi)
 	for c: Dictionary in _data.claws:
 		claws.append({ "node": bones[c.bone], "tip": bones[c.tip_bone], "tip_cm": c.tip, "tip_local": (c.tip as Vector3) - _pivot(c.tip_bone),
-			"far": bool(c.far), "name": String(c.get("name", "")), "base_basis": _claw_basis(c) })
+			"far": bool(c.far), "name": String(c.get("name", "")), "base_basis": _claw_basis(c), "geo": c.get("geo", {}) })
 	for s: String in ["_n", "_f"]:
 		show_bone("parpado" + s, false)
 
@@ -635,15 +636,17 @@ func _pose_claws(p: Dictionary) -> void:
 	var key := "%s|%s|%s|%s" % [snappedf(out, 0.01), gone, snappedf(keep, 0.01), bend]
 	if key != _claw_key:
 		_claw_key = key
+		var bend_frac := clampf(float(p.get("claw_bend_frac", BEND_FRAC_DRAW)), 0.0, 0.4)
 		for c: Dictionary in claws:
 			var n: Node3D = c.node
 			var tip: Node3D = c.tip
 			n.visible = out > 0.0 and not gone
 			var chipped := keep < 0.97
-			tip.visible = not chipped
-			var s := out * (clampf(keep / 0.6, 0.3, 1.0) if chipped else 1.0)
-			n.scale = Vector3.ONE * maxf(s, 0.001)
-			tip.quaternion = Quaternion.from_euler(Vector3(0.9 if bend else 0.0, 0.0, -0.6 if bend else 0.0))
+			n.scale = Vector3.ONE * maxf(out, 0.001)
+			tip.quaternion = Quaternion.IDENTITY
+			# unidad 4y: la garra doblada o mellada es una sola pieza (la malla de la punta doblada o cerrada en la rotura),
+			# nunca la punta girada sobre el corte ni la base encogida
+			_claw_shape(c, chipped and not gone, keep, bend and not chipped, bend_frac)
 	var broken := gone or keep < 0.97
 	if broken and not _broken:
 		_break_t = _t
@@ -663,6 +666,98 @@ func _pose_claws(p: Dictionary) -> void:
 			var tt := prog * SHARDS_S
 			g.position = (sh.at as Vector3) + v * tt + Vector3(0, -490.0, 0) * tt * tt * 0.5
 			g.rotation = Vector3(tt * 9.0, tt * 7.0 + k, tt * 5.0)
+
+
+## Unidad 4y · dibujo: lo que se dobla la punta de una garra doblada si la vista no lo dice (fracción del largo).
+const BEND_FRAC_DRAW := 0.15
+## Las mallas de las garras dobladas o melladas (de una pieza), por garra y estado, y las de siempre: se hacen una vez.
+var _claw_variants := {}
+var _claw_rest := {}
+
+
+## Unidad 4y: la forma de una garra (como Hd3D._claw_shape): entera, mellada en keep (la punta cerrada en la rotura, o la base
+## si la rotura pasa del corte) o doblada desde 1 − bend_frac del largo. Cambia la malla de cada pieza (sus huesos) por la de
+## la caché de esta garra; las piezas siguen pegadas en el corte.
+func _claw_shape(c: Dictionary, chipped: bool, keep: float, bent: bool, bend_frac: float) -> void:
+	var g: Dictionary = c.get("geo", {})
+	if g.is_empty():
+		(c.tip as Node3D).visible = not chipped
+		return
+	var mb := _claw_mesh_node(c.node)
+	var mt := _claw_mesh_node(c.tip)
+	if mb == null or mt == null:
+		return
+	var name := String(c.name)
+	if not _claw_rest.has(name):
+		_claw_rest[name] = [mb.mesh, mt.mesh]
+	var rest: Array = _claw_rest[name]
+	var L := float(g.length)
+	var cut_mm: Vector3 = g.cut_mm
+	var frame: Basis = g.frame
+	var cut_s := L * 0.6
+	var want_b: Mesh = rest[0]
+	var want_t: Mesh = rest[1]
+	var tip_on := true
+	if chipped:
+		var kq := snappedf(clampf(keep, 0.15, 0.97), 0.01)
+		var on_tip := kq > 0.61
+		var vkey := "mella|%s|%s" % [name, kq]
+		if not _claw_variants.has(vkey):
+			# en los huesos: la base con el origen en su base; la punta, en el corte (rig3d)
+			var origin := Vector3.ZERO if not on_tip else -(frame * (cut_mm * 0.1))
+			var arr := ClawGeo.chipped_arrays(L, float(g.h), float(g.w), float(g.arc), cut_s if on_tip else 0.0, L * kq, int(g.rows),
+				int(g.ring), "%s|%s" % [id, name], not on_tip, frame, origin, 0.1)
+			_claw_variants[vkey] = _claw_mesh_of(arr)
+		if on_tip:
+			want_t = _claw_variants[vkey]
+		else:
+			want_b = _claw_variants[vkey]
+			tip_on = false
+	elif bent:
+		var bq := snappedf(maxf(bend_frac, 0.02), 0.01)
+		var vkey := "dobla|%s|%s" % [name, bq]
+		if not _claw_variants.has(vkey):
+			var origin := -(frame * (cut_mm * 0.1))
+			var tip_a: Array = (g.tip_arrays as Array).duplicate()
+			var vs: PackedVector3Array = (tip_a[Mesh.ARRAY_VERTEX] as PackedVector3Array).duplicate()
+			for i in vs.size():
+				vs[i] = origin + frame * (vs[i] * 0.1)
+			var ns: PackedVector3Array = (tip_a[Mesh.ARRAY_NORMAL] as PackedVector3Array).duplicate()
+			for i in ns.size():
+				ns[i] = (frame * ns[i]).normalized()
+			tip_a[Mesh.ARRAY_VERTEX] = vs
+			tip_a[Mesh.ARRAY_NORMAL] = ns
+			var arr := ClawGeo.bend_arrays(tip_a, float(g.k), L * (1.0 - bq), L * bq * ClawGeo.BEND_HINGE, ClawGeo.BEND_ANGLE, frame,
+				origin, 0.1)
+			_claw_variants[vkey] = _claw_mesh_of(arr)
+		want_t = _claw_variants[vkey]
+	(c.tip as Node3D).visible = tip_on
+	for pair: Array in [[mb, want_b], [mt, want_t]]:
+		var mi: MeshInstance3D = pair[0]
+		if mi.mesh != pair[1]:
+			mi.mesh = pair[1]
+			if claw_mat != null:
+				mi.set_surface_override_material(0, claw_mat)
+
+
+## La malla de una pieza de garra (el hijo «Malla» de su hueso), o null.
+static func _claw_mesh_node(bone: Node3D) -> MeshInstance3D:
+	for ch: Node in bone.get_children():
+		if ch is MeshInstance3D and ch.name == "Malla":
+			return ch as MeshInstance3D
+	return null
+
+
+## Un ArrayMesh de una pieza de garra con el color de vértice de rig3d (blanco, alfa 0).
+static func _claw_mesh_of(arr: Array) -> ArrayMesh:
+	var vs: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
+	var cols := PackedColorArray()
+	cols.resize(vs.size())
+	cols.fill(Color(1, 1, 1, 0))
+	arr[Mesh.ARRAY_COLOR] = cols
+	var am := ArrayMesh.new()
+	am.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr)
+	return am
 
 
 ## Material de las garras, de la biblioteca (ClawMaterial: se construye una vez por material y queda en su caché): la

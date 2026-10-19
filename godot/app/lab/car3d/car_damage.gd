@@ -29,6 +29,7 @@ const CarShape = preload("res://app/lab/car3d/car_shape.gd")
 const CurveKit = preload("res://app/lab/car3d/curve_kit.gd")
 const Rng = preload("res://core/shared/rng.gd")
 const Js = preload("res://core/shared/js.gd")
+const Catalog = preload("res://core/lab/catalog.gd")
 
 ## Tope de cada lista (los arrays de uniformes de los shaders).
 const MAX_GROOVES := 48
@@ -338,17 +339,17 @@ static func from_hit(hit: Dictionary, ctx: Dictionary) -> Dictionary:
 
 
 ## Daños del animal quieto encima (hold_report): las marcas de sus garras y el parabrisas que se agrieta bajo su peso
-## (windshield). ctx: como from_hit, con zone la zona en la que se agarra, feet el punto de sus patas (m) y, desde la unidad
-## 4s:
-##   - speed: lo que hay a la velocidad del deslizador (CarSpeedMarks.at, a través del estado: marks_now): el surco de cada
-##     garra con la carga de esa velocidad (hondura, ancho, capas, si raja el panel) y la punta clavada (puncture: la
-##     punzada o, si atraviesa, el agujero). Sin ella, las marcas de su peso (scen.scratch) o, asustado, sus desgarros
-##     (defense.tear), como hasta la 4r.
+## (windshield). ctx: como from_hit, con zone la zona en la que se agarra, feet el punto de sus patas (m) y:
+##   - plan (unidad 4y): lo que deja cada garra a la velocidad del deslizador (CarHoldMarks.plan, a través del estado:
+##     hold_plan): la huella de cada garra que agarra (la punción del motor: hondura y diámetro, o el agujero si atraviesa)
+##     y, solo si las garras se mueven (resbala, la raja corre o se doblan), un surco por garra desde su punta, paralelos y en
+##     la dirección del movimiento (rakes: largo, hondura, ancho y grados desde «hacia atrás»). Sin plan, nada: sin saber qué
+##     ha hecho el animal no se pinta ninguna marca (antes salían surcos de todo el panel aunque no resbalara).
+##   - speed: lo que hay a esa velocidad (CarSpeedMarks.at: marks_now), para las capas del surco.
 ##   - tips: dónde están las puntas de las garras que tocan el panel (m, en el coche; las da la vista con la pose del
-##     animal): cada surco sale de una punta y mide lo que resbala (lengthMm, o el desgarro del asustado; el animal resbala
-##     hacia atrás con el aire: el surco va de la punta hacia atrás, por el panel, como los desgarros); la punzada, en la
-##     punta. Sin tips, desde las patas, de dibujo (claw_rakes).
-## Cuántas: las garras que agarran (claws: MovingCar.BODIES[…].contact).
+##     animal): cada marca sale de una punta. Sin tips, desde las patas, de dibujo (claw_rakes).
+## Cuántas: las garras que agarran (claws: MovingCar.BODIES[…].contact). Cada garra de una pata deja la suya algo distinta
+## (VARIATION, juego): las medidas máximas son las de la física.
 static func from_hold(scen: Dictionary, ctx: Dictionary) -> Dictionary:
 	var out := empty()
 	if scen.is_empty() or not bool(scen.get("ok", false)):
@@ -358,81 +359,119 @@ static func from_hold(scen: Dictionary, ctx: Dictionary) -> Dictionary:
 	var feet: Vector3 = ctx.feet
 	var kind: String = ctx.get("kind", "mamifero")
 	var seed := "%s|%s|quieto" % [zone, ctx.get("claw_id", "")]
-	var dfn: Variant = scen.get("defense")
 	var sm: Dictionary = ctx.get("speed", {})
+	var plan: Dictionary = ctx.get("plan", {})
 	var glass := bool(ctx.get("glass", false))
 	var target: Dictionary = ctx.target
 	var metal: bool = target.get("body") != null and bool(target.body.get("metal", true))
-	var marks: Dictionary = {}
-	var len_m := 0.0
-	if not sm.is_empty():
-		marks = sm.marks
-		var tear_mm: Variant = (dfn.tear as Dictionary).get("lengthMm") if dfn != null else null
-		len_m = float(tear_mm if tear_mm != null else marks.get("lengthMm", 0.0)) / 1000.0
-	elif dfn != null:
-		marks = dfn.tear
-		len_m = float(marks.get("lengthMm", 0.0)) / 1000.0
-	elif ctx.has("speed"):
-		# la gráfica del daño aún no ha llegado del hilo: las de su peso, parado
-		marks = scen.get("scratch", {})
-		len_m = float((scen.get("holdCtx", {}) as Dictionary).get("slideMm", 0.0)) / 1000.0
-	# unidad 4s: la raja que corre por el panel (CarTear, a través de la vista: tear_mm) alarga los surcos que atraviesan
-	len_m = maxf(len_m, float(ctx.get("tear_mm", 0.0)) / 1000.0)
 	var side := side_zone(zone)
 	var axis := AXIS_SIDE if side else AXIS_TOP
 	var panel: Vector2 = CarShape.hold_panel(zone, Vector2(0.0, CarShape.CAR_L))  # unidad 4v: la luneta
 	var count := int(ctx.get("claws", 4))
 	var tips: Array = (ctx.get("tips", []) as Array).slice(0, count)
-	var layer := mark_layer(marks, target) if not marks.is_empty() else -1
-	if glass:
-		layer = 0 if float(marks.get("depthUm", 0.0)) > 0.0 else -1
 	var on_paint: bool = CarShape.TEAR_ZONES.has(zone) or glass
-	var hw := float(marks.get("widthUm", 0.0)) / 2.0e6
-	var depth := float(marks.get("depthUm", 0.0))
-	var lip := lip_of(marks)
-	if on_paint and layer >= 0 and Js.truthy(marks.get("scratched", depth > 0.0)) and hw > 0.0:
-		if tips.is_empty():
-			var p0 := feet
-			p0.x = clampf(p0.x, panel.x, panel.y)
-			out.grooves = claw_rakes(p0, axis, count, 1 if count <= 2 else 2, kind, len_m, -1.0, panel, hw, layer, 0, top, seed, depth, lip)
-		else:
-			for t: Vector3 in tips:
-				var a := Vector2(t.x, t.y if side else t.z)
-				var bx: float
-				if side:
-					bx = clampf(t.x - len_m, panel.x, panel.y)
-				else:
-					bx = walk_top(top, clampf(t.x, panel.x, panel.y), len_m, -1.0, panel.x, panel.y)
-				out.grooves.append({ "a": a, "b": Vector2(bx, a.y), "hw": hw, "layer": layer, "axis": axis, "hit": 0,
-					"depth_um": depth, "lip": lip })
-		out.focus = feet if tips.is_empty() else tips[0]
-		out.focus_m = 0.08
-	# la punta clavada: la punzada (o el agujero, si atraviesa) en cada garra que toca
-	var pn: Variant = sm.get("puncture") if not sm.is_empty() else null
-	if pn != null and on_paint and not glass and float(pn.get("holeUm", 0.0)) > 0.0:
-		var punct_um := float(sm.get("punctUm", pn.get("depthUm", 0.0)))
-		var through := Js.truthy(sm.get("punctThrough", pn.get("through", false)))
-		if through or punct_um > depth + 0.5:
-			var starts: Array = []
-			for t: Vector3 in tips:
-				starts.append(Vector2(t.x, t.y if side else t.z))
-			if starts.is_empty():
-				for g: Dictionary in claw_rakes(feet, axis, count, 1 if count <= 2 else 2, kind, 0.0, -1.0, panel, 0.0, 0, 0, top, seed):
-					starts.append(g.a)
-			var rng := Rng.new(Rng.seed_of(seed + "|punzadas"))
-			for c: Vector2 in starts.slice(0, MAX_HOLES):
-				if through:
-					out.holes.append({ "c": c, "r": float(pn.holeUm) / 2.0e6, "petals": PETALS if metal else 0, "axis": axis, "hit": 0,
+	# de dónde sale la marca de cada garra: su punta (o, sin la pose, junto a las patas)
+	var starts: Array = []
+	for t: Vector3 in tips:
+		# una garra que cae fuera del panel toca otro panel: aquí no deja marca (la vista corre al animal para que no pase)
+		if t.x >= panel.x - PANEL_TOL_M and t.x <= panel.y + PANEL_TOL_M:
+			starts.append(Vector2(t.x, t.y if side else t.z))
+	if starts.is_empty() and tips.is_empty():
+		var p0 := feet
+		p0.x = clampf(p0.x, panel.x, panel.y)
+		for g: Dictionary in claw_rakes(p0, axis, count, 1 if count <= 2 else 2, kind, 0.0, -1.0, panel, 0.0, 0, 0, top, seed):
+			starts.append(g.a)
+	if on_paint and not plan.is_empty():
+		var rk: Dictionary = plan.rakes
+		var marks: Dictionary = sm.get("marks", {})
+		var layer := mark_layer(marks, target) if not marks.is_empty() else -1
+		if glass:
+			layer = 0 if float(rk.depthUm) > 0.0 else -1
+		var hw := float(rk.widthUm) / 2.0e6
+		if int(rk.n) > 0 and layer >= 0 and hw > 0.0:
+			out.grooves = hold_rakes(starts.slice(0, int(rk.n)), axis, float(rk.lengthMm) / 1000.0, float(rk.deg), panel, hw, layer,
+				float(rk.depthUm), lip_of(marks), top, seed)
+		var pr: Dictionary = plan.prints
+		if int(pr.n) > 0 and not glass and float(pr.holeUm) > 0.0:
+			var rng := Rng.new(Rng.seed_of(seed + "|huellas"))
+			for c: Vector2 in starts.slice(0, mini(int(pr.n), MAX_HOLES)):
+				var k_r := lerpf(float(VARIATION.pit[0]), float(VARIATION.pit[1]), rng.next())
+				var k_d := lerpf(float(VARIATION.pit[0]), float(VARIATION.pit[1]), rng.next())
+				if String(pr.kind) == "agujero":
+					out.holes.append({ "c": c, "r": float(pr.holeUm) / 2.0e6 * k_r, "petals": PETALS if metal else 0, "axis": axis, "hit": 0,
 						"seed": rng.next(), "pit_um": 0.0, "lip": 0.0 })
 				else:
-					out.holes.append(pit(c, float(pn.holeUm), punct_um, lip, axis, 0, rng.next()))
-			if out.focus == Vector3.INF:
-				out.focus = feet if tips.is_empty() else tips[0]
-				out.focus_m = 0.08
+					out.holes.append(pit(c, float(pr.holeUm) * k_r, float(pr.depthUm) * k_d, lip_of(sm.get("marks", {})), axis, 0, rng.next()))
+		if not out.grooves.is_empty() or not out.holes.is_empty():
+			out.focus = feet if tips.is_empty() else tips[0]
+			out.focus_m = 0.08
 	var shield: Variant = scen.get("windshield")
 	if shield != null and bool(shield.get("cracked", false)):
 		hold_cracks(out, shield, ctx, tips, seed)  # unidad 4v: las de lo que tapa al conductor (CarGlass.view_loss)
 	hold_glass(out, scen, ctx)  # unidad 4v: la luneta que estalla bajo el animal
+	return out
+
+
+## Unidad 4y: la variación entre las garras de una pata (juego: no hay medición de cuánto difieren). Cada surco mide entre el
+## 85 % y el 100 % del largo de la física, ahonda entre el 85 % y el 100 % de su hondura y se curva de lado hasta un 4 % de
+## su largo; cada huella, entre el 90 % y el 100 % de su diámetro y su hondura. Con el azar determinista de rng.gd (la
+## semilla, el ensayo): las medidas máximas son las de la física. El ancho a lo largo del surco (empieza fino, se ensancha
+## donde la garra muerde y acaba con un arrastre) lo pinta el sombreador (car_damage.gdshaderinc), con el ancho de la física
+## donde más muerde.
+## Unidad 4y · dibujo: lo que una punta puede quedar fuera del panel dibujado y seguir marcándolo (m: el borde del panel).
+const PANEL_TOL_M := 0.005
+const VARIATION := {
+	"len": [0.85, 1.0], "depth": [0.85, 1.0], "bend": 0.04, "pit": [0.9, 1.0], "quality": "juego",
+	"source": "juego: la variación visual entre las garras de una misma pata (largo, hondura y curva de cada surco; tamaño de cada huella); sin medición publicada. Las medidas máximas son las de la física",
+}
+
+
+## Unidad 4y: un surco por garra desde cada punto de starts (m, en el plano del daño), paralelos, de len_m a lo largo de la
+## dirección deg (grados desde «hacia atrás», + hacia la derecha, como CarCurve.mark_deg) y sin pasar del panel, cada uno en
+## dos tramos (una curva suave) con su variación (VARIATION). En los paneles de arriba, a lo largo del coche, sobre la chapa
+## (walk_top). t0 y t1: la parte del surco entero que cubre cada tramo (para el ancho a lo largo del sombreador).
+static func hold_rakes(starts: Array, axis: int, len_m: float, deg: float, panel: Vector2, hw: float, layer: int, depth_um: float,
+		lip: float, top: PackedVector2Array, seed_text: String) -> Array:
+	var out: Array = []
+	if len_m <= 0.0:
+		return out
+	var th := deg_to_rad(deg)
+	var d := Vector2(-cos(th), sin(th))
+	# la curva de cada surco, como mucho un tercio de lo que separa dos garras de lado: los surcos paralelos nunca se cruzan
+	var gap := INF
+	for i in starts.size():
+		for j in range(i + 1, starts.size()):
+			var q: Vector2 = (starts[j] as Vector2) - (starts[i] as Vector2)
+			gap = minf(gap, absf(q.x * d.y - q.y * d.x))
+	for i in starts.size():
+		var rng := Rng.new(Rng.seed_of("%s|garra|%d" % [seed_text, i]))
+		var a: Vector2 = starts[i]
+		var L := len_m * lerpf(float(VARIATION.len[0]), float(VARIATION.len[1]), rng.next())
+		var dep := depth_um * lerpf(float(VARIATION.depth[0]), float(VARIATION.depth[1]), rng.next())
+		var bow := (rng.next() * 2.0 - 1.0) * minf(float(VARIATION.bend) * L, gap / 3.0)
+		var lay := layer
+		if layer < LAYER_BODY:
+			# la capa del color de un surco algo menos hondo
+			lay = 0
+			for k in Catalog.PAINT_LAYERS.size():
+				if dep > float(Catalog.PAINT_LAYERS[k].to) + 1e-6:
+					lay = mini(k + 1, 3)
+			lay = mini(lay, layer)
+		else:
+			dep = depth_um
+		var b := a + d * L
+		if axis == AXIS_TOP and absf(d.y) < 1e-3:
+			b = Vector2(walk_top(top, a.x, L, signf(d.x), panel.x, panel.y), a.y)
+		elif axis == AXIS_SIDE:
+			b = Vector2(clampf(a.x + d.x * L, panel.x, panel.y), a.y)
+		else:
+			b = Vector2(clampf(b.x, panel.x, panel.y), clampf(b.y, -CarShape.HALF_W, CarShape.HALF_W))
+		var along := b - a
+		var nrm := Vector2(-along.y, along.x).normalized() if along.length() > 1e-9 else Vector2.ZERO
+		var mid := a + along * 0.5 + nrm * bow
+		for seg: Array in [[a, mid, 0.0, 0.5], [mid, b, 0.5, 1.0]]:
+			out.append({ "a": seg[0], "b": seg[1], "hw": hw, "layer": lay, "axis": axis, "hit": 0, "depth_um": dep, "lip": lip,
+				"t0": seg[2], "t1": seg[3], "claw": i })
 	return out
 
 
@@ -510,7 +549,7 @@ static func pack(s: Dictionary) -> Dictionary:
 	for g: Dictionary in s.grooves:
 		gab.append(Vector4(g.a.x, g.a.y, g.b.x, g.b.y))
 		gp.append(Vector4(g.hw, float(g.layer) + clampf(float(g.get("depth_um", 0.0)), 0.0, 9999.0) / 10000.0,
-			float(g.axis) + 2.0 * roundf(clampf(float(g.get("lip", 0.0)), 0.0, 1.0) * 500.0), float(g.hit)))
+			float(g.axis) + 2.0 * roundf(clampf(float(g.get("lip", 0.0)), 0.0, 1.0) * 500.0), float(g.hit) + shape_code(g)))
 	var hc: Array[Vector4] = []
 	var hp: Array[Vector4] = []
 	for h: Dictionary in s.holes:
@@ -531,6 +570,15 @@ static func pack(s: Dictionary) -> Dictionary:
 		"n_holes": hc.size(), "hole_c": _pad(hc, MAX_HOLES), "hole_p": _pad(hp, MAX_HOLES),
 		"n_dents": dc.size(), "dent_c": _pad(dc, MAX_DENTS), "dent_p": _pad(dp, MAX_DENTS),
 		"n_cracks": cc.size(), "crack_c": _pad(cc, MAX_CRACKS), "crack_p": _pad(cp, MAX_CRACKS) }
+
+
+## Unidad 4y: la parte del surco entero que cubre un tramo (t0 a t1, de 0 a 1; un surco de un tramo, de 0 a 1), en la parte
+## fraccionaria del número del golpe (como mucho 0,5, para que el golpe siga siendo su parte entera): (32·t0 + t1)/2048 con
+## t0 y t1 en treintaunavos. El sombreador lo lee para el ancho a lo largo (empieza fino, se ensancha y acaba en arrastre).
+static func shape_code(g: Dictionary) -> float:
+	var q0 := clampi(roundi(float(g.get("t0", 0.0)) * 31.0), 0, 31)
+	var q1 := clampi(roundi(float(g.get("t1", 1.0)) * 31.0), 0, 31)
+	return float(q0 * 32 + q1) / 2048.0
 
 
 static func _pad(a: Array[Vector4], n: int) -> Array[Vector4]:

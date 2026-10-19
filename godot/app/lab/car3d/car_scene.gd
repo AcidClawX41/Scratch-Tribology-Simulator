@@ -399,8 +399,10 @@ func _show_roads() -> void:
 		road_chase.visible = curved and chasing
 
 
-## La cámara de persecución con la carretera larga de ahora (en cada fotograma de la vista de persecución).
-func update_chase() -> void:
+## La cámara de persecución con la carretera larga de ahora (en cada fotograma de la vista de persecución). avoid (unidad 4y):
+## la caja del animal en el mundo (sus mallas a la vista; vacía si no hay): la cámara nunca entra en ella y el animal no tapa
+## más de CHASE_ANIMAL_MAX de la vista (keep_clear).
+func update_chase(avoid := AABB()) -> void:
 	if not chasing or road_chase == null:
 		return
 	if not car.far_wheels:
@@ -411,9 +413,73 @@ func update_chase() -> void:
 	var compact := quality == "movil" and vp.x > 1.6 * vp.y
 	chase_cam.fov = float(RoadCurve.CHASE_COMPACT.fov) if compact else RoadCurve.CHASE_FOV
 	var pose := road_chase.chase_pose(compact)
-	chase_cam.position = pose[0]
+	var pos: Vector3 = pose[0]
+	var look: Vector3 = pose[1]
+	# lo que se aleja la cámara: en el acto si hace falta (nunca dentro del animal), y vuelve despacio (CHASE_EASE_S), para que
+	# la cola que se mueve no la haga saltar de un fotograma a otro
+	var fr := Engine.get_process_frames()
+	if fr != _pull_frame:
+		_pull_frame = fr
+		_chase_pull = 1.0 + (_chase_pull - 1.0) * exp(-get_process_delta_time() / CHASE_EASE_S)
+	if avoid.size != Vector3.ZERO:
+		var want := keep_clear(pos, look, avoid, chase_cam.fov, float(vp.x) / maxf(float(vp.y), 1.0))
+		_chase_pull = maxf(_chase_pull, (want - look).length() / maxf((pos - look).length(), 1e-6))
+	else:
+		_chase_pull = 1.0
+	pos = look + (pos - look) * _chase_pull
+	chase_cam.position = pos
 	chase_cam.look_at(pose[1], Vector3.UP)
 	_scenery_frame()  # (4x)
+
+
+# ════════ La cámara de persecución fuera del animal (unidad 4y) ════════
+
+## Dibujo: lo que se aparta la cámara de la caja del animal (m) y lo que puede ocupar el animal de la vista (fracción del
+## campo vertical y del horizontal). Con el velocirraptor de cine (3,4 m con la cola) la cámara de siempre lo veía casi encima.
+const CHASE_CLEAR_M := 0.5
+const CHASE_ANIMAL_MAX := 0.6
+const CHASE_STEPS := 15
+## Dibujo: lo que tarda la cámara en volver a su sitio cuando el animal deja de estorbar (s, constante de tiempo).
+const CHASE_EASE_S := 0.8
+var _chase_pull := 1.0
+var _pull_frame := -1
+
+
+## Dónde poner la cámara de persecución (pos, mirando a look) para que no entre en la caja del animal (box, en el mundo,
+## agrandada CHASE_CLEAR_M) ni el animal ocupe más de CHASE_ANIMAL_MAX de su campo (fov_deg vertical; aspect, ancho/alto):
+## se aleja de look por la misma recta, en pasos del 8 %, hasta 3 veces. Pura (la prueban los tests).
+static func keep_clear(pos: Vector3, look: Vector3, box: AABB, fov_deg: float, aspect := 1.6) -> Vector3:
+	var grown := box.grow(CHASE_CLEAR_M)
+	var v := pos - look
+	var p := pos
+	for i in CHASE_STEPS:
+		if not grown.has_point(p) and _covers(p, look, box, fov_deg, aspect) <= CHASE_ANIMAL_MAX:
+			return p
+		p = look + v * pow(1.08, float(i + 1))
+	return p
+
+
+## Lo que ocupa la caja box de la vista desde pos mirando a look (la mayor de sus fracciones del campo vertical y del
+## horizontal; 1 si alguna esquina queda detrás de la cámara).
+static func _covers(pos: Vector3, look: Vector3, box: AABB, fov_deg: float, aspect: float) -> float:
+	var fwd := (look - pos).normalized()
+	var right := fwd.cross(Vector3.UP).normalized()
+	var up := right.cross(fwd)
+	var half_v := deg_to_rad(fov_deg) * 0.5
+	var half_h := atan(tan(half_v) * aspect)
+	var lo := Vector2(INF, INF)
+	var hi := Vector2(-INF, -INF)
+	for k in 8:
+		var q := box.get_endpoint(k) - pos
+		var z := q.dot(fwd)
+		if z <= 0.05:
+			return 1.0
+		var a := Vector2(atan2(q.dot(right), z), atan2(q.dot(up), z))
+		lo = lo.min(a)
+		hi = hi.max(a)
+	var cov_h := (minf(hi.x, half_h) - maxf(lo.x, -half_h)) / (2.0 * half_h)
+	var cov_v := (minf(hi.y, half_v) - maxf(lo.y, -half_v)) / (2.0 * half_v)
+	return maxf(cov_v, cov_h) if cov_h > 0.0 and cov_v > 0.0 else 0.0
 
 
 # ════════ Luz del sol (unidad 4w) ════════

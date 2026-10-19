@@ -11,7 +11,8 @@
 ##   7 · el tigre que se abalanza sobre la puerta en la curva de 50 m: llega torciéndose (visto desde el coche que gira);
 ##   8 · el mismo con garras de zafiro: se mellan y los trocitos saltan, vistos con la cámara de persecución.
 ## Cristales (unidad 4v), en recta y de lado:
-##   9 · el águila con garras de diamante en el parabrisas: lo raya y lo agrieta (las garras de cerca y la marca);
+##   9 · el águila con garras de diamante en el parabrisas: sin resbalar no lo raya; lo agrieta bajo las garras (las garras de
+##       cerca y la marca);
 ##  10 · el oso de pie en el parabrisas: el laminado se agrieta bajo su peso y la grieta tapa al conductor;
 ##  11 · el tigre con garras de cuarzo en la luneta: la luneta templada estalla y se le va el apoyo;
 ##  12 · el oso asustado con garras de diamante en la luneta, a 60 km/h: estalla bajo él.
@@ -21,6 +22,16 @@
 ##  14 · las marcas de esos resbalones de cerca: las garras y luego la marca a unos milímetros;
 ##  15 · el oso de pie en la curva de 50 m, acelerando de 80 a 125 km/h: se desequilibra a ~112 km/h, resbala hacia fuera
 ##       arañando el techo, se agarra un instante al borde y cae, rodando por la carretera.
+## Marcas, cristales y garras (unidad 4y):
+##  16 · el águila con garras de oro en la curva de 130 m a 94 km/h: se agarra sin resbalar (solo las huellas de sus garras,
+##       bajo el pie; luego las garras y la marca de cerca);
+##  17 · el velocirraptor de cine con las garras clavadas en la S de 130 m, en el techo y luego en la luneta (en la S de 50 m
+##       a 70 km/h): la cámara de persecución nunca entra en él ni deja que su cola tape la vista;
+##  18 · las garras del velocirraptor de cerca, de oro (dobladas) y de Swarovski (melladas): enteras, nunca en trozos;
+##  19 · la lechuza en el techo, en recta a 60 km/h (las huellas de sus garras, de cerca) y luego más
+##       deprisa de lo que aguanta (se suelta y resbala hacia atrás: los surcos paralelos de cada garra, de cerca);
+##  20 · la lechuza con garras de diamante en el parabrisas: agarrada no lo raya; al resbalar, una raya fina por garra, con
+##       su microastillado (de cerca).
 ## En curva, la vista es la de persecución (la cámara detrás del coche, por la carretera), salvo en el caso 6.
 ## Captura:   node godot/tools/godot.mjs capture res://app/lab/demo_curvas.tscn --frames=900 --out=<carpeta> (~30 s a 30 fps)
 ## Teléfono:  … con --phone. Un caso: … -- --caso=3 (y más fotogramas: cada escena dura lo suyo).
@@ -42,13 +53,18 @@ const SCENES := [
 	"La misma S, con la vista de lado (la de las garras)",
 	"El tigre contra la puerta en la curva de 50 m",
 	"El tigre con garras de zafiro, en la curva de 50 m",
-	"El águila con garras de diamante en el parabrisas: lo raya y lo agrieta",
+	"El águila con garras de diamante en el parabrisas: sin resbalar no lo raya; lo agrieta bajo las garras",
 	"El oso de pie en el parabrisas: la grieta tapa al conductor",
 	"El tigre con garras de cuarzo en la luneta: estalla",
 	"El oso asustado con garras de diamante en la luneta",
 	"El tigre en la S de 50 m a 90 km/h: se agarra y se recoloca",
 	"Las marcas de los resbalones, de cerca",
 	"El oso en la curva de 50 m: de 80 a 125 km/h, se cae",
+	"El águila con garras de oro en la curva de 130 m a 94 km/h: se agarra sin resbalar",
+	"El velocirraptor con las garras clavadas en la S de 130 m",
+	"Las garras del velocirraptor de cerca: de oro y de Swarovski",
+	"La lechuza en el techo: agarrada a 60 km/h y luego resbala",
+	"La lechuza con garras de diamante en el parabrisas: resbala y lo raya",
 ]
 
 var lab: Control
@@ -340,3 +356,87 @@ func _scene_15(t: float) -> float:
 	_at(t + 0.2, _scroll.bind(card.view))
 	_drag(t + 0.6, card.speed.slider, 60.0 if _fall_car != "coche" else 80.0, _fall_v, 2.4)
 	return t + 6.4
+
+
+# ════════ Marcas, cristales y garras (unidad 4y) ════════
+
+## Un material de garras (la píldora de la tarjeta), si existe.
+func _inlay(id: String) -> void:
+	if card.inlay_pills.has(id):
+		card.inlay_pills[id].pressed.emit()
+
+
+func _scene_16(t: float) -> float:
+	_at(t, _caption.bind(15))
+	_at(t, _hold.bind("aguila", "techo", "plegadas", 94.0, CarCurve.ROAD_CURVE, 130.0))
+	_at(t + 0.1, _inlay.bind("oro"))
+	_at(t + 0.2, _scroll.bind(card.view))
+	_at(t + 3.0, func() -> void: card.view_seg.buttons["lado"].pressed.emit())
+	_at(t + 4.6, _zoom.bind("garras"))
+	_at(t + 6.4, _zoom.bind("marca"))
+	_at(t + 8.2, _zoom.bind("coche"))
+	return t + 8.6
+
+
+func _scene_17(t: float) -> float:
+	_at(t, _caption.bind(16))
+	_at(t, _hold.bind("velociraptor_pelicula", "techo", "tumbado", 95.0, CarCurve.ROAD_S, 130.0))
+	_at(t + 0.1, func() -> void:
+		if not card.st.embedded:
+			card.embedded_pill.pressed.emit())
+	_at(t + 0.2, _scroll.bind(card.view))
+	# en la luneta, en la S de 50 m: la cola llegaba a medio metro de la cámara y tapaba casi toda la vista
+	_at(t + 4.5, func() -> void:
+		card.zone_pills["luneta"].pressed.emit()
+		card.speed.slider.value = 70.0
+		card.radius.slider.value = CarCurve.slider_u(50.0))
+	return t + 9.0
+
+
+func _scene_18(t: float) -> float:
+	_at(t, _caption.bind(17))
+	_at(t, _hold.bind("velociraptor_pelicula", "techo", "tumbado", 200.0, CarCurve.ROAD_STRAIGHT, 130.0))
+	_at(t + 0.1, _inlay.bind("oro"))
+	_at(t + 0.15, func() -> void: card.view_seg.buttons["lado"].pressed.emit())
+	_at(t + 0.2, _scroll.bind(card.view))
+	_at(t + 0.6, _zoom.bind("garras"))
+	_at(t + 3.0, _inlay.bind("swarovski"))
+	_at(t + 3.2, _zoom.bind("garras"))
+	_at(t + 5.6, _zoom.bind("coche"))
+	return t + 6.0
+
+
+func _scene_19(t: float) -> float:
+	_at(t, _caption.bind(18))
+	_at(t, _hold.bind("lechuza", "techo", "plegadas", 60.0, CarCurve.ROAD_STRAIGHT, 130.0))
+	_at(t + 0.2, _scroll.bind(card.view))
+	_at(t + 1.0, func() -> void: card.view_seg.buttons["lado"].pressed.emit())
+	_at(t + 2.0, _zoom.bind("garras"))
+	_at(t + 3.6, _zoom.bind("marca"))
+	_at(t + 5.2, _zoom.bind("coche"))
+	# hasta 15 km/h más deprisa de lo que aguanta (lo dice el motor al llegar: det.kmh)
+	_at(t + 5.4, func() -> void:
+		var off := float(card.st.det.get("kmh", 120.0))
+		_drags.append({ "slider": card.speed.slider, "from": 60.0, "to": minf(off + 15.0, card.st.top_kmh()) if is_finite(off) else 120.0,
+			"t0": t + 5.4, "dur": 1.5, "started": false }))
+	_at(t + 7.6, _zoom.bind("garras"))
+	_at(t + 9.2, _zoom.bind("marca"))
+	_at(t + 10.8, _zoom.bind("coche"))
+	return t + 11.4
+
+
+func _scene_20(t: float) -> float:
+	_at(t, _caption.bind(19))
+	_at(t, _glass_hold.bind("lechuza", "parabrisas", "plegadas", "diamante", false, 50.0))
+	_at(t + 0.2, _scroll.bind(card.view))
+	_at(t + 0.4, func() -> void: card.view_seg.buttons["lado"].pressed.emit())
+	_at(t + 1.6, _zoom.bind("garras"))
+	_at(t + 3.2, _zoom.bind("coche"))
+	# hasta 15 km/h más deprisa de lo que aguanta (det.kmh, del motor)
+	_at(t + 3.4, func() -> void:
+		var off := float(card.st.det.get("kmh", 120.0))
+		_drags.append({ "slider": card.speed.slider, "from": 50.0, "to": minf(off + 15.0, card.st.top_kmh()) if is_finite(off) else 120.0,
+			"t0": t + 3.4, "dur": 1.5, "started": false }))
+	_at(t + 5.6, _zoom.bind("marca"))
+	_at(t + 7.4, _zoom.bind("coche"))
+	return t + 8.0

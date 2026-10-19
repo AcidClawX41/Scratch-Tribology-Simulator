@@ -43,7 +43,7 @@ static func _ctx(st: MCS) -> Dictionary:
 	return { "zone": st.zone, "draw": MC.ZONES[st.zone].draw, "target": st.target, "kind": st.kind(), "kicker": false,
 		"size": Vector3(body.height_m, body.length_m, 0.0), "claws": int(body.get("contact", 4)), "contact_mm": float(body.contact_mm),
 		"dir": -1.0, "hit": 0, "top": CarShape.top_curve(), "claw_id": st.claw.id, "glass": View.glass_zone(st.zone),
-		"feet": Vector3(w.x, CurveKit.top_y(CarShape.top_curve(), w.x), 0.0), "speed": st.marks_now() }
+		"feet": Vector3(w.x, CurveKit.top_y(CarShape.top_curve(), w.x), 0.0), "speed": st.marks_now(), "plan": st.hold_plan() }
 
 
 func test_la_luneta_en_la_silueta() -> void:
@@ -74,8 +74,16 @@ func test_el_parabrisas_agrietado_como_lo_que_tapa() -> void:
 	assert_true(e.cracks.size() >= 1 and e.cracks.size() <= CarDamage.MAX_CRACKS, "unas estrellas pequeñas")
 	for c: Dictionary in e.cracks:
 		assert_near(float(c.r), CarDamage.CLAW_CRACK_R, 1e-9, 0.0, "del ancho de la franja")
-	assert_true(e.grooves.size() > 0, "los surcos del diamante en el vidrio")
-	for g: Dictionary in e.grooves:
+	# unidad 4y: agarrada sin resbalar no raya el vidrio; más deprisa de lo que aguanta, resbala y lo raya
+	assert_eq(e.grooves.size(), 0, "sin resbalar, el diamante no raya el vidrio")
+	var owl := _st("lechuza", "parabrisas", "diamante", 60.0)  # la lechuza se suelta dentro del deslizador, resbalando
+	var off := float(owl.det.kmh) + 10.0
+	assert_true(is_finite(off) and off <= owl.top_kmh() and String(owl.det.mode) == "atras", "resbala hacia atrás en el deslizador (%s km/h)" % off)
+	owl.set_speed(off)
+	owl.finish()
+	var e2 := CarDamage.from_hold(owl.scen, _ctx(owl))
+	assert_eq(e2.grooves.size(), int(MC.BODIES.lechuza.contact) * 2, "resbala: un surco por garra (en dos tramos)")
+	for g: Dictionary in e2.grooves:
 		assert_eq(int(g.layer), 0, "claros, como los pinta el shader de las lunas")
 	# la queratina no raya
 	assert_eq(s.grooves.size(), 0, "la queratina del oso no raya el vidrio")

@@ -3230,3 +3230,62 @@ Todo es **dibujo** (calidad «dibujo»): no cambia ningún número de la física
   el teléfono (+0,4 ms). Los árboles no proyectan sombras.
 - **Lo que no hace:** no hay paisaje en la vista de lado (allí siguen las colinas dibujadas detrás); en la curva más cerrada
   (la glorieta), los árboles del lado de dentro desaparecen.
+
+## 28. Las marcas de cada garra salen de lo que hace el animal (unidad 4y, petición de Eric del 18-10-2026)
+
+«Las marcas tienen que salir de lo que hace cada animal en la animación y en la física: dónde apoya cada pata y cada garra,
+cuándo resbala, cuándo se recoloca, cuándo golpea o se clava.» Motor: `godot/core/lab/car_hold_marks.gd` (`CarHoldMarks`),
+funciones puras sin números nuevos: decide cuáles de las marcas que ya da el motor (§21-§24: `CarSpeedMarks.at`, el surco y
+la punción con la carga de cada garra) han pasado de verdad a esa velocidad.
+
+### 28.1 Qué deja cada garra
+
+- **Apoyarse:** cada garra que agarra (`MovingCar.BODIES[…].contact`) deja su huella: la punción estática del motor con su
+  carga (hondura y diámetro) o, si atraviesa o ya está clavada tras un golpe, un agujero. En el vidrio no hay huella: lo que
+  hace el peso son las grietas del parabrisas o el estallido de la luneta (§24).
+- **Moverse:** solo entonces hay surcos, uno por garra, paralelos y en la dirección del movimiento:
+  - «resbala»: a esa velocidad no aguanta y resbala por el panel que queda (`slideMm`) hacia donde lo lleva la fuerza (el modo
+    del despegue: atrás 0°, de lado ±90°, delante o abajo 180°); si despega, no araña;
+  - «raja»: las garras atraviesan el panel y la raja corre (`CarTear`);
+  - «dobla»: las garras de un material dúctil se doblan y su punta rasca, como mucho, lo que se dobla (`brokenMm`).
+  Los resbalones de la curva y la caída por el lado de fuera siguen siendo de la 4u (§26).
+- **La luneta que estalla:** ni surcos ni huellas en un vidrio que ya no está.
+- **Sin moverse, ningún surco:** el surco del motor a esa velocidad es lo que rayaría si resbalara, y el texto lo dice así
+  («sin resbalar: la huella de cada una de sus 4 garras… · si resbalara, rayaría…»).
+
+### 28.2 En pantalla (dibujo)
+
+- **De dónde sale cada marca:** de la punta de cada garra que agarra según su anatomía: las dos manos del tigre y del oso, el
+  pie más cerca de la chapa de una rapaz y los dedos III y IV de los velocirraptores (en la alta definición son garras de
+  dibujo, `hd3d.toe_points()`; la falciforme va levantada). En un costado, la mano de plano contra la chapa (la pose la cuelga
+  de pie junto al coche): lo que una garra queda más afuera, más abajo. Si una pata cae fuera de su panel, el animal se corre
+  a lo largo hasta que todas caen dentro.
+- **Variación entre las garras de una pata (juego, `CarDamage.VARIATION`, con `rng.gd`):** cada surco mide del 85 al 100 % del
+  largo de la física y ahonda del 85 al 100 %, con una curva de lado de hasta un 4 % de su largo (nunca más de un tercio de lo
+  que separa dos garras: no se cruzan); cada huella, del 90 al 100 % de su diámetro y su hondura. Las medidas máximas son las
+  de la física.
+- **El detalle (juego, como las marcas de garras de los videojuegos):** el surco entra fino, se ensancha donde muerde, se
+  estrecha al final y arranca una escama de pintura al levantarse; los bordes, levantados según lo que no arranca la punta
+  (1 − fab, Hokkirigawa y Kato); en el vidrio, una raya fina con microastillado a los lados, solo si la garra raya (r ≥ 1,25);
+  la huella, con su cráter de capas y la pintura saltada alrededor si pasa del barniz; el agujero, con pétalos y la pintura
+  saltada. Una huella más pequeña que dos píxeles se dibuja de dos; en «Marca», la huella se ve a 8 veces su diámetro.
+- **Las garras dobladas o melladas son de una pieza** (`ClawGeo.bend_arrays` y `chipped_arrays`): la doblada, la misma malla
+  torcida desde el final; la mellada, cerrada en la rotura. Antes se giraba la pieza de la punta sobre el corte (con un hueco)
+  y se encogía la base: se veían en trozos.
+- **La cámara de persecución** se aparta del animal con su pose de ese fotograma (`CarScene.keep_clear`): nunca dentro de su
+  caja (con 0,5 m de margen) ni con el animal tapando más del 60 % de la vista; se aleja en el acto y vuelve en ~0,8 s.
+
+### 28.3 Tabla valor → fuente → tipo
+
+| Valor | Fuente | Tipo |
+|---|---|---|
+| La huella de cada garra | la punción estática del motor con la carga de cada garra (caso parecido: Dai, Gorb y Schwarz 2002) | estimación (modelo) |
+| El surco al resbalar y su largo | el surco del motor (Hokkirigawa y Kato 1988) a lo largo del panel que queda | estimación (modelo) |
+| Lo que rasca una garra doblada | suposición geométrica: como mucho lo que se dobla | estimación |
+| Rayar el vidrio pide r ≥ 1,25 | `CarGlass.R_SCRATCH` (§24) | modelo |
+| Variación, ancho a lo largo, microastillado, pintura saltada | juego | juego |
+
+### 28.4 Lo que no hace
+
+- No hay marcas del peso que se desplaza al recolocar una pata sin resbalar (solo las de la 4u en curva).
+- La pose de los costados sigue colgando al animal de pie junto al coche: las marcas van bien, el dibujo de la pata no.

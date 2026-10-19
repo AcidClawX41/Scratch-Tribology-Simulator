@@ -218,6 +218,10 @@ var _wing_want := 0.0
 var _claw_len := 1.0
 var _claw_gone := false
 var _claw_bend := 0.0
+## Unidad 4y: lo que se dobla la punta de una garra doblada (fracción del largo: lo de la física, brokenMm, y como poco
+## BEND_FRAC_MIN para que se vea; dibujo).
+var _claw_bend_frac := 0.0
+const BEND_FRAC_MIN := 0.08
 var _kick := 0.0
 var _key := ""
 var _layout_size := Vector2(-1.0, -1.0)
@@ -490,13 +494,20 @@ func sync(st: MovingCarState, replay := true) -> void:
 		var now: Dictionary = st.marks_now()
 		hold_frac = st.marks_frac_mode()
 		hold_broken_mm = st.marks_broken_mm()
-		var sig := hold_marks_sig(now) + "|%s" % Js.to_fixed(float(closeup_cut.get("lengthMm", 0.0)), 0)
+		var plan: Dictionary = st.hold_plan()  # unidad 4y: lo que deja cada garra según lo que hace
+		var sig := hold_marks_sig(now) + "|%s" % Js.to_fixed(float(closeup_cut.get("lengthMm", 0.0)), 0) + hold_plan_sig(plan)
 		if st.setup_version != _dmg_hold_version or sig != _hold_sig:
 			_dmg_hold_version = st.setup_version
 			_hold_sig = sig
 			_hold_scen = st.scen
 			_hold_ctx = _dmg_ctx(st, hold_zone, 0, Vector2.ZERO)
 			_hold_ctx["speed"] = now
+			_hold_ctx["plan"] = plan
+			var fit_key := "%s|%s|%s|%s|%s" % [claw_id, hold_zone, posture, st.target.id, variant]
+			if fit_key != _hold_fit_key:
+				_hold_fit_key = fit_key
+				_hold_fit_x = 0.0
+			_hold_fit_tries = 0
 			# unidad 4s (petición del 17-10): si la raja corre (el viento puede con las garras que atraviesan la chapa), los
 			# surcos miden lo que corre (CarTear)
 			_hold_ctx["tear_mm"] = float(closeup_cut.get("lengthMm", 0.0)) if String(closeup_cut.get("id", "")) in ["raja", "abre"] else 0.0
@@ -626,15 +637,40 @@ static func hold_marks_sig(m: Dictionary) -> String:
 		Js.truthy(m.through), Js.truthy(m.punctThrough), Js.truthy(m.broken), String(m.get("fracMode", ""))]
 
 
+## Unidad 4y: firma de lo que deja cada garra (CarHoldMarks.plan): cambia si las garras empiezan o dejan de moverse, o si
+## cambia lo que miden sus surcos o sus huellas.
+static func hold_plan_sig(p: Dictionary) -> String:
+	if p.is_empty():
+		return "|-"
+	return "|%s|%d|%s|%d|%s|%d" % [String(p.cause), int(p.rakes.n), Js.to_fixed(float(p.rakes.lengthMm), 1), roundi(float(p.rakes.deg)),
+		String(p.prints.kind), int(p.prints.n)]
+
+
 ## Las puntas de las garras que tocan el panel ahora (m, en el coche, sobre la chapa): las n más cercanas a la chapa de la
 ## zona en la que se agarra (de claw_points() del animal, con su pose de este fotograma). [] sin animal.
 func contact_tips(n: int) -> Array:
 	var side := CarDamage.side_zone(hold_zone)
 	var pts := _gripping(tips_by_gap(hold_zone))
 	var out: Array = []
-	for e: Array in pts.slice(0, maxi(n, 0)):
+	var seen: Array = []
+	for e: Array in pts:
+		# unidad 4y: las n garras que agarran según la física (las de las patas y los dedos de su anatomía, _gripping), cada una
+		# una vez, sobre la chapa bajo su punta: el número de marcas es el de garras que agarran, como dice la tarjeta
+		if out.size() >= n:
+			break
 		var w: Vector3 = e[1]
+		var dup := false
+		for q: Vector3 in seen:
+			dup = dup or q.distance_to(w) < 1e-4
+		if dup:
+			continue
+		seen.append(w)
 		if side:
+			# en un costado, la mano apoyada de plano contra la chapa (dibujo: la pose la cuelga de pie junto al coche, con los
+			# dedos abiertos hacia fuera): lo que una garra queda más afuera, más abajo; las dos manos, una encima de otra, como
+			# claw_rakes, entre el paso de rueda y la cintura
+			var lo := CarShape.arch_top(w.x) + 0.01
+			w.y = clampf(w.y - float(e[0]), lo, maxf(lo, CarDamage.SIDE_TOP_Y - 0.01))
 			w.z = half_w()
 		else:
 			w.y = surface_y(w.x)
@@ -661,15 +697,28 @@ func _gripping(pts: Array) -> Array:
 				if String(tags[i][0]).begins_with("delantera"):
 					keep[i] = true
 		"teropodo":
+			# unidad 4y: en la alta definición, los dedos III y IV son garras de dibujo (toe_points); las de claw_points son las
+			# falciformes, que van levantadas
+			if _rig.has_method("toe_points"):
+				var toes: Array = []
+				var side := CarDamage.side_zone(hold_zone)
+				for t: Array in _rig.call("toe_points"):
+					if String(t[1]) in ["III", "IV"]:
+						var w: Vector3 = root.transform * (t[2] as Vector3)
+						toes.append([_gap_of(w, side), w])
+				if not toes.is_empty():
+					toes.sort_custom(func(a: Array, b: Array) -> bool: return float(a[0]) < float(b[0]))
+					return toes
 			for i in tags.size():
 				if String(tags[i][1]) in ["III", "IV"]:
 					keep[i] = true
 		"ave":
-			# el pie más cerca de la chapa
+			# el pie más cerca de la chapa de la zona (unidad 4y: también en un costado)
 			var gap := {}
+			var side_a := CarDamage.side_zone(hold_zone)
 			for i in tags.size():
 				var w := root.transform * (raw[i] as Vector3)
-				gap[tags[i][0]] = minf(float(gap.get(tags[i][0], INF)), absf(w.y - CarDamage.surf_y(_top, w.x)))
+				gap[tags[i][0]] = minf(float(gap.get(tags[i][0], INF)), _gap_of(w, side_a))
 			var foot := ""
 			for f: String in gap:
 				if foot == "" or float(gap[f]) < float(gap[foot]):
@@ -703,10 +752,14 @@ func tips_by_gap(zone: String) -> Array:
 	var pts: Array = []
 	for q: Vector3 in _claw_points_now():
 		var w := root.transform * q
-		var gap := (half_w() - w.z) if side else (w.y - CarDamage.surf_y(_top, w.x))
-		pts.append([absf(gap), w])
+		pts.append([_gap_of(w, side), w])
 	pts.sort_custom(func(a: Array, b: Array) -> bool: return float(a[0]) < float(b[0]))
 	return pts
+
+
+## Lo que separa un punto del animal (m, en el coche) de la chapa: la del costado (side) o la de arriba.
+func _gap_of(w: Vector3, side: bool) -> float:
+	return absf((half_w() - w.z) if side else (w.y - CarDamage.surf_y(_top, w.x)))
 
 
 ## Las puntas de las garras en la raíz del animal (claw_points), una vez por fotograma y pose (las piden el apoyo en la chapa,
@@ -731,12 +784,24 @@ func _rebuild_hold_marks() -> void:
 	var near := tips_by_gap(hold_zone)
 	if _rig != null and (near.is_empty() or float(near[0][0]) > HOLD_TIPS_MAX_GAP):
 		if _dmg_hold.is_empty():
-			_dmg_hold = _twisted(CarDamage.from_hold(_hold_scen, _hold_ctx))
+			# unidad 4y: sin las garras en la chapa no hay marcas de garras (solo lo del peso: las grietas y la luneta)
+			var no_tips := _hold_ctx.duplicate()
+			no_tips["plan"] = {}
+			_dmg_hold = _twisted(CarDamage.from_hold(_hold_scen, no_tips))
 			_dmg_dirty = true
 			_apply_damage()
 		return
 	_hold_dirty = false
-	_contact_tips = contact_tips(int(_hold_ctx.get("claws", 4)))
+	var tips := contact_tips(int(_hold_ctx.get("claws", 4)))
+	# unidad 4y: las garras tienen que caer dentro de su panel (el dibujo de la zona puede dejar una pata fuera): se corre el
+	# animal a lo largo y se rehacen en el próximo dibujo
+	var fit := hold_fit_dx(tips)
+	if absf(fit) > HOLD_FIT_EPS and _hold_fit_tries < HOLD_FIT_TRIES:
+		_hold_fit_x += fit
+		_hold_fit_tries += 1
+		_hold_dirty = true
+		return
+	_contact_tips = tips
 	_hold_ctx["tips"] = _contact_tips
 	_dmg_hold = _twisted(CarDamage.from_hold(_hold_scen, _hold_ctx))
 	_dmg_dirty = true
@@ -1041,6 +1106,9 @@ func _closeup_aim() -> Dictionary:
 ## ClawCloseup.MARK_FIELD_MIN y 3 cm), desde ClawCloseup.MARK_ELEV_DEG sobre el panel y mirando a lo largo del surco. Si no hay
 ## surcos, una punzada o un agujero. {} si no hay nada.
 const MARK_FIELD_K := 25.0
+## Unidad 4y · dibujo: la huella o el agujero de una garra, a MARK_HOLE_K veces su diámetro (como poco MARK_HOLE_MIN, m).
+const MARK_HOLE_K := 8.0
+const MARK_HOLE_MIN := 0.0015
 
 
 func _mark_aim(near: Vector3, axis: int) -> Dictionary:
@@ -1073,9 +1141,13 @@ func _mark_aim(near: Vector3, axis: int) -> Dictionary:
 		c = best.c
 		w = float(best.r) * 2.0
 	var p := CarDamage.surface_point(c, axis, _top)
-	return { "focus": p, "normal": CarDamage.surface_normal(p, axis, _top), "field": clampf(w * MARK_FIELD_K, ClawCloseup.MARK_FIELD_MIN, 0.03),
+	# unidad 4y: una huella o un agujero, más de cerca (MARK_HOLE_K veces su diámetro): con el campo de un surco, la huella
+	# de una punta (unas décimas de milímetro) era un punto en medio de la vista
+	var hole := best.has("c")
+	var f_min := MARK_HOLE_MIN if hole else ClawCloseup.MARK_FIELD_MIN
+	return { "focus": p, "normal": CarDamage.surface_normal(p, axis, _top), "field": clampf(w * (MARK_HOLE_K if hole else MARK_FIELD_K), f_min, 0.03),
 		"dir": dir, "cam": dir, "below": 0.0, "side": axis == CarDamage.AXIS_SIDE, "elev": ClawCloseup.MARK_ELEV_DEG,
-		"field_min": ClawCloseup.MARK_FIELD_MIN }
+		"field_min": f_min }
 
 
 ## Un largo redondo (m) para la barra de escala de la lupa: el mayor de SCALE_BARS que no pasa de target.
@@ -1482,6 +1554,7 @@ func _draw_overlay() -> void:
 			_draw_hold_animal()
 		else:
 			_draw_impact()
+		_chase_after_pose()  # unidad 4y
 		_update_closeup()
 		if closeup_full_on():
 			last_draw_us = Time.get_ticks_usec() - t0
@@ -1566,8 +1639,10 @@ func _draw_hold_animal() -> void:
 			_claw_gone = true
 		"dobla":
 			_claw_bend = 1.0
+			_claw_bend_frac = maxf(hold_broken_mm / maxf(claw_reach_mm, 1.0), BEND_FRAC_MIN)
 	_kick = 0.0
 	var base := car_point(draw_pos)
+	base.x += _hold_fit_x  # unidad 4y: corrido a lo largo hasta que sus garras caen dentro de su panel
 	var z := zone_z(hold_zone)
 	if kind == "mamifero" and hold_zone == "ventanilla":
 		base.y -= 0.45 * animal_size.x  # colgado del marco de la ventanilla: el cuerpo, no los pies, en su punto
@@ -1693,6 +1768,7 @@ func _place_animal(world: Vector2, z: float, rot: float, scale_k: float, alpha: 
 	_pose["claw_len"] = _claw_len
 	_pose["claw_gone"] = _claw_gone
 	_pose["claw_bend"] = _claw_bend
+	_pose["claw_bend_frac"] = _claw_bend_frac
 	_pose["kick"] = _kick
 	_pose["flail"] = (1.0 - _attach) if mode == MovingCarState.MODE_HOLD and not holds and not reduce_motion else 0.0
 	_pose["lean"] = 0.12 * clampf(local_kmh / 150.0, 0.0, 1.0) if kind == "ave" and mode == MovingCarState.MODE_HOLD and holds else 0.0
@@ -1841,6 +1917,7 @@ func _draw_impact() -> void:
 				_claw_gone = true
 			"dobla":
 				_claw_bend = 1.0
+				_claw_bend_frac = maxf(float(frac.get("brokenMm", 0.0)) / maxf(claw_reach_mm, 1.0), BEND_FRAC_MIN) if frac != null else BEND_FRAC_MIN
 	_kick = 0.0
 	if kicker or leaper:
 		# la patada del casuario y el salto del velocirraptor, con los pies por delante (la pose «kick»)
@@ -2031,7 +2108,7 @@ func _apply_curve() -> void:
 					_bend_key = key
 					rl.set_kappa_const(RoadCurve.chase_kappa(_curve_k))
 				rl.set_road(_road)
-		_scene.update_chase()
+		_scene.update_chase(animal_box())  # unidad 4y: la cámara nunca entra en el animal
 	else:
 		var rc: RoadCurve = _scene.road_curve
 		if rc != null:
@@ -2777,4 +2854,81 @@ func _straight_chase_tick() -> void:
 		_scene.road_chase.set_road(_road)
 		_scene.car.set_steer(0.0)
 		_scene.set_roll(0.0)
-		_scene.update_chase()
+		_scene.update_chase(animal_box())  # unidad 4y: la cámara nunca entra en el animal
+
+
+# ════════ La cámara fuera del animal (unidad 4y) ════════
+
+var _box_rig: RefCounted = null
+var _box_meshes: Array = []
+
+
+## La cámara de persecución con la pose del animal de este fotograma: _apply_curve la pone antes de mover al animal (con su
+## caja del fotograma anterior), y un animal que se recoloca, salta o cae podía quedar a un paso de la cámara o tapándola.
+func _chase_after_pose() -> void:
+	if _scene != null and _scene.chasing:
+		_scene.update_chase(animal_box())
+
+
+## La caja del animal en el mundo con su pose de ahora (la unión de las cajas de sus mallas a la vista; vacía sin animal o si no
+## se ve): la cámara de persecución la esquiva (CarScene.keep_clear). Las mallas se buscan una vez por animal; en cada fotograma
+## solo se suman cajas.
+func animal_box() -> AABB:
+	if _rig == null:
+		return AABB()
+	var root: Node3D = _rig.get("root")
+	if root == null or not root.is_visible_in_tree():
+		return AABB()
+	if _box_rig != _rig:
+		_box_rig = _rig
+		_box_meshes.clear()
+		var stack: Array = [root]
+		while not stack.is_empty():
+			var n: Node = stack.pop_back()
+			stack.append_array(n.get_children())
+			if n is MeshInstance3D:
+				_box_meshes.append(n)
+	var out := AABB()
+	var first := true
+	for mi: MeshInstance3D in _box_meshes:
+		if not is_instance_valid(mi) or not mi.is_visible_in_tree() or mi.mesh == null:
+			continue
+		var b: AABB = mi.global_transform * mi.get_aabb()
+		out = b if first else out.merge(b)
+		first = false
+	return out
+
+
+# ════════ Las garras dentro de su panel (unidad 4y) ════════
+
+## Dibujo: el margen (m) con el que las garras tienen que caer dentro del panel en el que se agarra, lo que se corre como poco
+## para molestarse y las veces que se intenta.
+const HOLD_FIT_M := 0.01
+const HOLD_FIT_EPS := 0.002
+const HOLD_FIT_TRIES := 4
+var _hold_fit_x := 0.0
+var _hold_fit_tries := 0
+var _hold_fit_key := ""
+
+
+## Lo que hay que correr el animal a lo largo (m) para que las puntas de sus garras (tips) caigan dentro del panel de la zona
+## en la que se agarra (CarShape.hold_panel, con HOLD_FIT_M de margen): así cada marca sale de una garra que toca su panel.
+## 0 si ya están dentro, sin puntas o en una zona sin marcas en la chapa.
+func hold_fit_dx(tips: Array) -> float:
+	if tips.is_empty() or not (CarShape.TEAR_ZONES.has(hold_zone) or glass_zone(hold_zone)):
+		return 0.0
+	var panel: Vector2 = CarShape.hold_panel(hold_zone, Vector2(0.0, CAR_L))
+	var lo := INF
+	var hi := -INF
+	for t: Vector3 in tips:
+		lo = minf(lo, t.x)
+		hi = maxf(hi, t.x)
+	var a := panel.x + HOLD_FIT_M
+	var b := panel.y - HOLD_FIT_M
+	if hi - lo > b - a:
+		return (a + b) * 0.5 - (lo + hi) * 0.5
+	if hi > b:
+		return b - hi
+	if lo < a:
+		return a - lo
+	return 0.0

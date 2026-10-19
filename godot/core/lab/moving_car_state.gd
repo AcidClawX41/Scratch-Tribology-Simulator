@@ -57,6 +57,7 @@ const DinoLab = preload("res://core/lab/dino_lab.gd")
 const Glazing = preload("res://core/lab/glazing.gd")
 ## Unidad 4s: hasta dónde llega cada marca y si raja o abre el panel.
 const CarTear = preload("res://core/lab/car_tear.gd")
+const CarHoldMarks = preload("res://core/lab/car_hold_marks.gd")
 ## Unidad 4t: el coche en curva (la aceleración lateral v²/R, el tope del coche y la curva en S).
 const CarCurve = preload("res://core/lab/car_curve.gd")
 const CarCurveGrip = preload("res://core/lab/car_curve_grip.gd")
@@ -1712,7 +1713,7 @@ func layers_view() -> Array:
 			cut = maxi(cut, (pn.layers as Array).size())
 			through = pn.through
 	elif not scen.is_empty() and Js.truthy(scen.get("ok")):
-		cut = (hold_marks().layers as Array).size()
+		cut = hold_visible_layers().size()  # unidad 4y: lo que se ve (las huellas si no se mueven)
 		through = embedded  # clavadas tras un golpe que ha atravesado el panel
 		var now := marks_now()
 		if not now.is_empty() and (Js.truthy(now.through) or Js.truthy(now.punctThrough)):
@@ -1807,8 +1808,11 @@ func marks_readings() -> Array:
 	var c := marks_curve()
 	var out: Array = []
 	var fr: Dictionary = m.fracture
-	out.append(_reading("marcas_v", "Marcas a esta velocidad", Format.fmt_len(float(m.depthUm)), CarSpeedMarks.marks_txt(m, target),
-		String(c.quality), String(c.source)))
+	# unidad 4y: lo que deja de verdad (la huella de cada garra; surcos solo si se mueven), de acuerdo con el dibujo
+	var plan := hold_plan()
+	var shown := CarHoldMarks.visible_depth_um(plan) if not plan.is_empty() else float(m.depthUm)
+	out.append(_reading("marcas_v", "Marcas a esta velocidad", Format.fmt_len(shown), hold_plan_txt() if not plan.is_empty() else CarSpeedMarks.marks_txt(m, target),
+		String(plan.get("quality", c.quality)), String(c.source) + ("; " + String(plan.source) if not plan.is_empty() else "")))
 	var load_sub := CarSpeedMarks.load_txt(m)
 	var yields: bool = Js.truthy(c.samples[0].tipYields)
 	if yields or Js.truthy(fr.get("slips", false)):
@@ -1841,10 +1845,12 @@ func marks_rows() -> Array:
 	if m.is_empty():
 		return [["Marcas a %s" % fmt_kmh(v_kmh), "calculando…"]]
 	var out: Array = []
-	out.append(["Marcas a %s" % fmt_kmh(v_kmh), CarSpeedMarks.marks_txt(m, target)])
-	var layers: Array = m.layers
+	var plan := hold_plan()  # unidad 4y: lo que deja de verdad
+	out.append(["Marcas a %s" % fmt_kmh(v_kmh), hold_plan_txt() if not plan.is_empty() else CarSpeedMarks.marks_txt(m, target)])
+	var layers: Array = hold_visible_layers()
 	if not layers.is_empty():
-		out.append(["Capas que raya a esa velocidad", " · ".join(PackedStringArray(layers))])
+		var title := "Capas que raya a esa velocidad" if plan.is_empty() or CarHoldMarks.moves(plan) else "Capas que marca la punta a esa velocidad"
+		out.append([title, " · ".join(PackedStringArray(layers))])
 	var fr: Dictionary = m.fracture
 	var verdict := String(fr.verdict).to_lower() if fr.verdict != "" else "sin datos"
 	out.append(["Garras a %s" % fmt_kmh(v_kmh), ("%s: %s" % [verdict, fr.vsub]) if fr.vsub != "" else verdict])
@@ -1940,11 +1946,20 @@ func tear_now() -> Dictionary:
 	var m := marks_now()
 	if m.is_empty():
 		return {}
+	# unidad 4y: sin moverse, lo que se ve es la huella de cada garra (la punción), no el surco de si resbalara
+	var p0 := _hold_plan_of(m, 0.0)
+	var still := not CarHoldMarks.moves(p0)
+	return _tear_hold(o, m, CarHoldMarks.visible_depth_um(p0) if still else float(m.depthUm), still, b)
+
+
+## Unidad 4y: el escalón de CarTear quieto encima con la hondura de lo que se ve (still: sin moverse, la de las huellas).
+func _tear_hold(o: Dictionary, m: Dictionary, depth_um: float, still: bool, b: Variant) -> Dictionary:
 	var pn2: Variant = m.get("puncture")
-	o.merge({ "zone": zone, "hold": true, "depthUm": float(m.depthUm), "through": Js.truthy(m.through),
+	o.merge({ "zone": zone, "hold": true, "depthUm": depth_um, "through": Js.truthy(m.through),
 		"punctThrough": Js.truthy(m.punctThrough), "holeUm": float(pn2.holeUm) if pn2 != null else 0.0,
 		"cutMm": 0.0,  # quieto encima las garras no avanzan: solo corre la raja si el viento puede con ella (pullN)
-		"nClaws": int(b.get("contact", 1)) if b != null else 1, "pullN": float(at.get("needN", 0.0)) if not at.is_empty() else 0.0 })
+		"nClaws": int(b.get("contact", 1)) if b != null else 1, "pullN": float(at.get("needN", 0.0)) if not at.is_empty() else 0.0,
+		"pit": still })
 	return CarTear.assess(o)
 
 
@@ -1984,7 +1999,7 @@ func groove_color() -> String:
 	if mode == MODE_IMPACT and not hit.is_empty() and Js.truthy(hit.get("ok")):
 		marks = hit.marks
 	elif not scen.is_empty() and Js.truthy(scen.get("ok")):
-		marks = hold_marks()
+		marks = { "layers": hold_visible_layers() }  # unidad 4y: lo que se ve (las huellas si no se mueven)
 	if marks == null:
 		return ""
 	var n: int = (marks.layers as Array).size()
@@ -3876,6 +3891,9 @@ func closeup_marks_txt(m: Dictionary) -> String:
 	if on_glass():
 		var mk: Dictionary = m.get("marks", {})
 		var txt := CarSpeedMarks.marks_txt(m, target) if float(mk.get("depthUm", 0.0)) > 0.0 else glass_trace_txt(mk)
+		var gp := hold_plan()  # unidad 4y: sin resbalar no raya el vidrio (ni el que ha estallado)
+		if not gp.is_empty() and not CarHoldMarks.moves(gp):
+			txt = CarHoldMarks.txt(gp, m, target, true, String(gp.cause) == CarHoldMarks.CAUSE_SHATTER)
 		var rear: Variant = rear_now()
 		if rear != null and bool(rear.shattered):
 			txt += " · estalla la luneta: pierde el apoyo"
@@ -3886,7 +3904,8 @@ func closeup_marks_txt(m: Dictionary) -> String:
 	var t := tear_now()
 	if not t.is_empty() and int(t.level) >= 2:
 		return String(t.text)
-	return CarSpeedMarks.marks_txt(m, target)
+	var p := hold_plan()  # unidad 4y: lo que deja de verdad
+	return CarHoldMarks.txt(p, m, target, false, true) if not p.is_empty() else CarSpeedMarks.marks_txt(m, target)
 
 
 ## El primer plano en el golpe contra un cristal: lo que deja en el vidrio y si lo agrieta o lo revienta.
@@ -4069,3 +4088,56 @@ func _glass_verdict() -> void:
 		"verdict": String(v.verdict).replace("ESTALLA LA LUNETA", "A ~%s km/h ESTALLA LA LUNETA" % CarFormat.kmh_txt(at_v)),
 		"vsub": "hasta ahí aguanta, pero el viento tira de sus garras enganchadas; a esa velocidad, %s" % String(v.vsub),
 	}
+
+
+# ════════ Marcas de cada garra (unidad 4y) ════════
+
+## Qué deja cada garra del animal quieto encima a la velocidad del deslizador (CarHoldMarks.plan): la huella de cada garra al
+## apoyarse y, solo si se mueven (resbala, la raja corre o se doblan), un surco por garra en la dirección del movimiento. Los
+## resbalones de la curva son de grip_now (4u). {} en el golpe, sin animal o mientras llega la gráfica del daño.
+func hold_plan() -> Dictionary:
+	if mode != MODE_HOLD or scen.is_empty() or not Js.truthy(scen.get("ok")):
+		return {}
+	var m := marks_now()
+	if m.is_empty():
+		return {}
+	var t := tear_now()
+	var tear := float(t.lengthMm) if not t.is_empty() and String(t.get("id", "")) in ["raja", "abre"] else 0.0
+	return _hold_plan_of(m, tear)
+
+
+func _hold_plan_of(m: Dictionary, tear_mm: float) -> Dictionary:
+	var h: Dictionary = scen.get("holdCtx", {})
+	var lat := float(at.get("lateralN", 0.0)) if not at.is_empty() else 0.0
+	var side := signf(lat) if lat != 0.0 else signf(float(scen.get("wc", 0.0)))
+	# cómo se ha soltado: si el coche ya ha pasado de la velocidad del despegue, como se soltó allí (el modo del despegue:
+	# resbala hacia atrás o despega); si no (una ventana que solo aguanta más deprisa), el de esta velocidad
+	var how := String(at.get("mode", "")) if not at.is_empty() else ""
+	if not det.is_empty() and bool(det.get("atRest", false)) and is_finite(float(det.get("kmh", INF))) and v_kmh >= float(det.kmh) \
+			and String(det.get("mode", "")) != "":
+		how = String(det.mode)
+	var rear: Variant = rear_now()  # unidad 4y: la luneta que ha estallado ya no se raya
+	var shattered := rear != null and Js.truthy((rear as Dictionary).get("shattered"))
+	return CarHoldMarks.plan(m, {
+		"shattered": shattered, "shatterQuality": String((rear as Dictionary).get("quality", "")) if shattered else "",
+		"shatterSource": String((rear as Dictionary).get("source", "")) if shattered else "",
+		"claws": int(h.get("nContact", 1)), "holds": Js.truthy(at.get("holds", true)) if not at.is_empty() else true,
+		"mode": how, "side": side if side != 0.0 else 1.0,
+		"slideMm": float(h.get("slideMm", 0.0)), "tearMm": tear_mm, "glass": on_glass(), "embedded": Js.truthy(scen.get("embedded")),
+		"curve": curve_on(), "fracMode": marks_frac_mode(), "brokenMm": marks_broken_mm(), "panelUm": MovingCar.panel_um(target) })
+
+
+## Lo que deja en palabras (CarHoldMarks.txt), de acuerdo con el dibujo; short: sin el «si resbalara» (el primer plano).
+func hold_plan_txt(short := false) -> String:
+	return CarHoldMarks.txt(hold_plan(), marks_now(), target, on_glass(), short)
+
+
+## Las capas que corta lo que se ve quieto encima: las de los surcos si se mueven; si no, las de la huella de la punta.
+func hold_visible_layers() -> Array:
+	var p := hold_plan()
+	var m := marks_now()
+	if p.is_empty() or m.is_empty():
+		return (hold_marks().get("layers", []) as Array)
+	if CarHoldMarks.moves(p):
+		return (m.get("layers", []) as Array)
+	return MovingCar.layers_crossed(target, CarHoldMarks.visible_depth_um(p)) if target.get("body") != null and not on_glass() else []

@@ -10,7 +10,8 @@ const int MAX_GROOVES = 48;
 const int MAX_HOLES = 40;
 const int MAX_DENTS = 16;
 
-// Surcos, ranuras y tajos: a y b (x0, v0, x1, v1), y (medio ancho m, capa + hondura µm / 10000, eje + 2·labio, golpe).
+// Surcos, ranuras y tajos: a y b (x0, v0, x1, v1), y (medio ancho m, capa + hondura µm / 10000, eje + 2·labio, golpe +
+// forma). Forma (unidad 4y): la parte del surco entero que cubre el tramo, (32·t0 + t1)/2048 con t0 y t1 en treintaunavos.
 // Capa: 0 barniz · 1 color · 2 imprimación · 3 anticorrosivo (o promotor) · 4 la carrocería (metal o plástico) ·
 // 5 la atraviesa (hueco oscuro con el borde de la carrocería). Labio: su altura entre la hondura, en milésimas (0-500).
 // Van empaquetados en tres números para no pasar del máximo de uniformes del renderizador Compatibility en los móviles.
@@ -93,6 +94,26 @@ float dmg_hash(float n) {
 	return fract(sin(n * 12.9898) * 43758.5453);
 }
 
+// Unidad 4y: la forma de un tramo de surco, de la parte fraccionaria del número del golpe: (t0, t1), la parte del surco entero
+// que cubre (sin forma, el surco entero).
+vec2 dmg_shape(float w) {
+	float code = floor(fract(w + 1e-6) * 2048.0 + 0.5);
+	if (code < 0.5) {
+		return vec2(0.0, 1.0);
+	}
+	return vec2(floor(code / 32.0) / 31.0, mod(code, 32.0) / 31.0);
+}
+
+// Unidad 4y (juego, como las marcas de garras muy detalladas de los videojuegos): el ancho relativo a lo largo del surco
+// entero (T de 0 a 1): la punta entra fina, se ensancha hasta morder del todo, se estrecha al final y, al levantarse, arranca
+// una escama de pintura algo más ancha; cada garra (k) un poco distinta.
+float dmg_taper(float T, float k) {
+	float enter = mix(0.35, 1.0, smoothstep(0.0, 0.2, T));
+	float drag = 1.0 - 0.45 * smoothstep(0.72, 0.95, T);
+	float flake = 0.55 * smoothstep(0.93, 1.0, T) * (0.6 + 0.4 * sin(k * 3.7 + 1.3));
+	return enter * drag + flake;
+}
+
 // Capas de la pintura (µm desde la superficie: dónde acaba el barniz, el color, la imprimación y el anticorrosivo) y el
 // espesor de la pintura con la carrocería (µm): con ellas, la hondura de cada punto de un surco o de una punzada decide la
 // capa que se ve ahí (las paredes enseñan las capas que cortan, en terrazas, y el fondo la más honda). Las pone la vista
@@ -157,7 +178,9 @@ vec4 damage_marks_ex(vec3 p, vec3 n, float px, out vec4 relief, out float lip) {
 		float depth_um = fract(gp.y + 1e-4) * 10000.0;
 		vec4 ab = groove_ab[i];
 		vec2 a = ab.xy;
-		vec2 b = mix(a, ab.zw, dmg_progress_slide(gp.w));
+		float hitn = floor(gp.w + 1e-4);
+		vec2 tt = dmg_shape(gp.w);
+		vec2 b = mix(a, ab.zw, dmg_progress_slide(hitn));
 		vec2 uv = dmg_plane(p, axis);
 		vec2 ba = b - a;
 		float L2 = max(dot(ba, ba), 1e-12);
@@ -168,6 +191,13 @@ vec4 damage_marks_ex(vec3 p, vec3 n, float px, out vec4 relief, out float lip) {
 		// el borde algo irregular a lo largo (dibujo: lo que arranca la punta no es una regla)
 		float along = h * sqrt(L2);
 		hw *= 1.0 + 0.08 * sin(along / max(hw, 1e-6) * 0.9 + float(i) * 1.7) + 0.05 * sin(along / max(hw, 1e-6) * 2.3 + float(i));
+		// unidad 4y: el ancho a lo largo del surco entero (empieza fino, se ensancha donde la garra muerde y acaba con un
+		// arrastre y la pintura arrancada al levantarse); la hondura, con él (juego: el ancho y la hondura de la física son
+		// los de donde más muerde)
+		float T = mix(tt.x, tt.y, h);
+		float shape = dmg_taper(T, float(i));
+		hw *= shape;
+		depth_um *= clamp(shape, 0.45, 1.0);
 		// unidad 4s (petición del 17-10: las marcas visibles sin la lupa): una marca más fina que un píxel se dibuja de un
 		// píxel (dibujo; su ancho de verdad lo enseñan el primer plano y la lupa)
 		float w = max(hw, px * 0.8);
@@ -249,9 +279,15 @@ vec4 damage_marks_ex(vec3 p, vec3 n, float px, out vec4 relief, out float lip) {
 			// punzada: el cono de la punta, de su diámetro y su hondura, sin atravesar; su labio alrededor
 			float rad = hc.z;
 			float lipk = clamp(-hc.w - 1.0, 0.0, 1.0);
-			float wr = max(rad, px * 0.6);
+			// unidad 4y: una huella más pequeña que dos píxeles se dibuja de dos (dibujo, como los surcos de un píxel): la de cada
+			// garra se ve en «Garras» de cerca; su tamaño de verdad, en «Marca»
+			float wr = max(rad, px * 1.0);
 			float lw = rad * 0.8;
-			if (r > wr + lw + px * 2.0) {
+			// unidad 4y (juego): la pintura saltada alrededor del cráter, de borde irregular, si la punta pasa del barniz
+			float ang_p = atan(d2.y, d2.x);
+			float chip_r = rad * (1.45 + 0.55 * (0.5 + 0.5 * sin(ang_p * 3.0 + hp.z * 21.0) * sin(ang_p * 7.0 + hp.z * 9.0)));
+			bool chips = pit_um > paint_to_um.x * 0.6;
+			if (r > max(wr + lw, chips ? chip_r : 0.0) + px * 2.0) {
 				continue;
 			}
 			bool resolved = rad > px * 1.5;
@@ -265,6 +301,9 @@ vec4 damage_marks_ex(vec3 p, vec3 n, float px, out vec4 relief, out float lip) {
 					best = vec4(cov, layer, 0.0, 0.0);
 				}
 				continue;
+			}
+			if (resolved && chips && r < chip_r && best.x < 0.85) {
+				best = vec4(0.85, min(1.0, dmg_layer_at(pit_um)), 0.0, 0.0);
 			}
 			if (resolved && r < rad + lw && lipk > 0.0) {
 				float t = (r - rad) / lw;
@@ -281,7 +320,9 @@ vec4 damage_marks_ex(vec3 p, vec3 n, float px, out vec4 relief, out float lip) {
 		float rad = max(hc.z, px * 0.6);
 		float petals = hc.w;
 		float reach = petals > 0.5 ? rad * 2.3 : rad * 1.6;
-		if (r > reach + px * 2.0) {
+		// unidad 4y (juego): la pintura saltada alrededor de los pétalos, de borde irregular
+		float flaked = reach * (1.12 + 0.28 * (0.5 + 0.5 * sin(atan(d2.y, d2.x) * 5.0 + hp.z * 13.0)));
+		if (r > max(reach, petals > 0.5 ? flaked : 0.0) + px * 2.0) {
 			continue;
 		}
 		float ang = atan(d2.y, d2.x) + hp.z * 6.2831853;
@@ -316,6 +357,8 @@ vec4 damage_marks_ex(vec3 p, vec3 n, float px, out vec4 relief, out float lip) {
 					// el pétalo sigue pintado por fuera: solo se oscurece (está doblado hacia dentro)
 					best.w = max(best.w, 0.55 * k);
 				}
+			} else if (r < flaked && best.x < 0.5 && rad > px * 1.5) {
+				best = vec4(0.85, 2.0, 0.0, 0.0);
 			}
 		} else if (r < reach) {
 			// plástico: el labio blanqueado por el desgarro
@@ -332,4 +375,53 @@ vec4 damage_marks(vec3 p, vec3 n, float px) {
 	vec4 relief;
 	float lip;
 	return damage_marks_ex(p, n, px, relief, lip);
+}
+
+
+// Unidad 4y (juego): el microastillado del vidrio a los lados de la raya de una garra más dura que él (conchas pequeñas
+// pegadas al borde, cada pocas veces su ancho, de un lado o del otro). Devuelve la cobertura (0-1).
+float dmg_glass_chips(vec3 p, vec3 n, float px) {
+	float best = 0.0;
+	for (int i = 0; i < MAX_GROOVES; i++) {
+		if (i >= n_grooves) {
+			break;
+		}
+		vec4 gp = groove_p[i];
+		int axis = int(mod(gp.z, 2.0) + 0.5);
+		if (dot(n, dmg_axis(axis)) < 0.35) {
+			continue;
+		}
+		float hw = gp.x;
+		if (hw < px * 0.7) {
+			continue;
+		}
+		vec4 ab = groove_ab[i];
+		vec2 a = ab.xy;
+		vec2 b = mix(a, ab.zw, dmg_progress_slide(floor(gp.w + 1e-4)));
+		vec2 uv = dmg_plane(p, axis);
+		vec2 ba = b - a;
+		float L = length(ba);
+		if (L < 1e-9) {
+			continue;
+		}
+		vec2 t = ba / L;
+		vec2 nn = vec2(-t.y, t.x);
+		float along = dot(uv - a, t);
+		float across = dot(uv - a, nn);
+		if (along < 0.0 || along > L || abs(across) > hw * 3.2) {
+			continue;
+		}
+		float cellw = hw * 2.2;
+		float cell = floor(along / cellw);
+		float hs = dmg_hash(cell * 7.31 + float(i) * 1.7);
+		if (hs < 0.45) {
+			continue;
+		}
+		float sgn = dmg_hash(cell * 3.17 + float(i)) > 0.5 ? 1.0 : -1.0;
+		float rc = hw * (0.6 + 0.9 * dmg_hash(cell * 5.91 + float(i) * 0.3));
+		vec2 c = vec2((cell + 0.5) * cellw, sgn * hw);
+		float dd = length(vec2(along, across) - c);
+		best = max(best, 1.0 - smoothstep(rc - px * 0.5, rc + px * 0.5, dd));
+	}
+	return best;
 }

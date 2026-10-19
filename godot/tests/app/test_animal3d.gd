@@ -261,8 +261,18 @@ func test_garras_reforjadas_melladas_partidas_y_dobladas() -> void:
 	assert_eq(shards, 0, "y caen y desaparecen")
 	rig.pose({ "t": 2.1, "live": true, "claw_gone": true })
 	assert_false((claws[0].node as Node3D).visible, "partida: sin garra")
+	var rest_tip: Mesh = Animal3D._claw_mesh_node(claws[0].tip).mesh
 	rig.pose({ "t": 2.2, "live": true, "claw_bend": 1.0 })
-	assert_true((claws[0].node as Node3D).visible and not (claws[0].tip as Node3D).quaternion.is_equal_approx(Quaternion.IDENTITY), "doblada: la punta torcida")
+	# unidad 4y: la punta doblada es la malla de la punta torcida desde su final, de una pieza (no la pieza girada sobre el corte)
+	var bent_tip: Mesh = Animal3D._claw_mesh_node(claws[0].tip).mesh
+	assert_true((claws[0].node as Node3D).visible and (claws[0].tip as Node3D).visible and bent_tip != rest_tip, "doblada: la punta torcida")
+	var va: PackedVector3Array = rest_tip.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
+	var vb: PackedVector3Array = bent_tip.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
+	var moved := 0.0
+	for i in mini(va.size(), vb.size()):
+		moved = maxf(moved, va[i].distance_to(vb[i]))
+	assert_true(va.size() == vb.size() and moved > 0.0, "la misma malla, con la punta movida (%s)" % moved)
+	assert_true((claws[0].tip as Node3D).quaternion.is_equal_approx(Quaternion.IDENTITY), "sin girar la pieza sobre el corte")
 	free_rig(rig)
 
 

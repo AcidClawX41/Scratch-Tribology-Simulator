@@ -127,6 +127,17 @@ static func layers_txt(target: Dictionary, depth_um: float, through: bool) -> St
 	return "corta %s y raya %s (%s): no llega a %s" % [_list(cut), _with_article(marked), Format.fmt_len(depth_um), String(body.noun)]
 
 
+## Unidad 4y: lo mismo para la huella de la punta de una garra que no se mueve (la punción quieto encima): «la huella de
+## la punta corta el barniz y marca el color (52 µm): no llega a la chapa».
+static func pit_txt(target: Dictionary, depth_um: float) -> String:
+	var t := layers_txt(target, depth_um, false)
+	if depth_um <= 0.0 or t == "":
+		return t
+	if t.begins_with("raya "):
+		t = "marca " + t.substr(5)
+	return "la huella de la punta " + t.replace(" y raya ", " y marca ")
+
+
 ## Un largo (mm) en palabras: «6.1 mm», «24.5 cm», «160 cm».
 static func len_txt(mm: float) -> String:
 	if mm < 10.0:
@@ -184,7 +195,7 @@ static func assess(o: Dictionary) -> Dictionary:
 	if depth > 0.0:
 		out.level = 1
 		out.id = "marca"
-		out.text = layers_txt(target, depth, false)
+		out.text = pit_txt(target, depth) if Js.truthy(o.get("pit")) else layers_txt(target, depth, false)
 	if punct and not through:
 		out.level = 2
 		out.id = "perfora"

@@ -230,6 +230,7 @@ void fragment() {
 	// rayas de unas garras más duras que el vidrio
 	vec4 m = damage_marks(v_obj, n, px);
 	white = max(white, m.x * 0.8);
+	white = max(white, dmg_glass_chips(v_obj, n, px) * 0.55);  // unidad 4y: el microastillado a los lados de la raya
 	if (white > 0.0) {
 		col = mix(col, vec3(0.82, 0.86, 0.88), white);
 		alpha = mix(alpha, 0.92, white);

@@ -14,6 +14,7 @@
 extends RefCounted
 
 const Contact = preload("res://core/shared/contact.gd")
+const Rng = preload("res://core/shared/rng.gd")
 const Physics = preload("res://core/lab/physics.gd")
 const Catalog = preload("res://core/lab/catalog.gd")
 ## El arco de cada garra, con su fuente (CareData.claw_arc, unidad 5g): la misma medida para la cetrería, la galería y el
@@ -246,3 +247,117 @@ static func model_claw(length_mm: float, base_h_mm: float, base_w_mm: float, arc
 		"base": tube_hw(ss_b, hh_b, ww_b, k, ring, cap, 1.0, L), "tip": tube_hw(ss_t, hh_t, ww_t, k, ring, 0.0, 1.0, L),
 		"cut_point": _point(s_cut, k), "tip_point": _point(L, k), "tip_dir": _tangent(L, k), "cut_mm": s_cut, "k": k,
 	}
+
+
+# ════════ Garras dobladas y melladas, de una pieza (unidad 4y) ════════
+# «Una garra doblada se ve doblada en la punta y una mellada, desconchada; nunca piezas sueltas» (Eric, 18-10-2026). Antes la
+# punta doblada era la pieza de la punta girada sobre el corte (con un hueco abierto entre las dos) y la mellada, la base
+# encogida entera: se veían en trozos. Aquí, la misma malla de model_claw, deformada (doblada) o cerrada en el punto de la
+# rotura (mellada), en su marco (mm, o lo que diga frame/origin/scale): sigue pegada a la otra pieza en el corte. Dibujo: lo
+# que se dobla o se pierde lo dice la física (CarSpeedMarks.fracture: brokenMm); el ángulo de la punta doblada, la forma de la
+# rotura y su irregularidad, no (BEND_ANGLE, CHIP_JAG).
+
+## Dibujo: lo que se abre la punta doblada (rad) y lo que mide la charnela (fracción de lo que se dobla) en la que pasa de 0 a
+## todo el ángulo; la irregularidad de la rotura de una garra mellada (fracción del radio en el punto de la rotura).
+const BEND_ANGLE := 0.6
+const BEND_HINGE := 0.35
+const CHIP_JAG := 0.45
+
+
+## Los arrays de un trozo de garra (los de model_claw, en mm en el marco de su base) doblados desde s_bend (mm): cada vértice
+## gira alrededor del eje lateral (+Z) que pasa por la línea media en s_bend, con su s (UV.x) y la charnela suave hasta
+## s_bend + hinge (mm); en s_bend no se mueve nada, así que la malla sigue pegada a lo de antes. angle > 0: la punta se abre
+## (sube hacia +Y). frame/origin/scale: el marco en el que están los vértices (v = origin + frame·(v_mm·scale)), el de rig3d.
+static func bend_arrays(arrays: Array, k: float, s_bend: float, hinge: float, angle: float, frame := Basis.IDENTITY,
+		origin := Vector3.ZERO, scale := 1.0) -> Array:
+	var out := arrays.duplicate()
+	var vs: PackedVector3Array = (arrays[Mesh.ARRAY_VERTEX] as PackedVector3Array).duplicate()
+	var ns: PackedVector3Array = (arrays[Mesh.ARRAY_NORMAL] as PackedVector3Array).duplicate()
+	var ts: PackedFloat32Array = (arrays[Mesh.ARRAY_TANGENT] as PackedFloat32Array).duplicate()
+	var uvs: PackedVector2Array = arrays[Mesh.ARRAY_TEX_UV]
+	var inv := frame.inverse()
+	var pivot := _point(s_bend, k)
+	var h := maxf(hinge, 1e-3)
+	for i in vs.size():
+		var s := uvs[i].x
+		var th := angle * smoothstep(s_bend, s_bend + h, s)
+		if is_zero_approx(th):
+			continue
+		var rot := Basis(Vector3(0.0, 0.0, 1.0), th)
+		var v_mm := inv * (vs[i] - origin) / scale
+		vs[i] = origin + frame * ((pivot + rot * (v_mm - pivot)) * scale)
+		ns[i] = (frame * (rot * (inv * ns[i]))).normalized()
+		var tw := frame * (rot * (inv * Vector3(ts[i * 4], ts[i * 4 + 1], ts[i * 4 + 2])))
+		ts[i * 4] = tw.x
+		ts[i * 4 + 1] = tw.y
+		ts[i * 4 + 2] = tw.z
+	out[Mesh.ARRAY_VERTEX] = vs
+	out[Mesh.ARRAY_NORMAL] = ns
+	out[Mesh.ARRAY_TANGENT] = ts
+	return out
+
+
+## Un trozo de garra mellada, de s0 a s_keep (mm), cerrado en la rotura (una cara cóncava e irregular, como la de una
+## concha: CHIP_JAG), con la sección y el ahusado de model_claw (base base_h_mm × base_w_mm, arco arc_deg, largo length_mm);
+## cap_start: la base cerrada dentro del dedo (el trozo de la base). Las mismas UV que model_claw (UV2.y, el largo entero).
+## seed_text: la forma de la rotura (determinista, con rng.gd). frame/origin/scale como bend_arrays.
+static func chipped_arrays(length_mm: float, base_h_mm: float, base_w_mm: float, arc_deg: float, s0: float, s_keep: float, rows: int,
+		ring: int, seed_text: String, cap_start := false, frame := Basis.IDENTITY, origin := Vector3.ZERO, scale := 1.0) -> Array:
+	var L := maxf(length_mm, 0.1)
+	var k := deg_to_rad(arc_deg) / L
+	var s1 := clampf(s_keep, s0 + 0.05, L)
+	var ss := PackedFloat64Array()
+	var hh := PackedFloat64Array()
+	var ww := PackedFloat64Array()
+	var n := maxi(rows, 2)
+	for i in n + 1:
+		var s := s0 + (s1 - s0) * float(i) / float(n)
+		var f := pow(maxf(1.0 - s / L, 0.0), TAPER_EXP)
+		ss.append(s)
+		hh.append(base_h_mm * 0.5 * f)
+		ww.append(base_w_mm * 0.5 * f)
+	# la rotura: un anillo más pequeño un poco más allá y el polo, hundido (cóncava)
+	var f1 := pow(maxf(1.0 - s1 / L, 0.0), TAPER_EXP)
+	var r1 := sqrt(base_h_mm * base_w_mm) * 0.5 * f1
+	ss.append(s1 + r1 * 0.12)
+	hh.append(base_h_mm * 0.5 * f1 * 0.62)
+	ww.append(base_w_mm * 0.5 * f1 * 0.62)
+	ss.append(s1 + r1 * 0.13)
+	hh.append(0.0)
+	ww.append(0.0)
+	var cap := minf(base_h_mm, base_w_mm) * 0.5 * 0.6 if cap_start else 0.0
+	var a := tube_hw(ss, hh, ww, k, ring, cap, 1.0, L)
+	var vs: PackedVector3Array = a[Mesh.ARRAY_VERTEX]
+	var ns: PackedVector3Array = a[Mesh.ARRAY_NORMAL]
+	var cols := ring + 1
+	var total := vs.size() / cols
+	var t1 := _tangent(s1, k)
+	var rng := Rng.new(Rng.seed_of(seed_text))
+	var jag := PackedFloat32Array()
+	for j in ring:
+		jag.append((rng.next() - 0.5) * 2.0 * CHIP_JAG * r1)
+	# el borde de la rotura, irregular a lo largo; el polo, hundido hacia dentro; sus normales miran fuera de la garra
+	for q: int in [total - 3, total - 2, total - 1]:
+		for j in cols:
+			var idx := q * cols + j
+			var jj := j % ring
+			if q == total - 1:
+				vs[idx] -= t1 * r1 * 0.25
+			elif q == total - 2:
+				vs[idx] += t1 * jag[jj]
+			else:
+				vs[idx] += t1 * jag[jj] * 0.35
+			if q >= total - 2:
+				ns[idx] = (t1 * 0.85 + ns[idx] * 0.15).normalized()
+	var ts: PackedFloat32Array = a[Mesh.ARRAY_TANGENT]
+	for i in vs.size():
+		vs[i] = origin + frame * (vs[i] * scale)
+		ns[i] = (frame * ns[i]).normalized()
+		var tw := frame * Vector3(ts[i * 4], ts[i * 4 + 1], ts[i * 4 + 2])
+		ts[i * 4] = tw.x
+		ts[i * 4 + 1] = tw.y
+		ts[i * 4 + 2] = tw.z
+	a[Mesh.ARRAY_VERTEX] = vs
+	a[Mesh.ARRAY_NORMAL] = ns
+	a[Mesh.ARRAY_TANGENT] = ts
+	return a

@@ -296,11 +296,27 @@ func test_los_desgarros_del_animal_asustado() -> void:
 	var c := ctx(st, "techo")
 	var w := View.draw_to_world(Vector2(st.scen.draw.x, st.scen.draw.y))
 	c["feet"] = Vector3(w.x, CurveKit.top_y(CarShape.top_curve(), w.x), 0.0)
+	c["speed"] = st.marks_now()
+	c["plan"] = st.hold_plan()
+	# unidad 4y: asustada aprieta y se agarra sin resbalar: la huella de cada garra, ningún surco
+	assert_true(bool(st.at.holds), "a 90 km/h la lechuza asustada aguanta")
 	var s := CarDamage.from_hold(st.scen, c)
-	assert_eq(s.grooves.size(), int(MC.BODIES.lechuza.contact), "un desgarro por garra")
+	assert_eq(s.grooves.size(), 0, "sin resbalar no hay desgarros")
+	assert_eq(s.holes.size(), int(MC.BODIES.lechuza.contact), "una huella por garra")
+	# más deprisa de lo que aguanta, resbala por el techo hacia atrás: un desgarro por garra, hacia el borde de atrás
+	var off := float(st.det.kmh) + 10.0
+	assert_true(is_finite(off) and off <= st.top_kmh(), "se suelta en el deslizador (%s km/h)" % off)
+	st.set_speed(off)
+	st.finish()
+	c["speed"] = st.marks_now()
+	c["plan"] = st.hold_plan()
+	assert_false(bool(st.at.holds), "a %s km/h ya no aguanta" % off)
+	s = CarDamage.from_hold(st.scen, c)
+	var claws := int(MC.BODIES.lechuza.contact)
+	assert_eq(s.grooves.size(), claws * 2, "un desgarro por garra (en dos tramos)")
 	for g: Dictionary in s.grooves:
-		assert_eq(int(g.layer), CarDamage.LAYER_BODY, "hasta el metal (defense.tear)")
-		assert_near(g.b.x, (CarShape.PANELS.techo as Vector2).x, 1e-3, 1e-3, "de las patas al borde de atrás del panel")
+		assert_true(int(g.layer) >= 0, "con la capa del motor")
+		assert_true(g.b.x <= g.a.x + 1e-6 and g.b.x >= (CarShape.PANELS.techo as Vector2).x - 1e-6, "hacia atrás, sin pasar del panel")
 
 
 func test_la_ventanilla_que_estalla() -> void:

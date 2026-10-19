@@ -105,7 +105,11 @@ class Model:
 		_put_mm(tip_bone, "garra", g.tip, frame, base)
 		# name, base, d0 y up: el marco de la base (la cetrería cuelga ahí su propia garra; unidad 5c)
 		claws.append({ "bone": base_bone, "tip_bone": tip_bone, "tip": tip_p, "len": len, "dir": frame * (g.tip_dir as Vector3), "far": far,
-			"name": name, "base": base, "d0": d, "up": u })
+			"name": name, "base": base, "d0": d, "up": u,
+			# unidad 4y: lo que hace falta para la garra doblada o mellada de una pieza (en mm, en el marco frame; el corte, en
+			# cut_mm: la punta cuelga de él)
+			"geo": { "length": len * 10.0, "h": h * 10.0, "w": w * 10.0, "arc": curve_deg, "k": float(g.k), "cut_mm": g.cut_point,
+				"frame": frame, "rows": rings(18), "ring": segs(24), "tip_arrays": g.tip } })
 		fit_skip.append(base_bone)
 		fit_skip.append(tip_bone)
 

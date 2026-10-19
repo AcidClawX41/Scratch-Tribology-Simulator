@@ -123,6 +123,9 @@ var scale := 1.0
 ## El cuerpo de la cetrería (lo que devuelve CareBody.build) y las garras: [{ node, tip, out, in, tip_mm, mis: [base, punta] }].
 var body := {}
 var claws: Array = []
+## Unidad 4y: las garras de dibujo de los dedos que no se trabajan (las de los dedos III, IV y I del velocirraptor), con la
+## punta en su malla (mm): { mi, tip, paw, digit }. Son las que apoyan quieto encima (MovingCar.BODIES: THEROPOD_TOES).
+var toes: Array = []
 var claw_mat: ShaderMaterial
 var claw_natural := Color("#1E1B1A")
 
@@ -351,7 +354,7 @@ func _paw(animal: String, art: String, cl: Dictionary, pw: String, pose: Diction
 	for mc: Dictionary in spec.get("model_claws", []):
 		var am := ArrayMesh.new()
 		am.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, mc.arrays)
-		mcs.append({ "mesh": am, "xf": mc.xf })
+		mcs.append({ "mesh": am, "xf": mc.xf, "digit": String(mc.get("digit", "")), "tip": _far_vertex(mc.arrays) })
 	var out := { "parts": parts, "slots": spec.slots, "protract": spec.get("protract", {}), "model_claws": mcs, "anchor": turn * (spec.anchor as Transform3D),
 		"aabb": box, "verts": n_verts, "fresh": true, "xf": Transform3D.IDENTITY }
 	cache[key] = out
@@ -409,6 +412,7 @@ func _paw_nodes(e: Dictionary, pw: String) -> void:
 		mi.transform = mc.xf
 		node.add_child(mi)
 		_claw_slots.append(mi)
+		toes.append({ "mi": mi, "tip": mc.get("tip", Vector3.ZERO), "paw": pw, "digit": String(mc.get("digit", "")) })
 	var cl := _claw_spec(id)
 	var prot: Dictionary = e.protract
 	for d: String in e.slots:
@@ -439,7 +443,10 @@ func _paw_nodes(e: Dictionary, pw: String) -> void:
 		var chip := _chip_face(length, float(cl.base_r_mm) * k, float(cl.arc_deg), mc.cut_point as Vector3)
 		mb.add_child(chip)
 		claws.append({ "node": base, "tip": tip, "out": e.slots[d], "in": prot.get(d, e.slots[d]), "tip_m": (mc.tip_point as Vector3) * 0.001,
-			"cut_m": (mc.cut_point as Vector3) * 0.001, "meshes": [mb, mt], "paw": pw, "digit": d, "chip": chip })
+			"cut_m": (mc.cut_point as Vector3) * 0.001, "meshes": [mb, mt], "paw": pw, "digit": d, "chip": chip,
+			# unidad 4y: lo que hace falta para la garra doblada o mellada de una pieza (ClawGeo.bend_arrays y chipped_arrays)
+			"geo": { "length": length, "base_r": float(cl.base_r_mm) * k, "arc": float(cl.arc_deg), "base_mesh": mc.base, "tip_mesh": mc.tip,
+				"tip_arrays": mc.tip_arrays, "seed": "%s|%s|%s" % [id, pw, d] } })
 
 
 ## Unidad 4s (lo que daba mala imagen: «la garra mellada se distingue poco»): la cara de la rotura de una garra mellada, en
@@ -451,7 +458,7 @@ static var _chip_mat: StandardMaterial3D = null
 static var _chip_mesh: CylinderMesh = null
 
 
-static func _chip_face(length_mm: float, base_r_mm: float, arc_deg: float, cut: Vector3) -> MeshInstance3D:
+static func _chip_face(length_mm: float, base_r_mm: float, arc_deg: float, cut: Vector3, frac := CLAW_CUT) -> MeshInstance3D:
 	if _chip_mesh == null:
 		_chip_mesh = CylinderMesh.new()
 		_chip_mesh.top_radius = 1.0
@@ -464,23 +471,32 @@ static func _chip_face(length_mm: float, base_r_mm: float, arc_deg: float, cut: 
 		_chip_mat.roughness = 0.55
 		_chip_mat.emission_enabled = true
 		_chip_mat.emission = CHIP_COLOR * 0.25
+	var mi := MeshInstance3D.new()
+	mi.name = "Rotura"
+	mi.mesh = _chip_mesh
+	mi.material_override = _chip_mat
+	mi.transform = chip_face_xf(length_mm, base_r_mm, arc_deg, frac, cut)
+	mi.visible = false
+	return mi
+
+
+## Unidad 4y: dónde va la cara de la rotura de una garra que se mella en la fracción frac de su largo (mm, en el marco de su
+## base): en la línea media ahí (o en cut, si se da), a lo largo de su tangente, de su sección.
+static func chip_face_xf(length_mm: float, base_r_mm: float, arc_deg: float, frac: float, cut := Vector3.INF) -> Transform3D:
 	var L := maxf(length_mm, 0.1)
 	var kk := deg_to_rad(arc_deg) / L
-	var sc := L * CLAW_CUT
+	var sc := L * frac
 	var t := Vector3(cos(kk * sc), -sin(kk * sc), 0.0)
-	var f := pow(maxf(1.0 - CLAW_CUT, 0.0), ClawGeo.TAPER_EXP)
+	var c := cut
+	if c == Vector3.INF:
+		c = Vector3(sin(kk * sc) / kk, (cos(kk * sc) - 1.0) / kk, 0.0) if absf(kk) > 1e-9 else Vector3(sc, 0.0, 0.0)
+	var f := pow(maxf(1.0 - frac, 0.0), ClawGeo.TAPER_EXP)
 	var rh := base_r_mm * 2.3 * 0.5 * f
 	var rw := base_r_mm * 1.75 * 0.5 * f
 	var y := t.normalized()
 	var z := Vector3(0.0, 0.0, 1.0)
 	var x := y.cross(z).normalized()
-	var mi := MeshInstance3D.new()
-	mi.name = "Rotura"
-	mi.mesh = _chip_mesh
-	mi.material_override = _chip_mat
-	mi.transform = Transform3D(Basis(x * rh * 1.08, y * 0.35, z * rw * 1.08), cut)
-	mi.visible = false
-	return mi
+	return Transform3D(Basis(x * rh * 1.08, y * 0.35, z * rw * 1.08), c)
 
 
 ## Las mallas de una garra (ClawGeo.model_claw, de la caché por largo, base, arco y calidad; mm, en el marco de su base): la
@@ -497,7 +513,7 @@ static func _claw_meshes(length_mm: float, base_r_mm: float, arc_deg: float, mob
 	mb.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, mc.base)
 	var mt := ArrayMesh.new()
 	mt.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, mc.tip)
-	var out := { "base": mb, "tip": mt, "cut_point": mc.cut_point, "tip_point": mc.tip_point }
+	var out := { "base": mb, "tip": mt, "cut_point": mc.cut_point, "tip_point": mc.tip_point, "tip_arrays": mc.tip }
 	cache[key] = out
 	return out
 
@@ -705,7 +721,8 @@ func _pose_claws(p: Dictionary) -> void:
 	var gone := bool(p.get("claw_gone", false))
 	var keep := clampf(float(p.get("claw_len", 1.0)), 0.15, 1.0)
 	var bend_on := float(p.get("claw_bend", 0.0)) > 0.5
-	var key := "%s|%s|%s|%s" % [snappedf(out, 0.01), gone, snappedf(keep, 0.01), bend_on]
+	var bend_frac := clampf(float(p.get("claw_bend_frac", BEND_FRAC_DRAW)), 0.0, 1.0 - CLAW_CUT)
+	var key := "%s|%s|%s|%s|%s" % [snappedf(out, 0.01), gone, snappedf(keep, 0.01), bend_on, snappedf(bend_frac, 0.01)]
 	if key == _claw_key:
 		return
 	_claw_key = key
@@ -715,11 +732,64 @@ func _pose_claws(p: Dictionary) -> void:
 		n.transform = (c["in"] as Transform3D).interpolate_with(c.out as Transform3D, out)
 		var chipped := keep < 0.97
 		var tip: Node3D = c.tip
-		tip.visible = not chipped
-		(c.chip as Node3D).visible = chipped and not gone
-		tip.rotation = Vector3(0.0, 0.0, -0.6 if bend_on else 0.0) if not bend_on else Vector3(0.9, 0.0, -0.6)
-		var mb: MeshInstance3D = (c.meshes as Array)[0]
-		mb.scale = Vector3.ONE * 0.001 * (clampf(keep / CLAW_CUT, 0.3, 1.0) if chipped else 1.0)
+		tip.rotation = Vector3.ZERO
+		# unidad 4y: la garra doblada o mellada es una sola pieza (la malla de la punta doblada o cerrada en la rotura), nunca
+		# la punta girada sobre el corte ni la base encogida
+		_claw_shape(c, chipped and not gone, keep, bend_on and not chipped, bend_frac)
+
+
+## Unidad 4y · dibujo: lo que se dobla la punta de una garra doblada si la vista no lo dice (fracción del largo).
+const BEND_FRAC_DRAW := 0.15
+## Las mallas de las garras dobladas o melladas (de una pieza), por garra y estado: se hacen una vez.
+var _claw_variants := {}
+
+
+## Unidad 4y: la forma de una garra: entera, mellada en keep (fracción del largo que le queda: la punta cerrada en la rotura,
+## o la base si la rotura pasa del corte) o doblada (la punta, desde 1 − bend_frac del largo). Cambia las mallas de las dos
+## piezas (de la caché de esta garra) y pone la cara de la rotura en su sitio; las piezas siguen pegadas en el corte.
+func _claw_shape(c: Dictionary, chipped: bool, keep: float, bent: bool, bend_frac: float) -> void:
+	var g: Dictionary = c.geo
+	var mb: MeshInstance3D = (c.meshes as Array)[0]
+	var mt: MeshInstance3D = (c.meshes as Array)[1]
+	var tip: Node3D = c.tip
+	var chip: MeshInstance3D = c.chip
+	var L := float(g.length)
+	var mobile := _claw_quality == "movil"
+	var ring := ClawGeo.RING_MOBILE if mobile else CLAW_RING_NEAR
+	mb.scale = Vector3.ONE * 0.001
+	mb.mesh = g.base_mesh
+	mt.mesh = g.tip_mesh
+	tip.visible = true
+	chip.visible = false
+	if chipped:
+		var kq := snappedf(clampf(keep, 0.15, 0.97), 0.01)
+		var vkey := "mella|%s|%s" % [g.seed, kq]
+		var on_tip := kq > CLAW_CUT + 0.01
+		if not _claw_variants.has(vkey):
+			var s0 := L * CLAW_CUT if on_tip else 0.0
+			var arr := ClawGeo.chipped_arrays(L, float(g.base_r) * 2.3, float(g.base_r) * 1.75, float(g.arc), s0, L * kq,
+				6 if mobile else 14, ring, String(g.seed), not on_tip)
+			var am := ArrayMesh.new()
+			am.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr)
+			_claw_variants[vkey] = am
+		if on_tip:
+			mt.mesh = _claw_variants[vkey]
+		else:
+			mb.mesh = _claw_variants[vkey]
+			tip.visible = false
+		chip.transform = chip_face_xf(L, float(g.base_r), float(g.arc), kq)
+		chip.visible = true
+	elif bent:
+		var bq := snappedf(maxf(bend_frac, 0.02), 0.01)
+		var vkey := "dobla|%s|%s" % [g.seed, bq]
+		if not _claw_variants.has(vkey):
+			var k := deg_to_rad(float(g.arc)) / maxf(L, 0.1)
+			var s_b := L * (1.0 - bq)
+			var arr := ClawGeo.bend_arrays(g.tip_arrays, k, s_b, L * bq * ClawGeo.BEND_HINGE, ClawGeo.BEND_ANGLE)
+			var am := ArrayMesh.new()
+			am.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr)
+			_claw_variants[vkey] = am
+		mt.mesh = _claw_variants[vkey]
 
 
 ## Opacidad de todo el animal: los materiales de la cetrería no se desvanecen, así que por debajo de 1 se usa la
@@ -783,6 +853,29 @@ func claw_points() -> Array:
 			n = n.get_parent()
 		out.append(xf * ((c.tip_m as Vector3) - (c.cut_m as Vector3)))
 	return out
+
+
+## Unidad 4y: dónde están ahora las puntas de las garras de dibujo (las de los dedos que apoyan del velocirraptor), en la
+## raíz como claw_points(): [[pata, dedo, punta]].
+func toe_points() -> Array:
+	var out: Array = []
+	for t: Dictionary in toes:
+		var xf := Transform3D.IDENTITY
+		var n: Node = t.mi
+		while n != null and n != root:
+			xf = (n as Node3D).transform * xf
+			n = n.get_parent()
+		out.append([String(t.paw), String(t.digit), xf * (t.tip as Vector3)])
+	return out
+
+
+## Unidad 4y: la punta de una garra de dibujo (el vértice más lejos de su base, en el origen de sus arrays).
+static func _far_vertex(arrays: Array) -> Vector3:
+	var best := Vector3.ZERO
+	for v: Vector3 in arrays[Mesh.ARRAY_VERTEX] as PackedVector3Array:
+		if v.length_squared() > best.length_squared():
+			best = v
+	return best
 
 
 ## Unidad 4s: de qué pata y qué dedo es cada garra, en el orden de claw_points(): [[pata, dedo]].
