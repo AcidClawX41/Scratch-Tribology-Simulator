@@ -11,7 +11,7 @@
 # una Release en BORRADOR. El borrador no se publica solo: revísalo y publícalo a mano desde GitHub.
 #
 # Uso: sube la versión en godot/project.godot y en godot/export_presets.cfg (ver docs/GODOT-EXPORT.md) y después
-#        git tag v2.0.0 && git push origin v2.0.0
+#        git tag v2.0.1 && git push origin v2.0.1
 #      "Run workflow" a mano (workflow_dispatch), o una subida a la rama ci/release, compila lo mismo sin tocar
 #      Releases: los archivos quedan como artefactos de la ejecución.
 #
