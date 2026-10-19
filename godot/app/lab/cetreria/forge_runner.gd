@@ -26,6 +26,8 @@ const OPS := [
 	# 5r · la mesa de soldar: los mandos, colocar y alinear las piezas, el haz y el pedal, un pulso o la vuelta entera
 	"set_weld", "set_weld_params", "cycle_weld_method", "weld_prepare", "weld_align_pieces", "weld_nudge", "weld_aim",
 	"weld_set_hold", "weld_pulse_next", "weld_all",
+	# 5x · el interruptor «Guiado» del tutorial
+	"set_guide",
 ]
 ## Tope del tiempo pendiente en una sola orden «tick» (s).
 const MAX_TICK_S := 0.25

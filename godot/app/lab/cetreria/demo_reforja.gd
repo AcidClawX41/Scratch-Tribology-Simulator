@@ -30,9 +30,13 @@
 ##       apretado (el destello, el punto incandescente y el cordón), limar la costura y pasarla a la cetrería;
 ##  16 · el titanio sin argón: la soldadura sale contaminada (azul o gris) y se explica;
 ##  17 · una punta de metal duro en la funda de acero: con plata y el soplete (el metal duro no se funde);
+##  19 · el guiado botón a botón (5x): el metal duro de principio a fin pulsando solo lo que señala el guiado; la cámara se acerca
+##       a cada objeto, el panel baja hasta el control que late con su etiqueta y el aviso sobre la vista dice la acción y su valor;
+##  20 · el guiado en la mesa de soldar (5x): lo recomendado del láser con sus valores, colocar, alinear y los puntos de la costura;
+##  21 · sin tutorial no hay guiado (ni aviso, ni resaltado, ni la cámara se mueve sola); con el tutorial y sin «Guiado», el texto;
 ##  18 · pesar los polvos del metal duro (5w): la tarjeta del paso con los gramos de cada polvo para la funda de la garra, lo
 ##       que lleva y lo que falta junto a la balanza, el cobalto que se pasa y cómo se arregla, y «Listo: carga el crisol (L)».
-## Orden: 1, 2, 12, 13, 3, 4, 9, 14, 6, 5, 7, 8, 10, 11, 15, 16, 17 y 18.
+## Orden: 1, 2, 12, 13, 3, 4, 9, 14, 6, 5, 7, 8, 10, 11, 15, 16, 17, 18, 19, 20 y 21.
 ## Captura:   node godot/tools/godot.mjs capture res://app/lab/cetreria/demo_reforja.tscn --frames=4500 --out=<carpeta>
 ## Teléfono:  … con --phone (390 × 844: una columna). Un caso: … -- --caso=2 (y menos fotogramas).
 ## El estado va en el hilo de la interfaz (cada captura sale igual). No guarda ajustes. Al final escribe lo que cuesta un
@@ -65,8 +69,11 @@ const SCENES := [
 	"La mesa de soldar: el titanio sin argón sale contaminado",
 	"La mesa de soldar: una punta de metal duro, con plata y el soplete",
 	"Pesar los polvos del metal duro: cuántos gramos de cada uno pide la funda",
+	"El guiado botón a botón: el metal duro, una acción tras otra",
+	"El guiado en la mesa de soldar: la punta de acero con el láser",
+	"Sin tutorial no hay guiado; con el tutorial y sin «Guiado», solo el texto",
 ]
-const MAIN_ORDER := [0, 1, 11, 12, 2, 3, 8, 13, 5, 4, 6, 7, 9, 10, 14, 15, 16, 17]
+const MAIN_ORDER := [0, 1, 11, 12, 2, 3, 8, 13, 5, 4, 6, 7, 9, 10, 14, 15, 16, 17, 18, 19, 20]
 
 var lab: Control
 var care: Control
@@ -80,6 +87,7 @@ var _paint_sum := 0
 var _paint_n := 0
 var _paint_max := 0
 var _seen_paints := 0
+var _guide_live := false
 
 
 func _ready() -> void:
@@ -122,6 +130,11 @@ func _build_overlay() -> void:
 
 func _process(delta: float) -> void:
 	_t += delta
+	# 5x · siguiendo el guiado, el rótulo dice lo mismo que el aviso de la vista, en vivo (nunca dos cantidades distintas)
+	if _guide_live and page != null:
+		var g: Dictionary = page.runner.latest().get("guide", {})
+		if bool(g.get("on", false)):
+			_caption_text("%s · %s" % [String(_st().current_step().get("title", "")), String(g.hint)])
 	if page != null and int(page.paints) != _seen_paints:
 		_seen_paints = int(page.paints)
 		var us := int(page.last_paint_us)
@@ -1159,3 +1172,94 @@ func _scene_18() -> void:
 	_reveal(page.tut_card)
 	await _wait(1.5)
 	_log("en el plato: %s g · mezcla: %s" % [String.num(_st().pan_total(), 4), str(_st().snap().mix.get("ok", false))])
+
+
+# ─────────────────────────────── 5x · el guiado botón a botón ───────────────────────────────
+
+## Sigue el guiado: el puntero va al control del panel que late (o al objeto de la escena) y se pulsa lo que señala (la orden de
+## su botón). Hasta n acciones o hasta stop_step. secs: lo que dura cada acción nueva (las repetidas, menos).
+func _follow_guide(n: int, secs: float, stop_step := "") -> void:
+	_guide_live = true
+	await _follow_guide_steps(n, secs, stop_step)
+	_guide_live = false
+
+
+func _follow_guide_steps(n: int, secs: float, stop_step: String) -> void:
+	var last := ""
+	for i in n:
+		var g: Dictionary = page.runner.latest().get("guide", {})
+		if not bool(g.get("on", false)) or (stop_step != "" and String(g.step) == stop_step):
+			return
+		var key := "%s|%s" % [String(g.step), String(g.id)]
+		var again := key == last
+		last = key
+		if not again:
+			await _wait(secs * 0.55)
+		var node: Control = page.call("guide_node", String(g.panel))
+		if String(g.where) == "scene" and String(g.scene) == "costura":
+			var p: Vector2 = _scene().call("weld_seam_screen_point", float(g.get("u", 0.5)))
+			if p.x >= 0.0:
+				_set_pointer(p)
+		elif node != null and node.is_visible_in_tree():
+			cursor.visible = true
+			cursor.position = node.get_global_rect().get_center() - cursor.size * 0.5
+		page.runner.post(String(g.op), g.args)
+		await _wait(0.12 if again else secs * 0.45)
+		if String(g.op) == "weld_pulse_next":
+			await _wait(_st().weld_period_s())
+
+
+func _scene_19() -> void:
+	await _open_lab()
+	_caption(18, "el tutorial del metal duro con el «Guiado»")
+	_press(page.recipe_tiles["metal_duro"])
+	_post("restart")
+	_post("set_tutorial", [true])
+	_post("set_guide", [true])
+	_post("tutorial_goto", ["metal_duro"])
+	await _wait(1.6)
+	await _follow_guide(80, 1.6)
+	_caption(18, "terminado: la funda de metal duro, pulida y probada")
+	await _wait(1.5)
+
+
+func _scene_20() -> void:
+	await _open_lab()
+	_caption(19, "primero, la funda de acero (sin guiado)")
+	_press(page.recipe_tiles["acero"])
+	_post("restart")
+	_post("set_tutorial", [true])
+	_post("set_guide", [false])
+	_post("set_speed", [State.SPEEDS.size() - 1])
+	_post("tutorial_goto", ["acero"])
+	for i in 60:
+		if _st().tutorial_done():
+			break
+		_post("do_step")
+		_post("skip")
+		await _wait(0.05)
+	_post("set_guide", [true])
+	_post("tutorial_goto", [State.WELD])
+	_caption(19, "la mesa de soldar con el «Guiado»")
+	await _wait(1.4)
+	await _follow_guide(120, 1.8, "limar_costura")
+	_caption(19, "la costura entera: luego, limar el cordón y pulir")
+	await _wait(1.5)
+
+
+func _scene_21() -> void:
+	await _open_lab()
+	_press(page.recipe_tiles["zafiro"])
+	_post("restart")
+	_post("set_tutorial", [true])
+	_post("set_guide", [true])
+	_post("tutorial_goto", ["zafiro"])
+	_caption(20, "con el tutorial y el «Guiado»: el aviso, el control que late y la cámara en la balanza")
+	await _wait(2.4)
+	_post("set_guide", [false])
+	_caption(20, "«Guiado» apagado: solo el texto del paso")
+	await _wait(2.4)
+	_post("set_guide", [true])
+	_post("set_tutorial", [false])
+	_caption(20, "«Tutorial apagado»: ni aviso, ni resaltado, ni la cámara ni el panel se mueven solos")
+	await _wait(2.4)

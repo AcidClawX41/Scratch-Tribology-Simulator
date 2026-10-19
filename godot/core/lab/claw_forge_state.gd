@@ -49,6 +49,7 @@ const ClawOptics = preload("res://core/lab/claw_optics.gd")
 const Js = preload("res://core/shared/js.gd")
 const Format = preload("res://core/shared/format.gd")
 const ClawWeld = preload("res://core/lab/claw_weld.gd")
+const ForgeGuide = preload("res://core/lab/claw_forge_guide.gd")
 
 const GENERAL := ForgeTutorial.GENERAL
 const STONE := ForgeTutorial.STONE
@@ -438,6 +439,8 @@ var compensate := true
 var notice := ""
 ## Tutorial: el que se sigue (GENERAL o un proceso) y su paso.
 var tutorial_on := true
+## 5x · el guiado botón a botón dentro del tutorial (ForgeGuide): con él apagado, solo el texto del paso.
+var guide_on := true
 var tut_id := GENERAL
 var tut_step := 0
 ## 5w · los pasos que se han saltado solos al llegar a ellos porque ya se cumplían (en palabras; «» si ninguno).
@@ -2169,6 +2172,24 @@ func set_tutorial(on: bool) -> void:
 		_touch()
 
 
+## 5x · el interruptor «Guiado» del tutorial: la cámara, el panel y el aviso señalan la acción siguiente (o solo el texto).
+func set_guide(on: bool) -> void:
+	if on != guide_on:
+		guide_on = on
+		_touch()
+
+
+## 5x · la acción siguiente del tutorial (ForgeGuide.target, con el formato de core/shared/guide_target.gd): qué control del
+## panel o qué objeto de la escena, con el valor exacto. Solo con el tutorial y el guiado encendidos. bench: el bench_view() de
+## ahora, si ya se tiene.
+func guide_view(bench: Dictionary = {}) -> Dictionary:
+	if not tutorial_on or not guide_on or tutorial_done():
+		return ForgeGuide.Guide.off()
+	var st := current_step()
+	var hl := String(STEP_HIGHLIGHT.get(String(st.get("id", "")), ""))
+	return ForgeGuide.target(self, bench if not bench.is_empty() else bench_view(), hl)
+
+
 ## Salta a un tutorial (TUTORIALS): el general o el de un proceso (que pasa a ser el que se fabrica).
 func tutorial_goto(id: String) -> void:
 	if not TUTORIALS.has(id):
@@ -3622,12 +3643,13 @@ func labels_view(sn: Dictionary) -> Dictionary:
 func view() -> Dictionary:
 	var sn := snap()
 	var claw := CareData.claw_entry(String(setup.claw))
+	var bv := bench_view()
 	return {
 		"serial": _serial, "setup": setup.duplicate(true), "process": process, "process_name": String(ForgeTutorial.PROCESS_NAMES.get(process, process)),
 		"stone": stone, "stones": STONES.map(func(id: String) -> Dictionary: return { "id": id, "label": String(ForgeData.inlay_entry(id).short), "title": "%s, %s HV" % [String(ForgeData.inlay_entry(id).name), CareState.grouped(float(ForgeData.inlay_entry(id).hv))] }),
 		"stage": forge.stage(), "stage_name": String(STAGE_NAMES.get(forge.stage(), "")), "snap": sn,
 		"claw": { "id": String(claw.id), "name": String(claw.name), "reach": forge.natural_mm(), "color": String(claw.get("col", "#6B5A45")), "label": String(setup.get("claw_label", "")) },
-		"bench": bench_view(), "controls": controls_view(), "selected_control": selected_control, "run": run_view(),
+		"bench": bv, "controls": controls_view(), "selected_control": selected_control, "run": run_view(),
 		"act": act.duplicate(true), "piece": piece_view(), "sheath": sheath_view(), "shape": shape, "wall": wall,
 		"tutorial": tutorial_view(), "mistake": mistake_view(), "readouts": readouts(), "events": events_view(),
 		"sheet": result_sheet(), "care": care_view(), "bench_setup": bench_setup(), "sound": sound_view(),
@@ -3637,5 +3659,5 @@ func view() -> Dictionary:
 		"furnace_fiction": short_source(String(ForgeData.FURNACE.source)),
 		"speed": speed_i, "clock": clock_view(), "notice": notice, "inside": inside_view(), "lost_wax": lost_wax_view(),
 		"carving": carving_view(), "fit": (sn.fit as Dictionary).duplicate(true), "tool": carve_tool, "compensate": compensate,
-		"weld": weld_view(sn), "feasible": feasibility(),
+		"weld": weld_view(sn), "feasible": feasibility(), "guide": guide_view(bv), "guide_on": guide_on,
 	}

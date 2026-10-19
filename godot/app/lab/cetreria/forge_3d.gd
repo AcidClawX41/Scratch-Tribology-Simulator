@@ -132,6 +132,15 @@ const POWDER_COLORS := {
 const MOLD_COLORS := { "yeso": "#EDE8DC", "ceramico": "#C9A97A", "grafito": "#26272A" }
 const BARRIER_COLORS := { "silicona": Color(0.85, 0.32, 0.22, 0.7), "aerogel": Color(0.86, 0.9, 0.96, 0.92), "gel": Color(0.35, 0.6, 0.95, 0.5) }
 ## Lo que se ilumina en el tutorial: el sitio de cada cosa (y su radio).
+## 5x · las vistas en las que la cámara se acerca al objeto del guiado: [acimut, elevación, campo, distancia de la vista,
+## semiancho que tiene que caber (0: la distancia ya va por «far»)], las mismas de _apply_view; lo que ocupa el objeto del alto
+## de la vista y lo más cerca que llega (fracción de la distancia de la vista). Presentación, no física.
+const FOCUS_VIEWS := { "general": [0.0, 16.0, 40.0, 2.75, 1.2], "banco": [4.0, 38.0, 38.0, 0.95, 0.44], "horno": [0.0, 4.0, 40.0, 0.85, PANEL_HALF_W],
+	"taller": [-4.0, 30.0, 38.0, 1.05, 0.4], "soldar": [-14.0, 24.0, 34.0, 0.06, 0.0] }
+const FOCUS_FILL := 0.3
+## El aparato de soldar está detrás de la pieza: la vista «Soldar» ya lo encuadra con la costura delante.
+const FOCUS_SKIP := ["soldadura"]
+const FOCUS_MIN := 0.5
 const HIGHLIGHT_R := { "balanza": 0.13, "crisol": 0.07, "horno": 0.45, "ventana": 0.26, "arrancar": 0.04, "sacar": 0.04,
 	"pieza": 0.05, "muela": 0.11, "barrera": 0.06, "pistola": 0.08, "adhesivo": 0.06, "pulidora": 0.08, "carga": 0.06,
 	"garra": 0.07, "tienda": 0.08, "acrilico": 0.07, "puerta": 0.26, "cera": 0.06, "sierra": 0.1, "fresa": 0.08, "soldadura": 0.12 }
@@ -152,6 +161,8 @@ const WELD_SAMPLES := 72
 @export var auto_process := true
 var quality := ""
 var view_name := "general"
+## 5x · movimiento reducido: la cámara llega de golpe al objeto del guiado (y a cada vista) y el aro no late.
+var reduce_motion := false
 ## Lo que tapan los mandos de la página sobre la vista por la derecha (fracción del ancho; set_inset_right) y la proporción
 ## de la vista entera (la de _apply_view).
 var inset_right := 0.0
@@ -295,6 +306,11 @@ var _bolt_xforms: Array = []
 var _highlight: MeshInstance3D
 var _highlight_mat: StandardMaterial3D
 var _highlight_id := ""
+## 5x · el guiado: el objeto de la escena que señala (su id de _targets, «mando:…» o «costura» con su punto u), la vista en la
+## que se acerca a él y el punto de la costura.
+var _focus := ""
+var _focus_view := ""
+var _focus_u := -1.0
 var _selected_ring: MeshInstance3D
 # partículas
 var _bubbles_mmi: MultiMeshInstance3D
@@ -422,7 +438,7 @@ func info() -> Dictionary:
 		"update_ms_max": float(_upd_max) / 1000.0, "quality": "movil" if is_mobile() else "escritorio", "mesh_builds": _mesh_builds,
 		"mode": _visible_mode(), "run_kind": String(rv.get("kind", "")), "boule_mm": _boule_len, "anvil_gap": _anvil_gap,
 		"piece_at": String(_v.get("piece", {}).get("at", "")), "piece_shape": _piece_key, "held": String(_v.get("bench", {}).get("held", "")),
-		"highlight": _highlight_id, "pressed": _pressed, "targets": _targets.size(), "surface": _surface_key,
+		"highlight": _highlight_id, "focus": _focus, "focus_view": _focus_view, "pressed": _pressed, "targets": _targets.size(), "surface": _surface_key,
 		# 5m · la puerta, lo que entra, lo que hay en cada máquina, la cera perdida y el tallado
 		"door": _door.position.y, "carry": _carry_kind if _carry.visible else "", "hopper": _hopper_fill.visible,
 		"capsule": _capsule.visible, "pellet": _pellet.visible, "crucible": _melt_crucible.visible, "substrate": _cvd_mold.visible,
@@ -444,6 +460,24 @@ func target_screen_point(id: String) -> Vector2:
 				return Vector2(-1.0, -1.0)
 			return _rig.camera().unproject_position(p)
 	return Vector2(-1.0, -1.0)
+
+
+## 5x · el rectángulo de la pantalla (px del visor) que ocupa un sitio de la escena (las esquinas de su caja proyectadas), para
+## que el aviso del guiado no lo tape; Rect2() si no está o queda detrás de la cámara.
+func target_screen_rect(id: String) -> Rect2:
+	var cam := _rig.camera()
+	for t: Dictionary in _targets:
+		if String(t.id) == id:
+			var bb: AABB = t.aabb
+			var out := Rect2()
+			for i in 8:
+				var c := bb.get_endpoint(i)
+				if cam.is_position_behind(c):
+					return Rect2()
+				var q := cam.unproject_position(c)
+				out = Rect2(q, Vector2.ZERO) if i == 0 else out.expand(q)
+			return out
+	return Rect2()
 
 
 ## 5r · el punto de la pantalla de la costura en u (0-1 a lo largo de la vuelta), para la demo y los tests; (−1, −1) sin piezas
@@ -2063,33 +2097,56 @@ func _shell_arrays(prof: Dictionary, s0: float, s1: float, th: float) -> Array:
 	return ClawMesh.tube_arrays(out_s, out_r, _claw_k, 16, 0.0)
 
 
+## 5x · el aro que late va al objeto que señala el guiado del tutorial (ClawForgeState.guide_view: solo con el tutorial y el
+## guiado encendidos), y la cámara se acerca a él en su vista. Sin guiado, nada.
 func _apply_highlight(v: Dictionary) -> void:
-	var tv: Dictionary = v.tutorial
-	var id := String(tv.get("highlight", "")) if bool(tv.get("on", true)) else ""
-	if id == _highlight_id:
+	var g: Dictionary = v.get("guide", {})
+	var on := bool(g.get("on", false))
+	var id := String(g.get("scene", "")) if on else ""
+	var u := float(g.get("u", -1.0)) if on else -1.0
+	var gview := String(g.get("view", "")) if on else ""
+	if id != _focus or gview != _focus_view or absf(u - _focus_u) > 1e-6:
+		var moved := id != _focus or gview != _focus_view
+		_focus = id
+		_focus_view = gview
+		_focus_u = u
+		# un objetivo nuevo manda sobre lo que se haya movido la cámara a mano (y llega con suavidad)
+		if moved and id != "" and _rig != null:
+			_rig.reset_user()
+		if moved and gview == view_name:
+			_apply_view(reduce_motion)
+	if id == _highlight_id and id != "costura":
 		return
 	_highlight_id = id
-	var center := Vector3.ZERO
-	var r := float(HIGHLIGHT_R.get(id, 0.06))
-	var facing := false
-	if _controls.has(id):
-		center = (_controls[id].pos as Vector3) + Vector3(0, 0, 0.01)
-		r = 0.05
-		facing = true
-	else:
-		var found := false
-		for t: Dictionary in _targets:
-			if String(t.id) == id:
-				center = (t.aabb as AABB).get_center()
-				found = true
-		facing = id in ["arrancar", "sacar", "ventana"]
-		if not found:
-			_highlight.visible = false
-			return
-	_highlight.visible = id != ""
-	_highlight.position = center
+	var c := _focus_center(id)
+	if c.is_empty():
+		_highlight.visible = false
+		return
+	var facing := bool(c.facing)
+	var r := float(c.ring)
+	_highlight.visible = true
+	_highlight.position = c.center
 	_highlight.scale = Vector3(r, r * 0.15 if not facing else r, r)
 	_highlight.rotation = Vector3(PI * 0.5, 0, 0) if facing else Vector3.ZERO
+
+
+## Dónde está un objeto del guiado: { center, radius (para acercarse), ring (el aro), facing (el aro de frente) }; {} si no
+## está en la escena.
+func _focus_center(id: String) -> Dictionary:
+	if id == "":
+		return {}
+	var cid := id.trim_prefix("mando:")
+	if _controls.has(cid):
+		return { "center": (_controls[cid].pos as Vector3) + Vector3(0, 0, 0.01), "radius": 0.07, "ring": 0.05, "facing": true }
+	if id == "costura" and _weld_work != null and _weld_work.visible and _focus_u >= 0.0:
+		var w := _weld_work.global_transform * ClawMesh.surface_point(_weld_s, _weld_r, _weld_k, _focus_u * TAU)
+		return { "center": w, "radius": 0.012, "ring": 0.004, "facing": true }
+	for t: Dictionary in _targets:
+		if String(t.id) == id:
+			var bb: AABB = t.aabb
+			var rad := bb.size.length() * 0.5
+			return { "center": bb.get_center(), "radius": rad, "ring": float(HIGHLIGHT_R.get(id, clampf(rad * 0.75, 0.03, 0.2))), "facing": id in ["arrancar", "sacar", "ventana"] }
+	return {}
 
 
 # ───────────────────────────── vistas de la cámara ─────────────────────────────
@@ -2102,6 +2159,8 @@ func _apply_view(instant: bool) -> void:
 	# lo que queda a la vista: sin lo que tapan los mandos de la página por la derecha (en el teléfono, el deslizador grande)
 	var aspect := _aspect * (1.0 - inset_right)
 	var far := 1.0 / pow(minf(aspect, 1.0), 0.8)
+	if _focus_view == view_name and _apply_focus(far, aspect, instant):
+		return
 	match view_name:
 		"general":
 			_orbit(Vector3(0.12, 0.78, 0.0), 0.0, 16.0, _fit(2.75, 1.2, 40.0, aspect), 40.0, instant)
@@ -2129,6 +2188,23 @@ func _apply_view(instant: bool) -> void:
 			else:
 				var p := _piece.position if _piece.visible else (CLAW_POS + Vector3(0.02, -0.01, 0))
 				_orbit(p + Vector3(0, 0.005, 0), 10.0, 24.0, 0.16 * far, 34.0, instant)
+
+
+## 5x · el guiado: en su vista, la cámara se acerca al objeto que señala (con los ángulos de la vista y más cerca, como mucho
+## a la mitad de su distancia, para no perder dónde está), con la transición suave de la órbita. «Dentro» y «La pieza» ya
+## encuadran lo suyo. Devuelve si lo ha hecho.
+func _apply_focus(far: float, aspect: float, instant: bool) -> bool:
+	if not FOCUS_VIEWS.has(view_name) or FOCUS_SKIP.has(_focus):
+		return false
+	var c := _focus_center(_focus)
+	if c.is_empty():
+		return false
+	var fv: Array = FOCUS_VIEWS[view_name]
+	var fov := float(fv[2])
+	var base := _fit(float(fv[3]), float(fv[4]), fov, aspect) if float(fv[4]) > 0.0 else float(fv[3]) * far
+	var want := float(c.radius) / (FOCUS_FILL * tan(deg_to_rad(fov * 0.5))) * far
+	_orbit(c.center, float(fv[0]), float(fv[1]), clampf(want, base * FOCUS_MIN, base), fov, instant)
+	return true
 
 
 ## Lo que tapan los mandos de la página sobre la vista, por la derecha (fracción del ancho, 0-0,5; en el teléfono, el
@@ -2385,7 +2461,7 @@ func _animate(dt: float) -> void:
 	_move_held(String(v.bench.held), k)
 	# el resaltado late
 	if _highlight.visible:
-		_highlight_mat.emission_energy_multiplier = 1.2 + 0.8 * sin(_t * 5.0)
+		_highlight_mat.emission_energy_multiplier = 1.6 if reduce_motion else 1.2 + 0.8 * sin(_t * 5.0)
 	# 5r · la mesa de soldar: el punto incandescente que se enfría y el destello
 	_animate_weld(dt)
 

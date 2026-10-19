@@ -46,6 +46,8 @@ const CareStage = preload("res://app/lab/cetreria/care_stage.gd")
 const CareGauge = preload("res://app/lab/cetreria/care_gauge.gd")
 const CareBond3D = preload("res://app/lab/cetreria/care_bond3d.gd")
 const ReactionController = preload("res://app/lab/cetreria/reaction/reaction_controller.gd")
+## El contorno que late del guiado (unidad 5y).
+const CareGuide3D = preload("res://app/lab/cetreria/care_guide3d.gd")
 const ClawMaterial = preload("res://app/common/claw_material.gd")
 const GHOST_SHADER = preload("res://app/lab/cetreria/claw_ghost.gdshader")
 const State = preload("res://core/lab/claw_care_state.gd")
@@ -380,6 +382,14 @@ var _sec: Dictionary = {}
 var _reaction: ReactionController
 ## El reloj de la respiración del animal (más lento en la pausa para calmarlo: ReactionController.breath_rate()).
 var _breath_t := 0.0
+## El guiado (unidad 5y): el contorno de lo que señala, lo que enfoca en la garra (mm desde la base; −1: lo de siempre) y lo
+## que se acerca (× la distancia de la vista de la garra).
+var _guide3d: CareGuide3D = CareGuide3D.new()
+var _guided_key := ""
+var _guide_s := -1.0
+var _guide_zoom := 1.0
+## Cuánto va lo que enfoca la cámara hacia la zona que señala el guiado (0: lo de siempre; 1: la zona; dibujo).
+const GUIDE_PULL := 0.35
 
 
 func _ready() -> void:
@@ -467,6 +477,7 @@ func show_view(v: Dictionary) -> void:
 			(_tools[id].root as Node3D).visible = has_bond or _held == id
 	_bond_tray.visible = has_bond
 	_apply_suggest(v)
+	_apply_guide(v)
 	# 5t-B: la reacción del animal y la lente puesta
 	_reaction.show_view(v)
 
@@ -554,6 +565,101 @@ func tray_screen_point(id: String) -> Vector2:
 func reaction() -> ReactionController:
 	_ensure_built()
 	return _reaction
+
+
+## El guiado (unidad 5y): la cámara de la vista de la garra se acerca a s_mm (mm desde la base) a zoom × la distancia de
+## siempre (s_mm < 0: la de siempre); con instant, de golpe (sin transición, la preferencia de movimiento reducido).
+func guide_focus(s_mm: float, zoom: float = 1.0, instant := false) -> void:
+	_ensure_built()
+	if absf(s_mm - _guide_s) < 0.05 and absf(zoom - _guide_zoom) < 1e-3:
+		return
+	_guide_s = s_mm
+	_guide_zoom = zoom if s_mm >= 0.0 else 1.0
+	if view_name == "garra":
+		_apply_view(instant)
+
+
+## El punto de la pantalla (px del visor) de lo que señala el guiado: la herramienta en la bandeja, el punto de la garra, la
+## otra garra o la bandeja entera; (−1, −1) si no se ve o no es de la escena.
+func guide_screen_point(g: Dictionary) -> Vector2:
+	if g.is_empty() or String(g.get("where", "")) != "scene" or _rig == null:
+		return Vector2(-1.0, -1.0)
+	var cam := _rig.camera()
+	var p := Vector3.INF
+	match String(g.get("kind", "")):
+		"herramienta":
+			if String(g.id) == "bandeja":
+				p = (_tray as Node3D).global_position
+			elif String(g.tool) != _held:
+				return tray_screen_point(String(g.tool))
+		"garra":
+			if view_name == "seccion" or _v.is_empty():
+				return Vector2(-1.0, -1.0)
+			# en el eje de la garra (dentro de su silueta, la mire la cámara por donde la mire)
+			return claw_screen_point(clampf(float(g.get("s_mm", 0.0)), 0.0, float(_v.snap.claw.lengthMm)), 0.0, 0.0)
+		"pata":
+			var mi: MeshInstance3D = _others.get("%s|%s" % [String(g.paw), String(g.digit)])
+			if mi != null and mi.mesh != null:
+				p = mi.global_transform * mi.get_aabb().get_center()
+	if p == Vector3.INF or cam.is_position_behind(p):
+		return Vector2(-1.0, -1.0)
+	return cam.unproject_position(p)
+
+
+## Puntos de la pantalla (px del visor) a lo largo de la garra que se trabaja, por sus dos lados (el aviso del guiado se pone
+## donde no la tapa); vacío si no se ve (la sección).
+func claw_screen_samples() -> PackedVector2Array:
+	var out := PackedVector2Array()
+	if _v.is_empty() or view_name == "seccion" or _rig == null:
+		return out
+	var apex := float(_v.snap.claw.lengthMm)
+	for i in 9:
+		var s := apex * float(i) / 8.0
+		for a: float in [0.25, 0.75]:
+			out.append(claw_screen_point(s, a))
+	return out
+
+
+## El rectángulo del indicador de la forma en la vista (px del visor; vacío si no se ve).
+func gauge_rect() -> Rect2:
+	if _gauge == null or not _gauge.visible:
+		return Rect2()
+	return Rect2(_gauge.position, _gauge.size)
+
+
+## Lo que lleva el contorno del guiado ahora (para los tests): { key, meshes }.
+func guide_info() -> Dictionary:
+	return { "key": _guided_key, "meshes": _guide3d.count(), "focus_s": _guide_s, "zoom": _guide_zoom }
+
+
+## El contorno que late del guiado: la herramienta que hay que coger (en la bandeja), la garra que se trabaja o la otra garra
+## que sangra. Solo cambia al cambiar lo que señala (o la garra).
+func _apply_guide(v: Dictionary) -> void:
+	var g: Dictionary = v.get("guide", {})
+	var key := "%s|%s|%s|%s|%s" % [String(g.get("id", "")), String(g.get("tool", "")), _slot_key, _held, str(_block.visible)]
+	if key == _guided_key:
+		return
+	_guided_key = key
+	var tone := String({ "mal": "coral", "bien": "mint" }.get(String(g.get("tone", "")), "gold"))
+	match String(g.get("kind", "")):
+		"herramienta":
+			var tid := String(g.get("tool", ""))
+			if _tools.has(tid) and tid != _held:
+				_guide3d.outline(_tools[tid].meshes, "metros", tone)
+			elif String(g.id) == "bandeja":
+				_guide3d.outline(_meshes_of(_tray), "metros", tone)
+			else:
+				_guide3d.clear()
+		"garra":
+			_guide3d.outline([_sheath, _block] if _block.visible else [_sheath], "mm", tone)
+		"pata":
+			var mi: MeshInstance3D = _others.get("%s|%s" % [String(g.paw), String(g.digit)])
+			_guide3d.outline([mi] if mi != null else [], "mm", tone)
+		_:
+			_guide3d.clear()
+	if String(g.get("kind", "")) != "garra" and _guide_s >= 0.0:
+		_guide_s = -1.0
+		_guide_zoom = 1.0
 
 
 ## La cámara (para los tests).
@@ -1944,6 +2050,7 @@ func advance(delta: float) -> void:
 	_update_tool_anim(dt)
 	if _suggest_mark.visible:
 		_suggest_mark.position = _suggest_base + Vector3(0.0, 0.006 * (0.5 + 0.5 * sin(_t * 5.0)), 0.0)
+	_guide3d.advance(_t)
 	_update_particles(dt)
 	_update_sparks(dt)
 	_update_piece(dt)
@@ -2212,6 +2319,12 @@ func _update_sparks(dt: float) -> void:
 func _apply_suggest(v: Dictionary) -> void:
 	var tv: Dictionary = v.get("tutorial", {})
 	var id := String(tv.get("suggest", "")) if bool(tv.get("on", false)) else ""
+	# con el guiado (unidad 5y), la que señala él (la sugerida de la bandeja)
+	if not (v.get("guide", {}) as Dictionary).is_empty():
+		id = ""
+		for t: Dictionary in v.get("tray", []):
+			if bool(t.get("suggested", false)):
+				id = String(t.id)
 	if id == _held or not _slots.has(id) or not _slot_boxes.has(id):
 		id = ""
 	if id == _suggest_id:
@@ -2542,6 +2655,12 @@ func _apply_view(instant: bool) -> void:
 			var L := float(_v.snap.claw.startMm) if not _v.is_empty() else 40.0
 			var dist := clampf(L * GARRA_DIST_K * float(_garra_framing()[1]), GARRA_DIST_MIN, 0.4) / pow(aspect, 0.75)
 			_focus_s = -1.0
+			# el guiado (unidad 5y) se acerca a la zona que señala: a medio camino entre lo que enfoca siempre y la zona, sin
+			# cambiar de lado (de cerca, las otras garras y la pata la taparían)
+			if _guide_s >= 0.0 and not _v.is_empty():
+				var apex := float(_v.snap.claw.lengthMm)
+				_focus_s = lerpf(apex * float(_garra_framing()[0]), clampf(_guide_s, 0.0, apex), GUIDE_PULL)
+				dist = maxf(dist * _guide_zoom, ZOOM_MIN_M * 2.0)
 			# (unidad 5s) de los lados posibles, el primero desde el que las otras garras no tapan esta (el dedo II del águila,
 			# con el I y el III delante desde fuera de la pata)
 			var d := Vector3.ZERO

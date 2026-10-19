@@ -45,6 +45,11 @@
 ##       revuelve al segundo toque: la sesión se para con la explicación;
 ##  18 · las limas, claras (petición 51; solo con --caso=18): en una garra de zafiro, la lima de acero no muerde y dice por qué y
 ##       qué coger; la de diamante gruesa desbasta y la línea dice lo que ha quitado, la superficie y cuánto falta; la fina pule.
+##  19 · el guiado (unidad 5y; solo con --caso=19): con el tutorial y «Guiado» activados, cada acción señalada con su aviso
+##       corto sobre la vista: el mando del panel con su borde (capucha y toalla), la herramienta de la bandeja con su
+##       contorno (la vista general), la zona de la garra de cerca (cortar, la grieta, dar la punta), el tigre (la carne viva a
+##       trasluz y «Si sangra»), el velocirraptor de cine, la rapaz que se estresa (la pausa) y la que se suelta («Recogerla y
+##       encapucharla»). Cada toma, ~1,6 s; la salida dice en qué segundo empieza cada una (× 30 = el fotograma).
 ## Orden: 7, 8, 9, 1, 2, 3 y 4.
 ## Captura:   node godot/tools/godot.mjs capture res://app/lab/cetreria/demo_cetreria.tscn --frames=3300 --out=<carpeta>
 ## Teléfono:  … con --phone (390 × 844: una columna). Un caso: … -- --caso=3 (y menos fotogramas).
@@ -78,6 +83,7 @@ const SCENES := [
 	"La hoz del velocirraptor de cerca: la base del núcleo medido más el estuche",
 	"La cetrería guiada: la barra del animal, el tutorial paso a paso y «Si sangra» con su cuenta",
 	"Las limas, claras: para qué sirve cada una, qué ha hecho cada pasada y por qué no muerde",
+	"El guiado: cada acción señalada, con su aviso corto, en la escena y en el panel",
 ]
 ## Las escenas de la captura completa, en orden (5, 6, 10, 11 y 12, solo con --caso).
 const MAIN_ORDER := [6, 7, 8, 0, 1, 2, 3]
@@ -1356,3 +1362,136 @@ func _scene_16() -> void:
 	await _wait(2.0)
 	page.call("set_view", "garra")
 	await _wait(1.0)
+
+
+# ─────────────────────────────── 19 · el guiado (unidad 5y) ───────────────────────────────
+
+## Pulsa lo que señala el guiado en el estado (como el test de la 5y: la orden del mando, la herramienta o el gesto sobre la
+## garra donde señala), al momento: la demo solo enseña cada toma.
+func _guide_press(g: Dictionary) -> bool:
+	var st := _st()
+	var act: Dictionary = g.get("act", {})
+	var op := String(act.get("op", ""))
+	var args: Array = act.get("args", [])
+	match op:
+		"", "pieza":
+			return false
+		"esperar":
+			for i in int(ceilf(float(args[0] if not args.is_empty() else 1.0) / 0.25)):
+				st.tick(0.25)
+		"gesto":
+			var s0 := float(act.s_mm)
+			var kind := String(act.kind)
+			var secs := State.CLIP_CLOSE_S + 0.1 if kind == "corte" else float(act.get("secs", 0.0))
+			var along := float(act.get("along_mm", 0.0))
+			var n := maxi(int(ceilf(along / 150.0 * 60.0)), int(ceilf(secs * 60.0)))
+			st.press_on(s0)
+			for i in maxi(n, 1):
+				if kind == "lima":
+					st.drag(along / float(maxi(n, 1)), along / float(maxi(n, 1)), s0, 1.0 / 60.0)
+				else:
+					st.drag(0.0, 0.0, s0, 1.0 / 60.0)
+				st.tick(1.0 / 60.0)
+			st.release()
+		_:
+			if not st.has_method(op):
+				return false
+			st.callv(op, args)
+	return true
+
+
+## Juega lo señalado hasta que el guiado cumpla cond (o max pulsaciones) y enseña la toma.
+func _guide_until(cond: Callable, max_presses := 400) -> Dictionary:
+	var g: Dictionary = _st().view().guide
+	for i in max_presses:
+		if cond.call(g) or g.is_empty():
+			break
+		if not _guide_press(g):
+			break
+		g = _st().view().guide
+	page.runner.post("tick", [0.0])
+	page.refresh()
+	return g
+
+
+func _guide_shot(what: String, g: Dictionary, secs := 1.6) -> void:
+	# el puntero, en una esquina de la vista: la herramienta de la mano no se queda delante de la garra
+	_set_pointer((page.view3d as Control).size - Vector2(24.0, 24.0))
+	cursor.visible = false
+	_caption(18, what)
+	_log("toma «%s» desde el fotograma %d: [%s] %s · %s" % [what, int(round(_t * 30.0)), String(g.get("id", "")), String(g.get("hint", "")), String(g.get("value", ""))])
+	await _wait(secs)
+
+
+func _scene_19() -> void:
+	if not bool(_st().tutorial_on):
+		_press(page.tut_toggle)
+	_seg(page.animal_seg, "rapaz")
+	_key(KEY_R)
+	await _wait(0.6)
+	var g := _guide_until(func(x: Dictionary) -> bool: return true)
+	await _guide_shot("el águila: «Pon la capucha y la toalla», el mando del panel con su borde", g, 2.0)
+	g = _guide_until(func(x: Dictionary) -> bool: return String(x.get("kind", "")) == "herramienta" and String(x.id) != "bandeja")
+	await _guide_shot("coger lo que toca: la herramienta, con su contorno en la bandeja", g, 2.2)
+	g = _guide_until(func(x: Dictionary) -> bool: return String(x.get("id", "")) == "garra:sobrante")
+	await _guide_shot("la garra de cerca: cuánto cortar", g, 2.2)
+	g = _guide_until(func(x: Dictionary) -> bool: return String(x.get("hint", "")).begins_with("Grieta") and String(x.get("kind", "")) == "garra")
+	await _guide_shot("corregir: la grieta del cortaúñas, de frente", g, 2.0)
+	g = _guide_until(func(x: Dictionary) -> bool: return String(x.get("hint", "")).begins_with("Afila"))
+	await _guide_shot("dar la punta, a su ángulo, con lo que falta", g, 2.0)
+	# el tigre: la carne viva a trasluz y la sangre
+	_seg(page.animal_seg, "tigre")
+	await _wait(0.8)
+	g = _guide_until(func(x: Dictionary) -> bool: return true)
+	await _guide_shot("el tigre: anestesia antes de tocarle las garras", g, 1.6)
+	g = _guide_until(func(x: Dictionary) -> bool: return String(x.get("id", "")) == "garra:carne_viva")
+	await _guide_shot("su garra clara: la carne viva a trasluz", g, 2.0)
+	_st().pick("tenaza")
+	var s_cut := _apex() - (_st().care.quick_cover_mm() + 0.6)
+	_st().press_on(s_cut)
+	for i in 40:
+		_st().drag(0.0, 0.0, s_cut, 1.0 / 60.0)
+		_st().tick(1.0 / 60.0)
+	_st().release()
+	g = _guide_until(func(x: Dictionary) -> bool: return true)
+	await _guide_shot("sangra: coger el polvo hemostático", g, 2.2)
+	g = _guide_until(func(x: Dictionary) -> bool: return String(x.get("id", "")) == "garra:herida")
+	await _guide_shot("y apretar sobre la herida, con lo que falta", g, 2.2)
+	# el velocirraptor de cine
+	_seg(page.animal_seg, "velociraptor")
+	await _wait(0.6)
+	_st().set_model("pelicula")
+	g = _guide_until(func(x: Dictionary) -> bool: return String(x.get("id", "")) == "garra:pasada")
+	await _guide_shot("el velocirraptor: de la base a la punta, a su ángulo", g, 2.2)
+	# la rapaz que se estresa y la que se suelta
+	_seg(page.animal_seg, "rapaz")
+	await _wait(0.6)
+	_st().set_sedation("sujecion")
+	_st().patient.handled = true
+	_st().patient.stress = 0.78
+	_st().tick(0.05)
+	g = _guide_until(func(x: Dictionary) -> bool: return true)
+	await _guide_shot("se estresa: la pausa para calmarla", g, 2.0)
+	_key(KEY_R)
+	await _wait(0.4)
+	_st().pick("lima_bastarda")
+	for k in 300:
+		if not _st().halted.is_empty():
+			break
+		var s0 := _apex() - 1.0
+		_st().press_on(s0)
+		for i in 30:
+			_st().drag(2.0, 2.0, s0, 1.0 / 60.0)
+			_st().tick(1.0 / 60.0)
+		_st().release()
+	g = _guide_until(func(x: Dictionary) -> bool: return true)
+	await _guide_shot("se ha soltado: «Recogerla y encapucharla»", g, 2.4)
+	# y con «Guiado» apagado: el tutorial sigue, pero nada se resalta ni se mueve solo
+	_key(KEY_R)
+	await _wait(0.3)
+	_press(page.guide_pill)
+	page.runner.post("tick", [0.0])
+	page.refresh()
+	_reveal(page.tools_card)
+	await _guide_shot("«Guiado» apagado: nada se resalta ni se mueve solo", {}, 2.0)
+	_press(page.guide_pill)

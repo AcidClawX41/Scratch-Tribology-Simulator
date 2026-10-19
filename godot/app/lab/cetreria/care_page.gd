@@ -52,6 +52,9 @@ const CareProgressCard = preload("res://app/lab/cetreria/care_progress_card.gd")
 const VetMinigames = preload("res://core/lab/vet_minigames.gd")
 const Lens = preload("res://core/lab/claw_care_lens.gd")
 const Reaction = preload("res://core/lab/claw_care_reaction.gd")
+# 5y · el guiado del tutorial: el aviso corto y el aro sobre la vista, y el borde que late en el panel
+const CareGuideView = preload("res://app/lab/cetreria/care_guide_view.gd")
+const CareGuideFrame = preload("res://app/lab/cetreria/care_guide_frame.gd")
 
 const SCENE := "res://app/lab/cetreria/care_3d.tscn"
 ## La página del laboratorio experimental de la reforja (se carga al abrirla por primera vez).
@@ -318,6 +321,21 @@ var _care_checked := false
 var _forge_serial := -1
 var _weld_known := -1
 var _lens_serial := -1
+# 5y · el guiado: el aviso y el aro sobre la vista, el borde del panel, su interruptor, lo último que se señaló y lo atenuado
+var guide_view: CareGuideView
+var guide_frame: CareGuideFrame
+var guide_pill: Pill
+var _guide_id := ""
+var _guide_key := ""
+var _guide_ctrl: Control = null
+## El mando señalado aún no se ha traído a la vista (se trae cuando ya está colocado).
+var _reveal_pending: Control = null
+var _guide_samples := PackedVector2Array()
+var _guide_samples_t := 0.0
+## Lo que se atenúa del panel mientras se señala un mando suyo (dibujo).
+const GUIDE_DIM := 0.55
+## Lo que se acerca la cámara a cada zona de la garra (× la distancia de la vista de la garra; dibujo).
+const GUIDE_ZOOM := { "punta": 0.92, "herida": 0.92, "sobrante": 0.92, "angulo": 0.95, "pasada": 0.97 }
 
 
 ## La persona ha visto (o ha empezado) el tutorial de la primera vez: la sección lo guarda.
@@ -419,6 +437,9 @@ func _build() -> void:
 	_spin.name = "ArranqueYParada"
 	_spin.bus = &"Lab"
 	add_child(_spin)
+	# 5y · el borde que late sobre el mando del panel (encima de todo)
+	guide_frame = CareGuideFrame.new()
+	add_child(guide_frame)
 	resized.connect(_layout)
 	_layout()
 
@@ -465,6 +486,9 @@ func _build_view() -> void:
 	view3d.gui_input.connect(_on_view_input)
 	_a11y(view3d, "Vista 3D de la garra y de la bandeja de herramientas", HELP_MOUSE + " " + HELP_TOUCH)
 	view_box.add_child(view3d)
+	# 5y · el aro del guiado, encima de la escena y debajo de los textos
+	guide_view = CareGuideView.new()
+	view_box.add_child(guide_view)
 	# lo que se sobrepone a la vista: la herramienta, la mano, lo último que ha hecho y los avisos
 	var hud := Ui.margin(12, 10, 12, 10)
 	hud_box = hud
@@ -739,6 +763,12 @@ func _build_tutorial() -> void:
 	tut_toggle = Pill.new("Tutorial activado")
 	tut_toggle.pressed.connect(func() -> void: _post("set_tutorial", [not bool(_v.get("tutorial", {}).get("on", true))]))
 	_a11y(tut_toggle, "Activar o desactivar el tutorial")
+	# 5y · el guiado, con su propio interruptor (solo con el tutorial activado)
+	guide_pill = Pill.new("Guiado")
+	guide_pill.name = "Guiado"
+	guide_pill.pressed.connect(func() -> void: _post("set_guide", [not bool(_v.get("guide_on", true))]))
+	_a11y(guide_pill, "Activar o desactivar el guiado", "Con el tutorial activado, el guiado señala cada acción: la herramienta de la bandeja, la zona de la garra o el mando del panel, con un aviso corto y su valor sobre la vista.")
+	tut_card.right.add_child(guide_pill)
 	tut_card.right.add_child(tut_toggle)
 	tut_flow = Ui.flow(5, 5)
 	tut_card.body.add_child(tut_flow)
@@ -1094,11 +1124,11 @@ func set_active(on: bool) -> void:
 		_post("release")
 
 
-func set_view(id: String) -> void:
+func set_view(id: String, instant := false) -> void:
 	view = id
 	view_seg.set_value(id)
 	if scene != null:
-		scene.call("set_view", id)
+		scene.call("set_view", id, instant)
 	_post("note_view", [id])
 
 
@@ -1144,6 +1174,7 @@ func step(ms: float) -> void:
 		_apply_view(v, false)
 	_update_loops(dt)
 	_pulse_highlight(dt)
+	_guide_step(dt)
 
 
 ## Pinta ya la última vista (tests y demo).
@@ -1166,6 +1197,7 @@ func _apply_view(v: Dictionary, force: bool) -> void:
 	_paint_tray(v)
 	_paint_setup(v, force)
 	_paint_tutorial(v, force)
+	_paint_guide(v)
 	_paint_readings(v)
 	_paint_events(v, force)
 	_paint_report(v, force)
@@ -1193,6 +1225,12 @@ func _paint_hud(v: Dictionary) -> void:
 	if notice == "":
 		notice = String(tx.status)
 	hud_notice.text = notice
+	# 5y · con el guiado, su aviso dice qué coger y qué hacer: la ficha larga de la herramienta se esconde (está en la tarjeta de
+	# las herramientas) y, en el teléfono, también las líneas de la mano, para que el aviso quepa sin tapar la garra
+	var guided := not (v.get("guide", {}) as Dictionary).is_empty()
+	hud_tool.visible = not guided
+	for l: Label in [hud_hand, hud_action]:
+		l.visible = not (guided and compact)
 	status_label.text = ("El ensayo corre en su propio hilo: %s ms en el último paso." % Js.to_fixed(runner.work_ms(), 2)) if runner.is_threaded() else ""
 
 
@@ -1283,7 +1321,7 @@ func _paint_tutorial(v: Dictionary, force: bool) -> void:
 	var tv: Dictionary = v.tutorial
 	var st: Dictionary = tv.step
 	_paint_tutorial_progress(tv)
-	var key := "%s|%s|%s|%s|%s|%s|%s" % [str(tv.on), String(tv.process), str(tv.index), String(st.get("status", "")), str(tv.done), str(tv.processes.size()), String(st.get("status_text", ""))]
+	var key := "%s|%s|%s|%s|%s|%s|%s|%s" % [str(tv.on), String(tv.process), str(tv.index), String(st.get("status", "")), str(tv.done), str(tv.processes.size()), String(st.get("status_text", "")), str(_guide_active())]
 	if key == _tut_key and not force:
 		return
 	_tut_key = key
@@ -1319,7 +1357,8 @@ func _paint_tutorial(v: Dictionary, force: bool) -> void:
 		_set_highlight("")
 		return
 	if bool(tv.done) or st.is_empty():
-		_set_highlight("boton:terminar")
+		if not _guide_active():
+			_set_highlight("boton:terminar")
 		tut_goal.text = "Objetivo: terminar y mirar el informe"
 		tut_title.text = "Tutorial terminado"
 		tut_text.text = "Ya has recorrido todos los pasos. Pulsa «Terminar y ver el informe» para ver la nota, los consejos y dónde estaba la carne viva."
@@ -1329,7 +1368,8 @@ func _paint_tutorial(v: Dictionary, force: bool) -> void:
 		return
 	tut_next.disabled = false
 	tut_goal.text = "Objetivo: %s" % String(tv.get("goal", st.title))
-	_set_highlight(String(tv.get("ui", "")))
+	if not _guide_active():
+		_set_highlight(String(tv.get("ui", "")))
 	tut_title.text = "%s · %s (%d de %d)" % [String(tv.process_name), String(st.title), int(tv.index) + 1, int(tv.count)]
 	tut_text.text = String(st.text)
 	tut_source.text = "Fuente: " + String(st.source_short)
@@ -1373,9 +1413,48 @@ func _ui_target(ui: String) -> Control:
 		"reloj":
 			return clock_seg.buttons.get(id)
 		"boton":
-			return probe_pill if id == "probar" else (finish_button if id == "terminar" else null)
+			return _button_target(id)
 		"pieza":
 			return bond_card.buttons.get(id)
+		# 5y · los del guiado: las velocidades, la mano y las herramientas de la bandeja
+		"rpm":
+			var seg: Control = rpm_seg_grinder if rpm_seg_grinder.visible else rpm_seg
+			var b: Control = seg.buttons.get(id)
+			return b if b != null else rpm_seg_grinder.buttons.get(id)
+		"mano":
+			if id == "presion":
+				return touch_force if compact and touch_box.visible else force_slider
+			return angle_slider if id == "angulo" else null
+		"bandeja":
+			return tray_pills.get(id)
+	return null
+
+
+## Los botones que señalan el tutorial y el guiado (5y): «boton:id».
+func _button_target(id: String) -> Control:
+	match id:
+		"probar":
+			return probe_pill
+		"terminar":
+			return finish_button
+		"siguiente":
+			return tut_next
+		"pausa":
+			return pause_pill
+		"calmar":
+			return rest_button
+		"recoger":
+			return recapture_button
+		"empezar":
+			return restart_button
+		"seguir":
+			return resume_button
+		"torno":
+			return touch_power if compact and touch_box.visible and touch_power.visible else rotary_pill
+		"informe":
+			return report_card
+		"tienda":
+			return shop_button
 	return null
 
 
@@ -1397,6 +1476,152 @@ func _pulse_highlight(dt: float) -> void:
 	_hl_t += dt
 	var k := 0.5 + 0.5 * sin(_hl_t * 5.0)
 	_hl.self_modulate = Color.WHITE.lerp(Palette.color("gold"), 0.25 + 0.45 * k)
+
+
+# ─────────────────────────────── 5y · el guiado ───────────────────────────────
+
+func _guide_active() -> bool:
+	return not (_v.get("guide", {}) as Dictionary).is_empty()
+
+
+## El guiado (unidad 5y): el aviso corto y el aro sobre la vista; el mando del panel, resaltado con su borde que late y su
+## etiqueta, y lo demás del panel algo atenuado; al cambiar lo que señala, la cámara va a la vista que toca y se acerca a la
+## zona de la garra, y el panel se desplaza hasta el mando (en el teléfono, a la vista si lo señalado está en la escena).
+## Con «Tutorial apagado» o «Guiado» apagado, nada se resalta ni se mueve solo.
+func _paint_guide(v: Dictionary) -> void:
+	var g: Dictionary = v.get("guide", {})
+	var tv: Dictionary = v.get("tutorial", {})
+	guide_pill.set_on(bool(v.get("guide_on", true)))
+	guide_pill.text = "Guiado" if bool(v.get("guide_on", true)) else "Sin guiado"
+	guide_pill.visible = bool(tv.get("on", true))
+	guide_view.show_guide(g)
+	if g.is_empty():
+		if _guide_id != "":
+			_guide_id = ""
+			_guide_key = ""
+			_guide_ctrl = null
+			guide_frame.follow(null, "")
+			_dim_panel(null)
+			# (lo que resalta el tutorial sin el guiado ya lo ha puesto _paint_tutorial)
+			if scene != null:
+				scene.call("guide_focus", -1.0, 1.0, true)
+		return
+	var id := String(g.id)
+	var panel := String(g.where) == "panel"
+	var ctrl := _guide_control(g)
+	var tone := String({ "mal": "coral", "bien": "mint" }.get(String(g.tone), "gold"))
+	_set_highlight(id if panel else ("bandeja:" + String(g.tool) if String(g.kind) == "herramienta" else ""))
+	# en el teléfono, la herramienta se señala en la bandeja 3D (sin bajar hasta su píldora, lejos de la vista)
+	var framed: Control = ctrl if panel or not compact else null
+	guide_frame.follow(framed, String(g.label), tone, _clip_of(framed))
+	_dim_panel(ctrl if panel else null)
+	if id == _guide_id and String(g.key) == _guide_key:
+		return
+	var moved := id != _guide_id
+	_guide_id = id
+	_guide_key = String(g.key)
+	_guide_ctrl = ctrl
+	if not moved:
+		return
+	if String(g.view) != "" and String(g.view) != view:
+		set_view(String(g.view), reduce_motion)
+	if scene != null:
+		if String(g.kind) == "garra":
+			scene.call("guide_focus", float(g.s_mm), float(GUIDE_ZOOM.get(String(g.zone), 1.0)), reduce_motion)
+		else:
+			scene.call("guide_focus", -1.0, 1.0, true)
+	# el panel (o, en el teléfono, la vista) se trae cuando el mando ya está colocado: en el siguiente paso
+	_reveal_pending = framed if framed != null else (view_box if compact and not panel else null)
+	# en el teléfono, un paso que solo se lee (y sigue solo) no aparta la vista de la garra
+	if compact and panel and String((g.get("act", {}) as Dictionary).get("op", "")) == "esperar":
+		_reveal_pending = null
+
+
+## Cada fotograma: el aro sigue a lo que señala en la escena y el borde, al mando (el panel se desplaza); los dos laten.
+func _guide_step(dt: float) -> void:
+	if guide_view == null:
+		return
+	var g: Dictionary = _v.get("guide", {})
+	if not g.is_empty() and scene != null and active and not lab_open:
+		guide_view.set_point(scene.call("guide_screen_point", g))
+	else:
+		guide_view.set_point(Vector2(-1.0, -1.0))
+	# el aviso, arriba (debajo de los textos de la vista) o abajo: donde tape menos la garra
+	if not g.is_empty() and hud_box != null:
+		var col := hud_box.get_child(0) as Control
+		var top := col.get_global_rect().end.y - view_box.get_global_rect().position.y + 6.0
+		# los puntos de la garra en la pantalla, cada CareGuideView.PLACE_EVERY_S (el aviso solo se recoloca entonces)
+		_guide_samples_t -= dt
+		if _guide_samples_t <= 0.0 and scene != null:
+			_guide_samples_t = CareGuideView.PLACE_EVERY_S
+			_guide_samples = scene.call("claw_screen_samples")
+		var samples := _guide_samples
+		var gauge: Rect2 = scene.call("gauge_rect") if scene != null else Rect2()
+		var touch := touch_box.size.x if touch_box.visible else 0.0
+		guide_view.place(top, float(hud_box.get_theme_constant("margin_left")), float(hud_box.get_theme_constant("margin_right")), gauge, touch, samples, compact, dt)
+	if _reveal_pending != null and is_instance_valid(_reveal_pending) and _reveal_pending.size.y > 0.0:
+		_reveal(_reveal_pending)
+		_reveal_pending = null
+	guide_view.advance(dt)
+	guide_frame.advance(dt)
+
+
+## El control del panel de un objetivo del guiado (los del panel; la píldora de la herramienta de la bandeja), o null.
+func _guide_control(g: Dictionary) -> Control:
+	if String(g.get("where", "")) == "panel":
+		return _ui_target(String(g.id))
+	if String(g.get("kind", "")) == "herramienta" and String(g.id) != "bandeja":
+		return tray_pills.get(String(g.tool))
+	return null
+
+
+## El resto del panel, algo atenuado mientras se señala un mando suyo (sin bloquearlo); except null lo deja todo como estaba.
+func _dim_panel(except: Control) -> void:
+	var inside := except != null and right.is_ancestor_of(except)
+	for c in right.get_children():
+		if c is Control:
+			var keep := not inside or c == except or (c as Control).is_ancestor_of(except)
+			(c as Control).modulate.a = 1.0 if keep else GUIDE_DIM
+
+
+## El recorte del borde: el desplazamiento que contiene el control (lo que queda fuera no se ve), o ninguno.
+func _clip_of(c: Control) -> Rect2:
+	var sc := _scroll_of(c)
+	return sc.get_global_rect() if sc != null else Rect2()
+
+
+static func _scroll_of(c: Control) -> ScrollContainer:
+	var n: Node = c.get_parent() if c != null else null
+	while n != null:
+		if n is ScrollContainer:
+			return n as ScrollContainer
+		n = n.get_parent()
+	return null
+
+
+## Desplaza lo que contiene el control (la columna de las tarjetas o la sección) hasta que se vea, con una transición corta
+## (sin ella, con movimiento reducido). Si ya se ve entero, nada.
+func _reveal(c: Control) -> void:
+	var sc := _scroll_of(c)
+	if sc == null or sc.get_child_count() == 0 or not is_inside_tree():
+		return
+	var content := sc.get_child(0) as Control
+	var cr := c.get_global_rect()
+	var sr := sc.get_global_rect()
+	if content == null or (cr.position.y >= sr.position.y and cr.end.y <= sr.end.y):
+		return
+	var y := cr.position.y - content.get_global_rect().position.y - maxf((sr.size.y - cr.size.y) * 0.3, 8.0)
+	var to := int(clampf(y, 0.0, maxf(content.size.y - sc.size.y, 0.0)))
+	if reduce_motion:
+		sc.scroll_vertical = to
+		return
+	create_tween().tween_property(sc, "scroll_vertical", to, 0.4).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN_OUT)
+
+
+## Lo que enseña el guiado, para los tests y la demo: el objetivo, el aviso, el mando resaltado y su borde.
+func guide_info() -> Dictionary:
+	return { "guide": _v.get("guide", {}), "view": guide_view.info() if guide_view != null else {},
+		"frame": guide_frame.info() if guide_frame != null else {}, "control": _guide_ctrl, "highlight": _hl_id }
 
 
 ## El desplazamiento de la sección que contiene la página (el de su raíz), o null.

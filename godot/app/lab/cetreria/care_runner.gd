@@ -24,7 +24,7 @@ const OPS := [
 	"configure", "restart", "recapture", "set_animal", "set_claw", "set_inlay", "set_overgrowth_days", "set_tip_start", "set_sedation", "set_humidity",
 	"pick", "drop", "set_force", "nudge_force", "wheel_force", "set_angle", "nudge_angle", "set_rotary", "toggle_rotary",
 	"set_rpm_index", "cycle_rpm", "set_paused", "toggle_pause", "press_on", "drag", "release", "tick", "finish", "resume",
-	"set_tutorial", "tutorial_next", "tutorial_prev", "tutorial_goto", "set_time_scale", "dismiss_mistake",
+	"set_tutorial", "set_guide", "tutorial_next", "tutorial_prev", "tutorial_goto", "set_time_scale", "dismiss_mistake",
 	"select_claw", "set_paw", "set_digit", "cycle_paw", "cycle_digit", "set_model", "probe_tip", "reforge_with",
 	# unidad 5l: una herramienta nueva de la bandeja
 	"renew_tool",

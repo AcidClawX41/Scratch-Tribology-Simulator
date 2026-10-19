@@ -62,6 +62,8 @@ const CareAnatomy = preload("res://core/lab/care_anatomy.gd")
 ## La reacción del animal estresado y la lente de la cámara (unidad 5t-A).
 const Reaction = preload("res://core/lab/claw_care_reaction.gd")
 const Lens = preload("res://core/lab/claw_care_lens.gd")
+## El guiado del tutorial (unidad 5y): el objetivo de cada acción, con su valor y su aviso corto.
+const Guide = preload("res://core/lab/claw_care_guide.gd")
 
 ## La bandeja: cada herramienta con su gesto, su nombre corto y su tecla (1-5: lima gruesa, lima fina, torno, cortaúñas
 ## y amoladora; 0 sin tecla). Las de gesto «torno» (el torno y la amoladora) son giratorias: interruptor y velocidades. Los datos de cada una están en CareData.TOOLS; «presion» es apretar con una gasa, sin
@@ -460,6 +462,9 @@ var time_scale := 1.0
 ## Terminado: se enseña el informe y se revela la carne viva.
 var finished := false
 var tutorial_on := true
+## El guiado (unidad 5y): con el tutorial activado, señala cada acción (la herramienta, la zona de la garra o el mando) con su
+## aviso corto. Su propio interruptor («Guiado»).
+var guide_on := true
 ## Número de ensayos empezados (la semilla de la carne viva oculta de cada uno).
 var trials := 0
 ## El dibujo del velocirraptor: «reconstruccion» (con plumas) o «pelicula» (el de cine). Solo cambia el dibujo: la garra
@@ -1741,12 +1746,16 @@ func rpm() -> float:
 ## La sujeción para el selector, en corto (el nombre entero y la fuente van en la ayuda): [{ id, label, title }]. La
 ## sujeción de una rapaz es la capucha y la toalla; la de los demás, solo de nombre (a ellos se les anestesia).
 static func sedation_options(animal: String) -> Array:
-	var short := { "libre": "Libre", "sujecion": "Capucha y toalla" if animal == "rapaz" else "Sujeción", "sedacion": "Sedación", "anestesia": "Anestesia" }
 	var out: Array = []
 	for id: String in SEDATION_IDS:
 		var e: Dictionary = CareData.SEDATION[id]
-		out.append({ "id": id, "label": String(short[id]), "title": "%s. Fuente: %s" % [String(e.name), short_source(String(e.source))] })
+		out.append({ "id": id, "label": sedation_label(animal, id), "title": "%s. Fuente: %s" % [String(e.name), short_source(String(e.source))] })
 	return out
+
+
+## El nombre corto de una sujeción en el selector (sin la fuente: el guiado lo pide en cada vista, unidad 5y).
+static func sedation_label(animal: String, id: String) -> String:
+	return String({ "libre": "Libre", "sujecion": "Capucha y toalla" if animal == "rapaz" else "Sujeción", "sedacion": "Sedación", "anestesia": "Anestesia" }.get(id, id))
 
 
 ## Las velocidades de una herramienta giratoria para el selector: [{ id (índice), label, title }] (las de CareData, con
@@ -2449,6 +2458,52 @@ func set_tutorial(on: bool) -> void:
 	if on != tutorial_on:
 		tutorial_on = on
 		_touch()
+
+
+## El interruptor del guiado (unidad 5y): sin él, el tutorial sigue, pero nada se señala ni se mueve solo.
+func set_guide(on: bool) -> void:
+	if on != guide_on:
+		guide_on = on
+		_touch()
+
+
+## El objetivo del guiado (unidad 5y, ClawCareGuide.target): {} sin «Tutorial activado» o con «Guiado» apagado. sn y tv: el
+## snapshot (el de la vista, sin la carne viva oculta) y la vista del tutorial, si ya están hechos.
+func guide_view(sn: Dictionary = {}, tv: Dictionary = {}) -> Dictionary:
+	if not tutorial_on or not guide_on:
+		return {}
+	var s := sn if not sn.is_empty() else care.snapshot()
+	return Guide.target(self, s, tv if not tv.is_empty() else tutorial_view(s))
+
+
+## La vista de la cámara que se ve (la que apunta note_view).
+func view_id() -> String:
+	return _view_id
+
+
+## Lo que falta para que un paso informativo siga solo (s reales); 0 en los demás. st: el paso de ahora, si ya se tiene (el de
+## tutorial_view; rehacerlo cuesta).
+func read_left_s(st: Dictionary = {}) -> float:
+	var step := st if not st.is_empty() else current_step()
+	if step.is_empty() or String(step.check) != "":
+		return 0.0
+	return maxf(read_s(step) - _read_t, 0.0)
+
+
+## La primera garra del animal, que no es la elegida, que sangra: [pata, dedo] o [] (el guiado; sin rehacer slots_view).
+func bleeding_elsewhere() -> Array:
+	for key: String in _slots:
+		var e: Dictionary = _slots[key]
+		if bool(e.get("bleeding", false)):
+			var parts := key.split("|")
+			if parts.size() == 2 and not (String(parts[0]) == paw and String(parts[1]) == digit):
+				return [String(parts[0]), String(parts[1])]
+	return []
+
+
+## Los ids de la bandeja, en su orden.
+static func tray_ids() -> Array:
+	return TRAY.map(func(t: Dictionary) -> String: return String(t.id))
 
 
 ## Procesos del tutorial ahora (con «sangrado» y «reconstruir» si han entrado).
@@ -3527,8 +3582,15 @@ func view() -> Dictionary:
 		sn.thermal["quickCell"] = -1
 		rep = _hide_quick(rep)
 	var tut := tutorial_view(sn)
+	# el guiado (unidad 5y): la zona que resalta la escena y la herramienta de la bandeja son las suyas
+	var guide := guide_view(sn, tut)
+	var hl := String(tut.hint) if tutorial_on else ""
+	var suggest := String(tut.suggest)
+	if not guide.is_empty():
+		hl = String(guide.zone) if String(guide.kind) == "garra" else ""
+		suggest = String(guide.tool) if String(guide.kind) == "herramienta" else ""
 	var hints := {
-		"highlight": String(tut.hint) if tutorial_on else "",
+		"highlight": hl,
 		"overgrowth": [float(sn.claw.naturalMm), float(sn.claw.lengthMm)] if float(sn.claw.lengthMm) > float(sn.claw.naturalMm) else [],
 		"quick_band": quick_band_mm(),
 		"good_angle": [float(sn.tip.naturalAlphaDeg), float(sn.tip.naturalAlphaDeg) + float(CareData.MARGINS.facet_deg)],
@@ -3538,7 +3600,7 @@ func view() -> Dictionary:
 	return {
 		"serial": _serial, "setup": setup.duplicate(true), "snap": sn, "report": rep, "finished": finished,
 		"paused": paused, "reforged": is_reforged(), "initial_profile": _initial_profile.duplicate(true),
-		"hand": hand_view(), "tray": tray_view(String(tut.suggest)), "tutorial": tut, "hints": hints,
+		"hand": hand_view(), "tray": tray_view(suggest), "tutorial": tut, "hints": hints, "guide": guide, "guide_on": guide_on,
 		"readouts": readouts(sn, revealed), "events": events_view(sn), "notice": _notice,
 		"last_action": _last_action.duplicate(true), "fx": _fx.duplicate(true), "fx_n": _fx_n,
 		"texts": texts(sn, rep, revealed), "time_scale": time_scale, "sound": sound_view(), "mistake": mistake_view(),

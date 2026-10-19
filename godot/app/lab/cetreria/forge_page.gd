@@ -37,6 +37,7 @@ const Palette = preload("res://app/theme/palette.gd")
 const Js = preload("res://core/shared/js.gd")
 const Sfx = preload("res://core/lab/sfx.gd")
 const SfxForge = preload("res://core/lab/sfx_forge.gd")
+const GuideOverlay = preload("res://app/common/guide_overlay.gd")
 
 const SCENE := "res://app/lab/cetreria/forge_3d.tscn"
 const TITLE := "Laboratorio experimental (reforja)"
@@ -55,14 +56,6 @@ const TOUCH := 44.0
 const TOUCH_GAP := 8.0
 const TONE := { "bien": "mint", "aviso": "gold", "mal": "coral", "": "text" }
 const QUALITY_COLOR := { "primary": "mint", "secondary": "text", "estimate": "gold", "ficcion": "rose", "dibujo": "dim" }
-## La vista de la cámara que va con lo que se ilumina en el tutorial.
-const HIGHLIGHT_VIEW := {
-	"soldadura": "soldar",
-	"balanza": "banco", "crisol": "banco", "tienda": "banco", "horno": "horno", "ventana": "dentro", "arrancar": "horno",
-	"sacar": "horno", "pieza": "pieza", "muela": "taller", "barrera": "taller", "pistola": "taller", "adhesivo": "taller",
-	"pulidora": "taller", "carga": "taller", "garra": "taller", "acrilico": "banco",
-	"puerta": "horno", "cera": "banco", "sierra": "taller", "fresa": "taller",
-}
 ## Nombres cortos de los tutoriales para el selector.
 const TUT_SHORT := {
 	"soldadura": "Soldar",
@@ -126,6 +119,13 @@ var tut_warn: Label
 var tut_prev: Button
 var tut_next: Button
 var tut_do: Button
+## 5x · el interruptor «Guiado» (dentro del tutorial): con él apagado, solo el texto del paso.
+var guide_toggle: Pill
+## 5x · el guiado botón a botón: el aviso sobre la vista, el control del panel que late, el desplazamiento y el velo.
+var guide: GuideOverlay
+## Los botones que el guiado señala por su id (los que no se guardan en otra parte).
+var guide_nodes := {}
+var _guide_key := ""
 var mistake_box: PanelContainer
 var mistake_what: Label
 var mistake_fix: Label
@@ -221,7 +221,6 @@ var _fx_seen := 0
 var _keys := {}
 var _loop: AudioStreamPlayer
 var _loop_id := ""
-var _last_highlight := ""
 ## Las tarjetas de las recetas (no cambian: se leen una vez, al construir, antes de que arranque el hilo).
 var _cards: Array = []
 
@@ -304,6 +303,10 @@ func _build() -> void:
 	_build_sheet()
 	_build_values()
 	_build_events()
+	guide = GuideOverlay.new()
+	guide.reduce_motion = Ui.reduce_motion()
+	add_child(guide)
+	guide.setup(right_scroll, view_box)
 	_loop = AudioStreamPlayer.new()
 	_loop.name = "MaquinaDeLaReforja"
 	_loop.bus = &"Lab"
@@ -523,6 +526,10 @@ func _build_tutorial() -> void:
 	tut_toggle.pressed.connect(func() -> void: _post("set_tutorial", [not bool(_v.get("tutorial", {}).get("on", true))]))
 	_a11y(tut_toggle, "Activar o desactivar el tutorial")
 	tut_card.right.add_child(tut_toggle)
+	guide_toggle = Pill.new("Guiado")
+	guide_toggle.pressed.connect(func() -> void: _post("set_guide", [not bool(_v.get("guide_on", true))]))
+	_a11y(guide_toggle, "Guiado botón a botón", "La cámara se acerca a lo que hay que usar, el panel baja hasta el control que hay que pulsar y un aviso sobre la vista dice la acción con su valor. Apagado, solo el texto del paso.")
+	tut_card.right.add_child(guide_toggle)
 	tut_choice = PillChoice.new(State.TUTORIALS.map(func(id: String) -> Dictionary: return { "id": id, "label": String(TUT_SHORT.get(id, id)), "title": "Tutorial: " + String(TUT_SHORT.get(id, id)) }), State.GENERAL, "Tutorial")
 	tut_choice.selected.connect(func(id: String) -> void: _post("tutorial_goto", [id]))
 	tut_card.body.add_child(tut_choice)
@@ -680,11 +687,14 @@ func _build_bench() -> void:
 	clear.pressed.connect(func() -> void: _post("clear_pan"))
 	var tare := _button("Tara (Z)", "Pill", "Pone la pantalla de la balanza a cero con lo que hay en el plato, para pesar el polvo siguiente desde cero.")
 	tare.pressed.connect(func() -> void: _post("tare"))
+	guide_nodes["tara"] = tare
+	guide_nodes["vaciar"] = clear
 	row2.add_child(tare)
 	var rec := _button("Poner lo recomendado (P)", "Pill", "Pone en la balanza y en los mandos lo que recomienda la receta, sin arrancar nada.")
 	rec.pressed.connect(func() -> void: _post("apply_recommended"))
 	load_button = _button("Cargar el crisol (L)", "PillGold", "Carga lo pesado en el crisol o en el alimentador del soplete.")
 	load_button.pressed.connect(func() -> void: _post("load_crucible"))
+	guide_nodes["recomendado"] = rec
 	for b: Button in [clear, rec, load_button]:
 		row2.add_child(b)
 	bench_card.body.add_child(row2)
@@ -822,6 +832,7 @@ func _build_shop() -> void:
 	var b_light := _button("Pasada suave (Mayús + T)", "Pill", "Una pasada suave, la cuarta parte de una normal, para acercarse a la silueta sin pasarse.")
 	b_light.pressed.connect(func() -> void: _post("carve_pass", [true]))
 	shop_card.body.add_child(_row([shop.carve_wet, b_pass, b_light]))
+	guide_nodes["pasada"] = b_pass
 	gauge = Control.new()
 	gauge.name = "IndicadorDeLaForma"
 	gauge.custom_minimum_size = Vector2(0.0, 104.0)
@@ -842,6 +853,7 @@ func _build_shop() -> void:
 	var b_prot := _button("Proteger (B)", "PillGold", "Pone la barrera sobre la mitad de la garra con carne viva.")
 	b_prot.pressed.connect(func() -> void: _post("protect"))
 	shop_card.body.add_child(_row([b_prot]))
+	guide_nodes["proteger"] = b_prot
 	# recubrir
 	shop_card.body.add_child(Ui.sub_label("Recubrir (opcional)"))
 	shop["coat"] = PillChoice.new(ForgeData.COATING_IDS.map(func(id: String) -> Dictionary: return { "id": id, "label": String(ForgeData.COATINGS[id].name), "title": String(ForgeData.COATINGS[id].name) }), "plasma_alumina", "Recubrimiento")
@@ -855,6 +867,7 @@ func _build_shop() -> void:
 	var b_coat := _button("Recubrir (R)", "PillGold", "Recubre con el método elegido.")
 	b_coat.pressed.connect(func() -> void: _post("coat"))
 	shop_card.body.add_child(_row([b_coat]))
+	guide_nodes["recubrir"] = b_coat
 	# probar el ajuste (5m; petición 43): el laboratorio no pega; la holgura es la del adhesivo con que se pegará en la cetrería
 	shop_card.body.add_child(Ui.sub_label("Probar el ajuste (se pega en la cetrería, sobre el animal)"))
 	var adh: Array = ForgeData.ADHESIVE_IDS.map(func(id: String) -> Dictionary: return { "id": id, "label": String(ForgeData.ADHESIVES[id].name).split(" (")[0], "title": String(ForgeData.ADHESIVES[id].name) })
@@ -865,6 +878,7 @@ func _build_shop() -> void:
 	var b_fit := _button("Probar el ajuste (U)", "PillGold", "Prueba la funda en la garra, sin pegarla: tiene que entrar con la holgura que llena el adhesivo.")
 	b_fit.pressed.connect(func() -> void: _post("fit_test"))
 	shop_card.body.add_child(_row([b_fit]))
+	guide_nodes["ajuste"] = b_fit
 	fit_label = Ui.para("", "Small", "dim")
 	shop_card.body.add_child(fit_label)
 	# pulir
@@ -881,6 +895,7 @@ func _build_shop() -> void:
 	var b_pol := _button("Pulir (O)", "PillGold", "Pule la superficie (la capa, si la hay).")
 	b_pol.pressed.connect(func() -> void: _post("polish"))
 	shop_card.body.add_child(_row([shop.sharpen, b_pol]))
+	guide_nodes["pulir"] = b_pol
 	right.add_child(shop_card)
 
 
@@ -938,7 +953,9 @@ func _build_weld() -> void:
 	weld_gas_row.add_child(weld_overlap)
 	weld_card.body.add_child(weld_gas_row)
 	var row := Ui.flow()
-	for e: Array in [["colocar", "Colocar en la mesa (Q)", "PillGold", "Pone la funda y la punta en la mesa de soldar, a ojo, y evalúa el punto con los mandos de ahora.", "weld_prepare"],
+	# 5x · lo recomendado para este metal y su método, también aquí (el guiado lo señala en la mesa de soldar)
+	for e: Array in [["recomendado", "Poner lo recomendado (P)", "Pill", "Pone en la mesa de soldar el método y los mandos que unen este metal sin perforar la pared.", "apply_recommended"],
+			["colocar", "Colocar en la mesa (Q)", "PillGold", "Pone la funda y la punta en la mesa de soldar, a ojo, y evalúa el punto con los mandos de ahora.", "weld_prepare"],
 			["alinear", "Alinear (I)", "Pill", "Alinea las piezas del todo bajo el microscopio, como con el útil de alinear.", "weld_align_pieces"],
 			["punto", "Un punto (J)", "Pill", "Un pulso en el primer tramo de la costura que falta (con el ratón: apretado sobre la costura y recorriéndola).", "weld_pulse_next"]]:
 		var b := _button(String(e[1]), String(e[2]), String(e[3]))
@@ -1117,6 +1134,8 @@ func _layout() -> void:
 		view_box.size_flags_vertical = Control.SIZE_FILL
 	start_button.theme_type_variation = &"PillGold" if compact else &"RunButton"
 	touch_box.visible = _touch_wanted()
+	if guide != null:
+		guide.setup(right_scroll if wide else right, view_box)
 	_update_inset()
 
 
@@ -1149,6 +1168,7 @@ func _configure_scene(s: Node) -> void:
 	if q == "":
 		q = "movil" if OS.has_feature("mobile") or compact else ""
 	s.set("quality", q)
+	s.set("reduce_motion", guide.reduce_motion if guide != null else false)
 
 
 func _on_scene_ready(s: Node) -> void:
@@ -1231,7 +1251,31 @@ func step(ms: float) -> void:
 	var v := runner.latest()
 	if int(v.get("serial", -1)) != _seen_serial:
 		_apply_view(v, false)
+	_advance_guide(dt)
 	_update_loop()
+
+
+## 5x · el aviso del guiado sigue al objeto en la pantalla (la cámara se mueve) y el borde late.
+func _advance_guide(dt: float) -> void:
+	if guide == null or not guide.visible:
+		if guide != null:
+			guide.advance(dt)
+		return
+	var g: Dictionary = guide.target
+	var p := Vector2(-1.0, -1.0)
+	var half := 0.0
+	if scene != null and String(g.get("scene", "")) != "":
+		if String(g.scene) == "costura":
+			p = scene.call("weld_seam_screen_point", float(g.get("u", 0.5)))
+			half = 14.0
+		else:
+			var r: Rect2 = scene.call("target_screen_rect", String(g.scene))
+			p = r.get_center() if r.size != Vector2.ZERO else Vector2(-1.0, -1.0)
+			half = r.size.y * 0.5
+		if p.x < 0.0 or p.y < 0.0 or p.x > view_box.size.x or p.y > view_box.size.y:
+			p = Vector2(-1.0, -1.0)
+	guide.set_scene_point(p, half)
+	guide.advance(dt)
 
 
 ## Pinta ya la última vista (tests y demo).
@@ -1248,7 +1292,7 @@ func _apply_view(v: Dictionary, force: bool) -> void:
 	if scene != null:
 		scene.call("show_view", v)
 	_paint_hud(v)
-	if _changed("tut", [v.tutorial, v.mistake, v.feasible].hash(), force):
+	if _changed("tut", [v.tutorial, v.mistake, v.feasible, v.get("guide_on", true)].hash(), force):
 		_paint_tutorial(v)
 	if _changed("make", [v.process, v.shape, v.wall, v.stone, v.sheath.text, v.feasible].hash(), force):
 		_paint_make(v)
@@ -1272,7 +1316,7 @@ func _apply_view(v: Dictionary, force: bool) -> void:
 	if values_list.visible and _changed("values", [v.process, v.shape, v.wall, v.stone, v.workshop].hash(), force):
 		_paint_values(v)
 	_play_fx(v)
-	_follow_highlight(v)
+	_paint_guide(v)
 	paints += 1
 	last_paint_us = Time.get_ticks_usec() - t0
 
@@ -1333,6 +1377,8 @@ func _paint_tutorial(v: Dictionary) -> void:
 	# el acrílico de la prótesis de verdad solo tiene sentido con una garra rota (unidad 5j)
 	(tut_choice.buttons[State.ACRYLIC] as Button).visible = bool(v.care.get("block", false)) or String(tv.id) == State.ACRYLIC
 	var on := bool(tv.on)
+	guide_toggle.visible = on
+	guide_toggle.set_on(bool(v.get("guide_on", true)))
 	for c: Control in [tut_choice, tut_title, tut_text, tut_source, tut_control, tut_status, tut_mistake, tut_prev, tut_next, tut_do]:
 		c.visible = on
 	var fz: Dictionary = v.get("feasible", {})
@@ -1749,18 +1795,94 @@ func _play_fx(v: Dictionary) -> void:
 	_fx_seen = n
 
 
-## Con el tutorial encendido, la cámara va adonde está lo que se ilumina, al cambiar de paso.
-func _follow_highlight(v: Dictionary) -> void:
-	var tv: Dictionary = v.tutorial
-	var h := String(tv.get("highlight", "")) if bool(tv.get("on", true)) else ""
-	if h == _last_highlight:
+## 5x · el guiado botón a botón (ClawForgeState.guide_view; solo con el tutorial y el «Guiado» encendidos): al cambiar de
+## acción, la vista de la cámara que la enseña (la escena se acerca sola al objeto); en el panel, el control que toca con su
+## borde que late, su etiqueta y el desplazamiento hasta él; sobre la vista, el aviso corto. Sin guiado, nada se mueve solo.
+func _paint_guide(v: Dictionary) -> void:
+	var g: Dictionary = v.get("guide", {})
+	var on := bool(g.get("on", false))
+	var node := guide_node(String(g.get("panel", ""))) if on else null
+	if node != null and not node.is_visible_in_tree():
+		node = null
+	guide.view_inset_right = (-touch_box.offset_left + TOUCH_GAP) if touch_box.visible else 0.0
+	if _changed("guide", [g, node].hash(), false):
+		guide.show_target(g, node)
+	var key := "%s|%s|%s" % [String(g.get("step", "")), String(g.get("id", "")), String(g.get("view", ""))] if on else ""
+	if key == _guide_key:
 		return
-	_last_highlight = h
-	var want := String(HIGHLIGHT_VIEW.get(h, ""))
-	if State.CONTROL_IDS.has(h):
-		want = "horno"
+	_guide_key = key
+	var want := String(g.get("view", "")) if on else ""
 	if want != "" and want != view:
 		set_view(want)
+
+
+## El control del panel que hace la acción del guiado, por su id (claw_forge_guide.gd): null si no lo hay.
+func guide_node(id: String) -> Control:
+	if id == "":
+		return null
+	var parts := id.split(":")
+	var head := parts[0]
+	var arg := parts[1] if parts.size() > 1 else ""
+	match head:
+		"dosis", "quitar":
+			var row: Dictionary = jar_rows.get(arg, {})
+			if row.is_empty():
+				return null
+			var bs: Array = row.dose_b
+			var i := int(parts[2]) if head == "dosis" and parts.size() > 2 else bs.size() - 1
+			return bs[i] if i >= 0 and i < bs.size() else null
+		"cargar":
+			return load_button
+		"mando":
+			var cr: Dictionary = control_rows.get(arg, {})
+			if cr.is_empty():
+				return null
+			if parts.size() > 2:
+				return (cr.widget as PillChoice).buttons.get(parts[2]) if cr.widget is PillChoice else null
+			return cr.widget
+		"meter":
+			return insert_button
+		"arrancar":
+			return start_button
+		"acabar":
+			return skip_button
+		"enfriar":
+			return cool_button
+		"cera":
+			return wax_buttons.get(arg)
+		"cera_medida":
+			return wax_compensate
+		"herramienta":
+			return carve_tools.buttons.get(arg)
+		"tallar_material":
+			return (shop.carve_abr as PillChoice).buttons.get(arg)
+		"tallar_agua":
+			return shop.carve_wet
+		"tallar_fuerza":
+			return shop.carve_force
+		"barrera":
+			return (shop.barrier as PillChoice).buttons.get(arg)
+		"barrera_espesor":
+			return shop.barrier_th
+		"recubrimiento":
+			return (shop.coat as PillChoice).buttons.get(arg)
+		"recubrir_tiempo":
+			return shop.coat_time
+		"recubrir_punta":
+			return shop.coat_cover
+		"holgura":
+			return shop.gap
+		"pulir_abrasivo":
+			return (shop.polish_abr as PillChoice).buttons.get(arg)
+		"grano":
+			return (shop.grit as PillChoice).buttons.get(arg)
+		"soldar_recomendado", "soldar_colocar", "soldar_alinear", "soldar_punto":
+			return weld_buttons.get(head.trim_prefix("soldar_"))
+		"siguiente":
+			return tut_next
+		"tutorial":
+			return tut_choice.buttons.get(arg)
+	return guide_nodes.get(head)
 
 
 # ─────────────────────────────── Sonido continuo ───────────────────────────────
